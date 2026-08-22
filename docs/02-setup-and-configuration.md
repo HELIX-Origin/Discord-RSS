@@ -45,10 +45,10 @@ These files are committed back to the repository automatically by the GitHub Act
 
 ## Scheduled behavior
 
-Both workflows run on a 30-minute cron schedule:
+Both workflows run on an hourly cron schedule, at the top of each hour:
 
-- feed workflow: `*/30 * * * *`
-- status workflow: `*/30 * * * *`
+- feed workflow: `0 * * * *`
+- status workflow: `0 * * * *`
 
 The feed workflow is designed so it only posts newly discovered content and never replays a full backlog after the initial run.
 

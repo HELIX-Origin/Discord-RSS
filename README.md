@@ -25,14 +25,14 @@ The feed workflow stores its last-seen feed item in `.github/feed-state.json` an
 
 ## Behavior
 
-- Polls the configured feed every 30 minutes
+- Polls the configured feed hourly at the top of each hour
 - Posts only newly seen entries to Discord
 - Skips initial historical backfill on the first run
 - Limits each run to the 5 newest unseen posts, so a backlog cannot grow without bound
 - Limits posts to entries under the configured `SITE_URL`
 - Excludes known noisy forum URLs when the site uses the default Virtual Customs pattern
 - Sends each post to Discord as a rich embed with title, author, link, and publish time
-- Polls the site status every 30 minutes on a separate workflow
+- Polls the site status hourly on a separate workflow, also at the top of the hour
 - Posts to a dedicated status webhook only when the site transitions between online and offline states
 - Uses a single concurrency group per workflow so overlapping scheduled runs do not duplicate posts
 

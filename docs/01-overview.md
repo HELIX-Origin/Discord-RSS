@@ -12,7 +12,7 @@ The project focuses on three things:
 
 ## How it works
 
-- The scheduled workflow runs every 30 minutes
+- The scheduled workflow runs hourly at the top of each hour
 - It fetches the configured feed or auto-discovers feed URLs from the site
 - It filters posts to the allowed host and removes known noisy forum URLs
 - It stores the most recently posted entry ID in a JSON state file

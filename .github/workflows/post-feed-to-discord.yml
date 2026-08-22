@@ -3,7 +3,7 @@ name: Post feed updates to Discord
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 * * * *"
 
 concurrency:
   group: post-feed-to-discord
