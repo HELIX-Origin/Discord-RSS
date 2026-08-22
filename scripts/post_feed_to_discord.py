@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from html import unescape
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 DEFAULT_EXCLUDED_SUBSTRINGS = (
     "forumdisplay.php/766-The-Team",
@@ -176,7 +176,6 @@ def save_state(path: Path, state: dict[str, str]) -> None:
 
 def post_to_discord(webhook_url: str, entry: Entry) -> None:
     message = {
-        "content": entry.link or None,
         "embeds": [
             {
                 "title": entry.title[:256],
@@ -202,7 +201,7 @@ def post_to_discord(webhook_url: str, entry: Entry) -> None:
         raise SystemExit(f"Failed to post to Discord webhook: {exc}") from exc
 
 
-def remove_nones(value):
+def remove_nones(value: Any) -> Any:
     if isinstance(value, dict):
         return {key: remove_nones(inner) for key, inner in value.items() if inner is not None}
     if isinstance(value, list):
