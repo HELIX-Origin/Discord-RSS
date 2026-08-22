@@ -8,7 +8,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from html import unescape
@@ -166,14 +166,14 @@ def clean_summary(value: str | None) -> str:
 
 
 def is_excluded(entry: Entry, excluded_substrings: Iterable[str]) -> bool:
-    haystacks = (entry.link, entry.entry_id, entry.summary)
+    haystacks = (entry.link, entry.entry_id)
     return any(substring in haystacks_value for substring in excluded_substrings for haystacks_value in haystacks)
 
 
 def is_allowed(entry: Entry, allowed_hosts: Iterable[str]) -> bool:
     for candidate in (entry.link, entry.entry_id):
         parsed = urllib.parse.urlparse(candidate)
-        if parsed.scheme in {"http", "https"} and parsed.netloc.lower() in allowed_hosts:
+        if parsed.scheme in {"http", "https"} and (parsed.hostname or "").lower() in allowed_hosts:
             return True
     return False
 
@@ -228,6 +228,9 @@ def remove_nones(value: Any) -> Any:
 
 
 def build_discord_message(entry: Entry) -> dict[str, Any]:
+    forum_link = truncate_field_value(f"[Open post]({entry.link})") if entry.link else None
+    normalized_timestamp = normalize_timestamp(entry.published)
+    published_value = truncate_field_value(normalized_timestamp or entry.published) if entry.published else None
     embed = {
         "title": entry.title[:256],
         "url": entry.link or None,
@@ -235,15 +238,15 @@ def build_discord_message(entry: Entry) -> dict[str, Any]:
         "color": 0x5865F2,
         "author": {"name": entry.author[:256]} if entry.author else {"name": "Virtual Customs"},
         "fields": [
-            {"name": "Forum", "value": "[Open post](%s)" % entry.link[:1024], "inline": False}
+            {"name": "Post", "value": forum_link, "inline": False}
         ]
-        if entry.link
+        if forum_link
         else [],
         "footer": {"text": "Virtual Customs Feed"},
-        "timestamp": normalize_timestamp(entry.published),
+        "timestamp": normalized_timestamp,
     }
-    if entry.published:
-        embed["fields"].append({"name": "Published", "value": entry.published[:1024], "inline": True})
+    if published_value:
+        embed["fields"].append({"name": "Published", "value": published_value, "inline": True})
     return {"embeds": [embed], "allowed_mentions": {"parse": []}}
 
 
@@ -252,7 +255,7 @@ def normalize_timestamp(value: str) -> str | None:
         return None
 
     try:
-        return parsedate_to_datetime(value).astimezone().isoformat()
+        return parsedate_to_datetime(value).astimezone(timezone.utc).isoformat()
     except (TypeError, ValueError, IndexError, OverflowError):
         pass
 
@@ -262,6 +265,10 @@ def normalize_timestamp(value: str) -> str | None:
     except ValueError:
         return None
     return parsed.isoformat()
+
+
+def truncate_field_value(value: str) -> str:
+    return value[:1024]
 
 
 if __name__ == "__main__":
