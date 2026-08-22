@@ -1,6 +1,6 @@
 # Overview
 
-VirtualCustoms-Feed is a lightweight automation project for monitoring a Virtual Customs forum and turning new forum posts into Discord notifications. It is designed for GitHub-hosted automation so the site can be watched without needing a persistent local service.
+VirtualCustoms-Discord-Feed is a lightweight automation project for monitoring a Virtual Customs forum and turning new forum posts into Discord notifications. It is designed for GitHub-hosted automation so the site can be watched without needing a persistent local service.
 
 ## Core purpose
 

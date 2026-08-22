@@ -1,6 +1,6 @@
-# VirtualCustoms-Feed
+# VirtualCustoms-Discord-Feed
 
-GitHub Actions workflow for posting new RSS/Atom feed entries to a Discord webhook.
+GitHub Actions bot for monitoring Virtual Customs forum RSS/Atom feeds and posting new items to Discord.
 
 ## Documentation
 

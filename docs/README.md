@@ -1,4 +1,4 @@
-# VirtualCustoms-Feed Documentation
+# VirtualCustoms-Discord-Feed Documentation
 
 This repository automates the process of monitoring a Virtual Customs forum, discovering new posts, and sending the newest updates to a Discord channel. It also includes a separate site-status monitor that can alert a different Discord webhook whenever the forum changes between online and offline states.
 
