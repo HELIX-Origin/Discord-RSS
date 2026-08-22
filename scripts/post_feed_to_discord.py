@@ -19,7 +19,7 @@ DEFAULT_EXCLUDED_SUBSTRINGS = (
     "forumdisplay.php?766-The-Team",
     "/766-The-Team",
 )
-DEFAULT_ALLOWED_HOSTS = ("virtualcustoms.net", "www.virtualcustoms.net")
+DEFAULT_ALLOWED_HOSTS = ("virtualcustoms.net",)
 
 
 @dataclass(frozen=True)
@@ -62,11 +62,18 @@ def main() -> int:
         return 0
 
     entries_to_post = select_entries_to_post(visible_entries, previous_state.get("last_entry_id"), max_posts)
+    last_successful_entry_id = previous_state.get("last_entry_id", latest_entry_id)
 
     for entry in entries_to_post:
-        post_to_discord(webhook_url, entry)
+        try:
+            post_to_discord(webhook_url, entry)
+        except SystemExit:
+            save_state(state_path, {"last_entry_id": last_successful_entry_id})
+            raise
+        last_successful_entry_id = entry.entry_id
 
-    save_state(state_path, {"last_entry_id": latest_entry_id})
+    if entries_to_post:
+        save_state(state_path, {"last_entry_id": last_successful_entry_id})
     print(f"Posted {len(entries_to_post)} entries.")
     return 0
 
@@ -174,7 +181,7 @@ def select_entries_to_post(entries: list[Entry], last_entry_id: str | None, max_
 
     pending.reverse()
     if len(pending) > max_posts:
-        pending = pending[-max_posts:]
+        pending = pending[:max_posts]
     return pending
 
 

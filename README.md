@@ -15,7 +15,7 @@ The workflow stores its last-seen feed item in `.github/feed-state.json` and com
 - Polls the configured feed every 30 minutes
 - Posts only newly seen entries to Discord
 - Skips initial historical backfill on the first run
-- Limits posts to entries under `virtualcustoms.net`
+- Limits posts to entries under `https://virtualcustoms.net/`
 - Excludes entries that match the Virtual Customs `The Team` forum URL patterns
 - Uses a single concurrency group so overlapping scheduled runs do not duplicate posts
 

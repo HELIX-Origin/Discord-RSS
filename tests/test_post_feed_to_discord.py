@@ -63,7 +63,7 @@ class PostFeedToDiscordTests(unittest.TestCase):
 
         pending = select_entries_to_post(entries, "1", 2)
 
-        self.assertEqual(["4", "5"], [entry.entry_id for entry in pending])
+        self.assertEqual(["2", "3"], [entry.entry_id for entry in pending])
 
 
 if __name__ == "__main__":
