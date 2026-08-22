@@ -5,8 +5,12 @@ on:
   schedule:
     - cron: "*/30 * * * *"
 
+concurrency:
+  group: post-feed-to-discord
+  cancel-in-progress: false
+
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   post-feed:
@@ -20,14 +24,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Restore feed state cache
-        uses: actions/cache@v4.2.4
-        with:
-          path: .cache/feed-state.json
-          key: feed-state-${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: |
-            feed-state-${{ github.ref_name }}-
-
       - name: Run unit tests
         run: python -m unittest discover -s tests -p "test_*.py"
 
@@ -36,4 +32,16 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           FEED_URL: ${{ secrets.FEED_URL }}
           EXCLUDED_URL_SUBSTRINGS: forumdisplay.php/766-The-Team,forumdisplay.php?766-The-Team,/766-The-Team
+          STATE_FILE: .github/feed-state.json
         run: python scripts/post_feed_to_discord.py
+
+      - name: Persist feed state
+        run: |
+          if [ -z "$(git status --porcelain -- .github/feed-state.json)" ]; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/feed-state.json
+          git commit -m "Update feed state"
+          git push

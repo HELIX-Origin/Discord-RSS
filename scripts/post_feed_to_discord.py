@@ -48,13 +48,14 @@ def main() -> int:
         return 0
 
     previous_state = load_state(state_path)
-    entries_to_post = select_entries_to_post(visible_entries, previous_state.get("last_entry_id"), max_posts)
     latest_entry_id = visible_entries[0].entry_id
 
     if not previous_state:
         save_state(state_path, {"last_entry_id": latest_entry_id})
         print("Initialized state without posting historical entries.")
         return 0
+
+    entries_to_post = select_entries_to_post(visible_entries, previous_state.get("last_entry_id"), max_posts)
 
     for entry in entries_to_post:
         post_to_discord(webhook_url, entry)
