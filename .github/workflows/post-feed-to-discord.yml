@@ -37,9 +37,7 @@ jobs:
       - name: Post new feed entries
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          SITE_URL: https://virtualcustoms.net
-          ALLOWED_HOSTS: virtualcustoms.net
-          EXCLUDED_URL_SUBSTRINGS: forumdisplay.php/766-The-Team,forumdisplay.php?766-The-Team,/766-The-Team
+          SITE_URL: ${{ secrets.SITE_URL }}
           MAX_POSTS: "5"
           STATE_FILE: .github/feed-state.json
         run: python scripts/post_feed_to_discord.py

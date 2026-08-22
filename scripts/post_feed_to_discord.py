@@ -30,11 +30,32 @@ DEFAULT_ALLOWED_HOSTS = ("virtualcustoms.net",)
 CLOUDFLARE_CHALLENGE_MARKERS = (
     "cloudflare",
     "cf-challenge",
+    "cf-turnstile",
     "jschl",
     "checking your browser",
     "why am i seeing this",
+    "just a moment",
+    "verify you are human",
     "ray id",
     "captcha",
+    "managed challenge",
+    "challenge-platform",
+    "please enable javascript",
+    "attention required",
+    "ddos protection",
+)
+COMMON_FEED_PATHS = (
+    "rss.xml",
+    "atom.xml",
+    "feed.xml",
+    "index.rss",
+    "index.atom",
+    "feed",
+    "rss",
+    "forums/index.rss",
+    "forums/index.atom",
+    "forum-rss.xml",
+    "forum-atom.xml",
 )
 
 
@@ -49,25 +70,29 @@ class Entry:
 
 
 def main() -> int:
+    site_url = os.getenv("SITE_URL", "https://virtualcustoms.net")
     feed_urls = (
         parse_feed_urls(os.getenv("FEED_URLS") or os.getenv("FEED_URL"))
         if os.getenv("FEED_URLS") or os.getenv("FEED_URL")
-        else discover_feed_urls()
+        else discover_feed_urls([site_url])
     )
     if not feed_urls:
-        raise SystemExit("No RSS/Atom feed URLs discovered on the configured Virtual Customs site.")
+        raise SystemExit("No RSS/Atom feed URLs discovered on the configured site.")
 
     webhook_url = require_env("DISCORD_WEBHOOK_URL")
     state_path = Path(os.getenv("STATE_FILE", ".cache/feed-state.json"))
     max_posts = min(5, max(1, int(os.getenv("MAX_POSTS", "5"))))
     excluded_substrings = tuple(
         part.strip()
-        for part in os.getenv("EXCLUDED_URL_SUBSTRINGS", ",".join(DEFAULT_EXCLUDED_SUBSTRINGS)).split(",")
+        for part in os.getenv(
+            "EXCLUDED_URL_SUBSTRINGS",
+            ",".join(default_excluded_substrings(site_url)),
+        ).split(",")
         if part.strip()
     )
     allowed_hosts = tuple(
         part.strip().lower()
-        for part in os.getenv("ALLOWED_HOSTS", ",".join(DEFAULT_ALLOWED_HOSTS)).split(",")
+        for part in os.getenv("ALLOWED_HOSTS", ",".join(default_allowed_hosts(site_url))).split(",")
         if part.strip()
     )
 
@@ -93,7 +118,7 @@ def main() -> int:
 
     for entry in entries_to_post:
         try:
-            post_to_discord(webhook_url, entry)
+            post_to_discord(webhook_url, entry, site_url)
         except urllib.error.URLError as exc:
             save_state(state_path, {"last_entry_id": last_successful_entry_id})
             raise SystemExit(f"Failed to post to Discord webhook: {exc}") from exc
@@ -118,15 +143,55 @@ def parse_feed_urls(value: str | None) -> list[str]:
     return [part.strip() for part in value.replace("\n", ",").split(",") if part.strip()]
 
 
+def normalize_site_url(site_url: str | None) -> str:
+    value = (site_url or os.getenv("SITE_URL") or "https://virtualcustoms.net").strip()
+    if not value:
+        return "https://virtualcustoms.net"
+    return value if "://" in value else f"https://{value}"
+
+
+def site_host(site_url: str | None) -> str:
+    normalized = normalize_site_url(site_url)
+    parsed = urllib.parse.urlparse(normalized)
+    hostname = parsed.hostname or parsed.netloc or normalized
+    return hostname.split(":", 1)[0].lower().rstrip("/")
+
+
+def site_name(site_url: str | None) -> str:
+    host = site_host(site_url)
+    if not host:
+        return "Site"
+    if host == "virtualcustoms.net":
+        return "Virtual Customs"
+    labels = [part for part in host.split(".") if part]
+    if len(labels) >= 2:
+        primary = labels[-2]
+    else:
+        primary = labels[0]
+    return primary.replace("-", " ").replace("_", " ").title()
+
+
+def default_allowed_hosts(site_url: str | None = None) -> tuple[str, ...]:
+    host = site_host(site_url)
+    if host == "virtualcustoms.net":
+        return DEFAULT_ALLOWED_HOSTS
+    return (host,) if host else DEFAULT_ALLOWED_HOSTS
+
+
+def default_excluded_substrings(site_url: str | None = None) -> tuple[str, ...]:
+    return DEFAULT_EXCLUDED_SUBSTRINGS if site_host(site_url) == "virtualcustoms.net" else ()
+
+
 def discover_feed_urls(site_urls: Iterable[str] | None = None) -> list[str]:
     candidates = [
         candidate.strip()
-        for candidate in (site_urls or (os.getenv("SITE_URL", "https://virtualcustoms.net"),))
+        for candidate in (site_urls or (normalize_site_url(os.getenv("SITE_URL") or "https://virtualcustoms.net"),))
         if candidate and candidate.strip()
     ]
     discovered: set[str] = set()
 
     for site_url in candidates:
+        site_discovered: set[str] = set()
         try:
             html = fetch_via_http(site_url).decode("utf-8", errors="ignore")
         except SystemExit:
@@ -140,7 +205,14 @@ def discover_feed_urls(site_urls: Iterable[str] | None = None) -> list[str]:
             for href in match:
                 if href:
                     url = urllib.parse.urljoin(site_url, href)
-                    discovered.add(url)
+                    site_discovered.add(url)
+
+        if not site_discovered:
+            for path in COMMON_FEED_PATHS:
+                url = urllib.parse.urljoin(site_url, path)
+                site_discovered.add(url)
+
+        discovered.update(site_discovered)
 
     if discovered:
         return sorted(discovered)
@@ -199,7 +271,7 @@ def fetch_via_browser(feed_url: str) -> bytes:
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
         raise SystemExit(
-            "VirtualCustoms is behind Cloudflare's browser challenge and cannot be resolved without a browser-capable runtime. "
+            "The target site is behind a Cloudflare browser challenge and cannot be resolved without a browser-capable runtime. "
             "Install Playwright so the job can complete the challenge before reading the feed."
         ) from exc
 
@@ -217,7 +289,7 @@ def fetch_via_browser(feed_url: str) -> bytes:
             browser.close()
 
     raise SystemExit(
-        "VirtualCustoms is still presenting a Cloudflare challenge after a browser-based retry. "
+        "The target site is still presenting a Cloudflare challenge after a browser-based retry. "
         "The feed URL may require a different source or a site-specific pass-through step."
     )
 
@@ -376,8 +448,8 @@ def post_site_status(webhook_url: str, status: str, site_url: str) -> None:
         pass
 
 
-def post_to_discord(webhook_url: str, entry: Entry) -> None:
-    message = build_discord_message(entry)
+def post_to_discord(webhook_url: str, entry: Entry, site_url: str | None = None) -> None:
+    message = build_discord_message(entry, site_url)
 
     payload = json.dumps(remove_nones(message)).encode("utf-8")
     request = urllib.request.Request(
@@ -398,22 +470,23 @@ def remove_nones(value: Any) -> Any:
     return value
 
 
-def build_discord_message(entry: Entry) -> dict[str, Any]:
+def build_discord_message(entry: Entry, site_url: str | None = None) -> dict[str, Any]:
+    site_name_value = site_name(site_url)
     forum_link = truncate_field_value(f"[Open post]({entry.link})") if entry.link else None
     normalized_timestamp = normalize_timestamp(entry.published)
     published_value = truncate_field_value(normalized_timestamp or entry.published) if entry.published else None
     embed = {
         "title": entry.title[:256],
         "url": entry.link or None,
-        "description": entry.summary[:4096] or "New forum post on Virtual Customs.",
+        "description": entry.summary[:4096] or f"New forum post on {site_name_value}.",
         "color": 0x5865F2,
-        "author": {"name": entry.author[:256]} if entry.author else {"name": "Virtual Customs"},
+        "author": {"name": entry.author[:256]} if entry.author else {"name": site_name_value},
         "fields": [
             {"name": "Post", "value": forum_link, "inline": False}
         ]
         if forum_link
         else [],
-        "footer": {"text": "Virtual Customs Feed"},
+        "footer": {"text": f"{site_name_value} Feed"},
         "timestamp": normalized_timestamp,
     }
     if published_value:
@@ -421,13 +494,14 @@ def build_discord_message(entry: Entry) -> dict[str, Any]:
     return {"embeds": [embed], "allowed_mentions": {"parse": []}}
 
 
-def build_site_status_message(status: str, site_url: str) -> dict[str, Any]:
+def build_site_status_message(status: str, site_url: str | None = None) -> dict[str, Any]:
+    site_name_value = site_name(site_url)
     if status == "up":
-        title = "Virtual Customs is online"
+        title = f"{site_name_value} is online"
         description = "The site has recovered and is responding again."
         color = 0x57F287
     else:
-        title = "Virtual Customs is offline"
+        title = f"{site_name_value} is offline"
         description = "The site is not responding or is behind a challenge page."
         color = 0xED4245
 
@@ -435,11 +509,11 @@ def build_site_status_message(status: str, site_url: str) -> dict[str, Any]:
         "embeds": [
             {
                 "title": title,
-                "url": site_url,
+                "url": normalize_site_url(site_url),
                 "description": description,
                 "color": color,
                 "fields": [{"name": "Status", "value": status.upper(), "inline": True}],
-                "footer": {"text": "Virtual Customs Status"},
+                "footer": {"text": f"{site_name_value} Status"},
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         ],

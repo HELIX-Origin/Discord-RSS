@@ -29,7 +29,7 @@ jobs:
       - name: Run status check
         env:
           DISCORD_STATUS_WEBHOOK_URL: ${{ secrets.DISCORD_STATUS_WEBHOOK_URL }}
-          SITE_URL: https://virtualcustoms.net
+          SITE_URL: ${{ secrets.SITE_URL }}
           SITE_STATUS_STATE_FILE: .github/site-status-state.json
         run: python scripts/post_site_status.py
 

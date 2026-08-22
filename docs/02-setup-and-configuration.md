@@ -6,8 +6,9 @@ This page covers the runtime setup for the repository and how the scheduling, st
 
 Use repository secrets rather than environment-scoped or branch-specific GitHub Actions secrets because the workflow is designed to run from the repository itself and should not depend on ephemeral environment settings.
 
-### Feed channel secret
+### Base site and feed channel secrets
 
+- `SITE_URL` — base URL for the forum or site being monitored
 - `DISCORD_WEBHOOK_URL` — Discord webhook used for new forum post alerts
 
 ### Optional status channel secret

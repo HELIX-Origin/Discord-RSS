@@ -124,6 +124,13 @@ class PostFeedToDiscordTests(unittest.TestCase):
 
         self.assertEqual(["https://example.com/forums/index.rss", "https://example.com/updates.atom"], urls)
 
+    @patch.object(feed_module, "fetch_via_http", return_value=b"<html><body>No RSS links here</body></html>")
+    def test_falls_back_to_common_feed_paths_when_no_feed_links_are_present(self, _):
+        urls = discover_feed_urls(["https://example.com/forum/index.php"])
+
+        self.assertIn("https://example.com/forum/index.rss", urls)
+        self.assertIn("https://example.com/forum/rss.xml", urls)
+
     def test_posts_entries_after_last_seen_in_oldest_first_order(self):
         entries = [
             Entry("3", "Newest", "https://example.com/3", "", "", ""),
@@ -177,6 +184,25 @@ class PostFeedToDiscordTests(unittest.TestCase):
         self.assertEqual("Virtual Customs Feed", embed["footer"]["text"])
         self.assertTrue(embed["timestamp"].startswith("2026-08-22T23:00:00"))
         self.assertEqual("[Open post](https://virtualcustoms.net/showthread.php/123-visible)", embed["fields"][0]["value"])
+
+    def test_supports_generic_site_names_and_site_url_overrides(self):
+        entry = Entry(
+            "https://example.com/thread/123-visible",
+            "Visible",
+            "https://example.com/thread/123-visible",
+            "",
+            "",
+            "",
+        )
+
+        status_message = build_site_status_message("down", "https://example.com")
+        self.assertEqual("Example is offline", status_message["embeds"][0]["title"])
+        self.assertEqual("Example Status", status_message["embeds"][0]["footer"]["text"])
+
+        payload = build_discord_message(entry, "https://example.com")
+        self.assertEqual("Example Feed", payload["embeds"][0]["footer"]["text"])
+        self.assertEqual("Example", payload["embeds"][0]["author"]["name"])
+        self.assertEqual("New forum post on Example.", payload["embeds"][0]["description"])
 
     def test_site_status_uses_separate_discord_webhook_and_change_tracking(self):
         status_message = build_site_status_message("down", "https://virtualcustoms.net")
