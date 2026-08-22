@@ -1,6 +1,13 @@
 import unittest
 
-from scripts.post_feed_to_discord import DEFAULT_EXCLUDED_SUBSTRINGS, Entry, is_excluded, select_entries_to_post
+from scripts.post_feed_to_discord import (
+    DEFAULT_ALLOWED_HOSTS,
+    DEFAULT_EXCLUDED_SUBSTRINGS,
+    Entry,
+    is_allowed,
+    is_excluded,
+    select_entries_to_post,
+)
 
 
 class PostFeedToDiscordTests(unittest.TestCase):
@@ -14,6 +21,25 @@ class PostFeedToDiscordTests(unittest.TestCase):
         )
 
         self.assertTrue(is_excluded(entry, DEFAULT_EXCLUDED_SUBSTRINGS))
+
+    def test_only_allows_virtualcustoms_domain_entries(self):
+        allowed_entry = Entry(
+            entry_id="https://virtualcustoms.net/showthread.php/123-visible",
+            title="Visible",
+            link="https://virtualcustoms.net/showthread.php/123-visible",
+            published="",
+            summary="",
+        )
+        blocked_entry = Entry(
+            entry_id="https://example.com/offsite",
+            title="Blocked",
+            link="https://example.com/offsite",
+            published="",
+            summary="",
+        )
+
+        self.assertTrue(is_allowed(allowed_entry, DEFAULT_ALLOWED_HOSTS))
+        self.assertFalse(is_allowed(blocked_entry, DEFAULT_ALLOWED_HOSTS))
 
     def test_posts_entries_after_last_seen_in_oldest_first_order(self):
         entries = [

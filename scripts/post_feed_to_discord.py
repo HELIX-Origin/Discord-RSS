@@ -19,6 +19,7 @@ DEFAULT_EXCLUDED_SUBSTRINGS = (
     "forumdisplay.php?766-The-Team",
     "/766-The-Team",
 )
+DEFAULT_ALLOWED_HOSTS = ("virtualcustoms.net", "www.virtualcustoms.net")
 
 
 @dataclass(frozen=True)
@@ -40,9 +41,14 @@ def main() -> int:
         for part in os.getenv("EXCLUDED_URL_SUBSTRINGS", ",".join(DEFAULT_EXCLUDED_SUBSTRINGS)).split(",")
         if part.strip()
     )
+    allowed_hosts = tuple(
+        part.strip().lower()
+        for part in os.getenv("ALLOWED_HOSTS", ",".join(DEFAULT_ALLOWED_HOSTS)).split(",")
+        if part.strip()
+    )
 
     entries = fetch_entries(feed_url)
-    visible_entries = [entry for entry in entries if not is_excluded(entry, excluded_substrings)]
+    visible_entries = [entry for entry in entries if is_allowed(entry, allowed_hosts) and not is_excluded(entry, excluded_substrings)]
     if not visible_entries:
         print("No visible feed entries found.")
         return 0
@@ -146,6 +152,14 @@ def clean_summary(value: str | None) -> str:
 def is_excluded(entry: Entry, excluded_substrings: Iterable[str]) -> bool:
     haystacks = (entry.link, entry.entry_id, entry.summary)
     return any(substring in haystacks_value for substring in excluded_substrings for haystacks_value in haystacks)
+
+
+def is_allowed(entry: Entry, allowed_hosts: Iterable[str]) -> bool:
+    for candidate in (entry.link, entry.entry_id):
+        parsed = urllib.parse.urlparse(candidate)
+        if parsed.scheme in {"http", "https"} and parsed.netloc.lower() in allowed_hosts:
+            return True
+    return False
 
 
 def select_entries_to_post(entries: list[Entry], last_entry_id: str | None, max_posts: int) -> list[Entry]:

@@ -31,6 +31,7 @@ jobs:
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           FEED_URL: ${{ secrets.FEED_URL }}
+          ALLOWED_HOSTS: virtualcustoms.net,www.virtualcustoms.net
           EXCLUDED_URL_SUBSTRINGS: forumdisplay.php/766-The-Team,forumdisplay.php?766-The-Team,/766-The-Team
           STATE_FILE: .github/feed-state.json
         run: python scripts/post_feed_to_discord.py
