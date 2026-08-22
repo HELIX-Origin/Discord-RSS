@@ -17,6 +17,7 @@ The workflow stores its last-seen feed item in `.github/feed-state.json` and com
 - Skips initial historical backfill on the first run
 - Limits posts to entries under `https://virtualcustoms.net/`
 - Excludes entries that match the Virtual Customs `The Team` forum URL patterns
+- Sends each post to Discord as a rich embed with title, author, link, and publish time
 - Uses a single concurrency group so overlapping scheduled runs do not duplicate posts
 
 ## Local validation

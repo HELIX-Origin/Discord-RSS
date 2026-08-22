@@ -8,7 +8,9 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
 from html import unescape
 from pathlib import Path
 from typing import Any, Iterable
@@ -33,6 +35,7 @@ class Entry:
     link: str
     published: str
     summary: str
+    author: str
 
 
 def main() -> int:
@@ -123,7 +126,8 @@ def parse_rss(root: ET.Element) -> list[Entry]:
         guid = text_or_default(item.findtext("guid"), link or title)
         published = text_or_default(item.findtext("pubDate"), "")
         summary = clean_summary(item.findtext("description"))
-        entries.append(Entry(guid, title, link, published, summary))
+        author = text_or_default(item.findtext("author"), item.findtext("{http://purl.org/dc/elements/1.1/}creator") or "")
+        entries.append(Entry(guid, title, link, published, summary, author))
     return entries
 
 
@@ -139,6 +143,7 @@ def parse_atom(root: ET.Element) -> list[Entry]:
             item.findtext("atom:summary", default="", namespaces=namespace)
             or item.findtext("atom:content", default="", namespaces=namespace)
         )
+        author = text_or_default(item.findtext("atom:author/atom:name", default="", namespaces=namespace), "")
 
         link = ""
         for link_element in item.findall("atom:link", namespace):
@@ -146,7 +151,7 @@ def parse_atom(root: ET.Element) -> list[Entry]:
                 link = link_element.attrib.get("href", "")
                 break
 
-        entries.append(Entry(entry_id or link or title, title, link, published, summary))
+        entries.append(Entry(entry_id or link or title, title, link, published, summary, author))
     return entries
 
 
@@ -201,17 +206,7 @@ def save_state(path: Path, state: dict[str, str]) -> None:
 
 
 def post_to_discord(webhook_url: str, entry: Entry) -> None:
-    message = {
-        "embeds": [
-            {
-                "title": entry.title[:256],
-                "url": entry.link or None,
-                "description": entry.summary[:4096] or None,
-                "footer": {"text": entry.published[:2048]} if entry.published else None,
-            }
-        ],
-        "allowed_mentions": {"parse": []},
-    }
+    message = build_discord_message(entry)
 
     payload = json.dumps(remove_nones(message)).encode("utf-8")
     request = urllib.request.Request(
@@ -230,6 +225,43 @@ def remove_nones(value: Any) -> Any:
     if isinstance(value, list):
         return [remove_nones(inner) for inner in value if inner is not None]
     return value
+
+
+def build_discord_message(entry: Entry) -> dict[str, Any]:
+    embed = {
+        "title": entry.title[:256],
+        "url": entry.link or None,
+        "description": entry.summary[:4096] or "New forum post on Virtual Customs.",
+        "color": 0x5865F2,
+        "author": {"name": entry.author[:256]} if entry.author else {"name": "Virtual Customs"},
+        "fields": [
+            {"name": "Forum", "value": "[Open post](%s)" % entry.link[:1024], "inline": False}
+        ]
+        if entry.link
+        else [],
+        "footer": {"text": "Virtual Customs Feed"},
+        "timestamp": normalize_timestamp(entry.published),
+    }
+    if entry.published:
+        embed["fields"].append({"name": "Published", "value": entry.published[:1024], "inline": True})
+    return {"embeds": [embed], "allowed_mentions": {"parse": []}}
+
+
+def normalize_timestamp(value: str) -> str | None:
+    if not value:
+        return None
+
+    try:
+        return parsedate_to_datetime(value).astimezone().isoformat()
+    except (TypeError, ValueError, IndexError, OverflowError):
+        pass
+
+    normalized = value.replace("Z", "+00:00")
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    return parsed.isoformat()
 
 
 if __name__ == "__main__":
