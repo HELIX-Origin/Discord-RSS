@@ -13,7 +13,7 @@ Because of that, the repository uses two independent checks:
 
 ## Behavior
 
-- the status monitor runs hourly at the top of each hour
+- the status monitor runs every 30 minutes
 - it fetches the site URL and checks whether the page is available
 - it detects Cloudflare challenge pages and treats them as a site issue rather than a healthy state
 - it stores the latest state in `.github/site-status-state.json`

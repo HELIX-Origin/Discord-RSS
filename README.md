@@ -32,7 +32,7 @@ The feed workflow stores its last-seen feed item in `.github/feed-state.json` an
 - Limits posts to entries under the configured `SITE_URL`
 - Excludes known noisy forum URLs when the site uses the default Virtual Customs pattern
 - Sends each post to Discord as a rich embed with title, author, link, and publish time
-- Polls the site status hourly on a separate workflow, also at the top of the hour
+- Polls the site status every 30 minutes on a separate workflow
 - Posts to a dedicated status webhook only when the site transitions between online and offline states
 - Uses a single concurrency group per workflow so overlapping scheduled runs do not duplicate posts
 
