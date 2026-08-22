@@ -13,6 +13,8 @@ GitHub Actions workflow for posting new RSS/Atom feed entries to a Discord webho
 
 ## Required configuration
 
+GitHub refers to these as repository secrets, but they are configured under the repository's GitHub Actions secrets UI: Settings -> Secrets and variables -> Actions.
+
 - Repository secret: `SITE_URL` — base site URL for the forum or site being monitored
 - Repository secret: `DISCORD_WEBHOOK_URL`
 - Repository secret: `DISCORD_STATUS_WEBHOOK_URL`

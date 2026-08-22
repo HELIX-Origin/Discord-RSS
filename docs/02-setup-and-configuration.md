@@ -6,6 +6,8 @@ This page covers the runtime setup for the repository and how the scheduling, st
 
 Use repository secrets rather than environment-scoped or branch-specific GitHub Actions secrets because the workflow is designed to run from the repository itself and should not depend on ephemeral environment settings.
 
+GitHub's UI is a little confusing here: the secret page is under Settings -> Secrets and variables -> Actions, and GitHub labels these as repository secrets in the Actions context.
+
 ### Base site and feed channel secrets
 
 - `SITE_URL` — base URL for the forum or site being monitored
