@@ -1,0 +1,39 @@
+name: Post feed updates to Discord
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  post-feed:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5.6.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore feed state cache
+        uses: actions/cache@v4.2.4
+        with:
+          path: .cache/feed-state.json
+          key: feed-state-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            feed-state-${{ github.ref_name }}-
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -p "test_*.py"
+
+      - name: Post new feed entries
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          FEED_URL: ${{ vars.FEED_URL }}
+          EXCLUDED_URL_SUBSTRINGS: forumdisplay.php/766-The-Team,forumdisplay.php?766-The-Team,/766-The-Team
+        run: python /home/runner/work/VirtualCustoms-Feed/VirtualCustoms-Feed/scripts/post_feed_to_discord.py
