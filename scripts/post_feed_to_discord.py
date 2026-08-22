@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -26,6 +27,15 @@ DEFAULT_EXCLUDED_SUBSTRINGS = (
     "/766-The-Team",
 )
 DEFAULT_ALLOWED_HOSTS = ("virtualcustoms.net",)
+CLOUDFLARE_CHALLENGE_MARKERS = (
+    "cloudflare",
+    "cf-challenge",
+    "jschl",
+    "checking your browser",
+    "why am i seeing this",
+    "ray id",
+    "captcha",
+)
 
 
 @dataclass(frozen=True)
@@ -39,10 +49,17 @@ class Entry:
 
 
 def main() -> int:
-    feed_url = require_env("FEED_URL")
+    feed_urls = (
+        parse_feed_urls(os.getenv("FEED_URLS") or os.getenv("FEED_URL"))
+        if os.getenv("FEED_URLS") or os.getenv("FEED_URL")
+        else discover_feed_urls()
+    )
+    if not feed_urls:
+        raise SystemExit("No RSS/Atom feed URLs discovered on the configured Virtual Customs site.")
+
     webhook_url = require_env("DISCORD_WEBHOOK_URL")
     state_path = Path(os.getenv("STATE_FILE", ".cache/feed-state.json"))
-    max_posts = int(os.getenv("MAX_POSTS", "5"))
+    max_posts = min(5, max(1, int(os.getenv("MAX_POSTS", "5"))))
     excluded_substrings = tuple(
         part.strip()
         for part in os.getenv("EXCLUDED_URL_SUBSTRINGS", ",".join(DEFAULT_EXCLUDED_SUBSTRINGS)).split(",")
@@ -54,7 +71,10 @@ def main() -> int:
         if part.strip()
     )
 
-    entries = fetch_entries(feed_url)
+    entries: list[Entry] = []
+    for feed_url in feed_urls:
+        entries.extend(fetch_entries(feed_url))
+    entries = deduplicate_entries(entries)
     visible_entries = [entry for entry in entries if is_allowed(entry, allowed_hosts) and not is_excluded(entry, excluded_substrings)]
     if not visible_entries:
         print("No visible feed entries found.")
@@ -92,19 +112,120 @@ def require_env(name: str) -> str:
     return value
 
 
-def fetch_entries(feed_url: str) -> list[Entry]:
-    request = urllib.request.Request(
-        feed_url,
-        headers={
-            "User-Agent": "VirtualCustomsFeedBot/1.0 (+https://github.com/PhantomNimbi/VirtualCustoms-Feed)",
-            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml",
-        },
-    )
+def parse_feed_urls(value: str | None) -> list[str]:
+    if not value:
+        raise SystemExit("Missing required environment variable: FEED_URL or FEED_URLS")
+    return [part.strip() for part in value.replace("\n", ",").split(",") if part.strip()]
+
+
+def discover_feed_urls(site_urls: Iterable[str] | None = None) -> list[str]:
+    candidates = [
+        candidate.strip()
+        for candidate in (site_urls or (os.getenv("SITE_URL", "https://virtualcustoms.net"),))
+        if candidate and candidate.strip()
+    ]
+    discovered: set[str] = set()
+
+    for site_url in candidates:
+        try:
+            html = fetch_via_http(site_url).decode("utf-8", errors="ignore")
+        except SystemExit:
+            continue
+
+        for match in re.findall(
+            r'''<link[^>]+(?:rel=["']alternate["']|type=["'][^"']*(?:rss|atom)[^"']*["'])[^>]+href=["']([^"']+)["']|href=["']([^"']*(?:rss|atom)[^"']*)["']''',
+            html,
+            flags=re.IGNORECASE,
+        ):
+            for href in match:
+                if href:
+                    url = urllib.parse.urljoin(site_url, href)
+                    discovered.add(url)
+
+    if discovered:
+        return sorted(discovered)
+    return []
+
+
+def deduplicate_entries(entries: list[Entry]) -> list[Entry]:
+    seen: set[str] = set()
+    deduplicated: list[Entry] = []
+    for entry in entries:
+        key = entry.entry_id or entry.link or entry.title
+        if key in seen:
+            continue
+        seen.add(key)
+        deduplicated.append(entry)
+    return deduplicated
+
+
+def browser_headers() -> dict[str, str]:
+    return {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+        "Upgrade-Insecure-Requests": "1",
+        "DNT": "1",
+        "Connection": "keep-alive",
+    }
+
+
+def looks_like_cloudflare_challenge(content: bytes | str) -> bool:
+    source = (content.decode("utf-8", errors="ignore") if isinstance(content, bytes) else content).lower()
+    if not source:
+        return False
+    return any(marker in source for marker in CLOUDFLARE_CHALLENGE_MARKERS)
+
+
+def fetch_via_http(feed_url: str) -> bytes:
+    request = urllib.request.Request(feed_url, headers=browser_headers())
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor())
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
-            content = response.read()
+        with opener.open(request, timeout=30) as response:
+            return response.read()
+    except urllib.error.HTTPError as exc:
+        if exc.code in {403, 429} and looks_like_cloudflare_challenge(exc.read()):
+            return fetch_via_browser(feed_url)
+        raise SystemExit(f"Failed to download feed: {exc}") from exc
     except urllib.error.URLError as exc:
         raise SystemExit(f"Failed to download feed: {exc}") from exc
+
+
+def fetch_via_browser(feed_url: str) -> bytes:
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:
+        raise SystemExit(
+            "VirtualCustoms is behind Cloudflare's browser challenge and cannot be resolved without a browser-capable runtime. "
+            "Install Playwright so the job can complete the challenge before reading the feed."
+        ) from exc
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch(headless=True)
+        page = browser.new_page(user_agent=browser_headers()["User-Agent"])
+        try:
+            page.goto(feed_url, wait_until="domcontentloaded", timeout=60000)
+            for _ in range(12):
+                html = page.content()
+                if not looks_like_cloudflare_challenge(html):
+                    return html.encode("utf-8")
+                page.wait_for_timeout(5000)
+        finally:
+            browser.close()
+
+    raise SystemExit(
+        "VirtualCustoms is still presenting a Cloudflare challenge after a browser-based retry. "
+        "The feed URL may require a different source or a site-specific pass-through step."
+    )
+
+
+def fetch_entries(feed_url: str) -> list[Entry]:
+    content = fetch_via_http(feed_url)
+    if looks_like_cloudflare_challenge(content):
+        content = fetch_via_browser(feed_url)
 
     root = ET.fromstring(content)
     if root.tag.endswith("rss"):
@@ -182,6 +303,7 @@ def select_entries_to_post(entries: list[Entry], last_entry_id: str | None, max_
     if not last_entry_id:
         return []
 
+    max_posts = min(5, max(1, max_posts))
     pending: list[Entry] = []
     for entry in entries:
         if entry.entry_id == last_entry_id:
