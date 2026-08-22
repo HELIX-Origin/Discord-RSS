@@ -34,6 +34,6 @@ jobs:
       - name: Post new feed entries
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          FEED_URL: ${{ vars.FEED_URL }}
+          FEED_URL: ${{ secrets.FEED_URL }}
           EXCLUDED_URL_SUBSTRINGS: forumdisplay.php/766-The-Team,forumdisplay.php?766-The-Team,/766-The-Team
         run: python /home/runner/work/VirtualCustoms-Feed/VirtualCustoms-Feed/scripts/post_feed_to_discord.py
