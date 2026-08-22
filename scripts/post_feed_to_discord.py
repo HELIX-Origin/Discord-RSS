@@ -327,6 +327,55 @@ def save_state(path: Path, state: dict[str, str]) -> None:
     path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
 
 
+def get_site_status(site_url: str) -> bool:
+    try:
+        content = fetch_via_http(site_url)
+    except SystemExit:
+        return False
+
+    if not content:
+        return False
+    if looks_like_cloudflare_challenge(content):
+        return False
+    return True
+
+
+def main_site_status() -> int:
+    site_url = os.getenv("SITE_URL", "https://virtualcustoms.net")
+    webhook_url = os.getenv("DISCORD_STATUS_WEBHOOK_URL") or require_env("DISCORD_WEBHOOK_URL")
+    state_path = Path(os.getenv("SITE_STATUS_STATE_FILE", ".cache/site-status-state.json"))
+    current_status = "up" if get_site_status(site_url) else "down"
+    previous_state = load_state(state_path)
+
+    if not previous_state:
+        save_state(state_path, {"status": current_status})
+        print(f"Initialized site status to {current_status} without sending an alert.")
+        return 0
+
+    previous_status = previous_state.get("status")
+    if previous_status == current_status:
+        print(f"Site status unchanged: {current_status}")
+        return 0
+
+    post_site_status(webhook_url, current_status, site_url)
+    save_state(state_path, {"status": current_status})
+    print(f"Site status changed to {current_status}; alert sent.")
+    return 0
+
+
+def post_site_status(webhook_url: str, status: str, site_url: str) -> None:
+    message = build_site_status_message(status, site_url)
+    payload = json.dumps(remove_nones(message)).encode("utf-8")
+    request = urllib.request.Request(
+        webhook_url,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30):
+        pass
+
+
 def post_to_discord(webhook_url: str, entry: Entry) -> None:
     message = build_discord_message(entry)
 
@@ -370,6 +419,32 @@ def build_discord_message(entry: Entry) -> dict[str, Any]:
     if published_value:
         embed["fields"].append({"name": "Published", "value": published_value, "inline": True})
     return {"embeds": [embed], "allowed_mentions": {"parse": []}}
+
+
+def build_site_status_message(status: str, site_url: str) -> dict[str, Any]:
+    if status == "up":
+        title = "Virtual Customs is online"
+        description = "The site has recovered and is responding again."
+        color = 0x57F287
+    else:
+        title = "Virtual Customs is offline"
+        description = "The site is not responding or is behind a challenge page."
+        color = 0xED4245
+
+    return {
+        "embeds": [
+            {
+                "title": title,
+                "url": site_url,
+                "description": description,
+                "color": color,
+                "fields": [{"name": "Status", "value": status.upper(), "inline": True}],
+                "footer": {"text": "Virtual Customs Status"},
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+        ],
+        "allowed_mentions": {"parse": []},
+    }
 
 
 def normalize_timestamp(value: str) -> str | None:

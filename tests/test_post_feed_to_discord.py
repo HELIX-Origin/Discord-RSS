@@ -1,3 +1,6 @@
+import json
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -7,10 +10,13 @@ from scripts.post_feed_to_discord import (
     DEFAULT_EXCLUDED_SUBSTRINGS,
     Entry,
     build_discord_message,
+    build_site_status_message,
     deduplicate_entries,
     discover_feed_urls,
+    get_site_status,
     is_allowed,
     is_excluded,
+    main_site_status,
     parse_feed_urls,
     select_entries_to_post,
 )
@@ -171,6 +177,38 @@ class PostFeedToDiscordTests(unittest.TestCase):
         self.assertEqual("Virtual Customs Feed", embed["footer"]["text"])
         self.assertTrue(embed["timestamp"].startswith("2026-08-22T23:00:00"))
         self.assertEqual("[Open post](https://virtualcustoms.net/showthread.php/123-visible)", embed["fields"][0]["value"])
+
+    def test_site_status_uses_separate_discord_webhook_and_change_tracking(self):
+        status_message = build_site_status_message("down", "https://virtualcustoms.net")
+        self.assertEqual("Virtual Customs is offline", status_message["embeds"][0]["title"])
+        self.assertEqual(0xED4245, status_message["embeds"][0]["color"])
+
+        with patch.object(feed_module, "fetch_via_http", return_value=b"<html><title>Virtual Customs</title></html>"):
+            self.assertTrue(get_site_status("https://virtualcustoms.net"))
+
+        with patch.object(feed_module, "fetch_via_http", return_value=b"Checking your browser before accessing Virtual Customs"):
+            self.assertFalse(get_site_status("https://virtualcustoms.net"))
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            state_path = os.path.join(temp_dir, "site-status-state.json")
+            with open(state_path, "w", encoding="utf-8") as file:
+                json.dump({"status": "down"}, file)
+
+            with patch.dict(
+                os.environ,
+                {
+                    "SITE_URL": "https://virtualcustoms.net",
+                    "DISCORD_STATUS_WEBHOOK_URL": "https://example.com/webhook",
+                    "SITE_STATUS_STATE_FILE": state_path,
+                },
+                clear=False,
+            ):
+                with patch.object(feed_module, "get_site_status", return_value=True), patch.object(feed_module, "post_site_status") as post_status:
+                    status_code = main_site_status()
+                    self.assertEqual(0, status_code)
+                    post_status.assert_called_once_with("https://example.com/webhook", "up", "https://virtualcustoms.net")
+                    with open(state_path, "r", encoding="utf-8") as file:
+                        self.assertEqual({"status": "up"}, json.load(file))
 
 
 if __name__ == "__main__":

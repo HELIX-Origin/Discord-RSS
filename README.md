@@ -5,10 +5,11 @@ GitHub Actions workflow for posting new RSS/Atom feed entries to a Discord webho
 ## Required configuration
 
 - Repository secret: `DISCORD_WEBHOOK_URL`
+- Repository secret: `DISCORD_STATUS_WEBHOOK_URL`
 - Optional override: `FEED_URL` or `FEED_URLS` (comma-separated list when a specific site feed should be used)
 
 The workflow auto-discovers the active RSS/Atom feed URLs from the Virtual Customs site by default, so a `FEED_URL` secret is not required. All runtime configuration is expected to come from repository secrets and must not be committed into the repository.
-The workflow stores its last-seen feed item in `.github/feed-state.json` and commits that file back to the repository automatically.
+The feed workflow stores its last-seen feed item in `.github/feed-state.json` and commits that file back to the repository automatically. The status workflow stores the last-known online/offline state in `.github/site-status-state.json` and commits that file back to the repository as well.
 
 ## Behavior
 
@@ -19,7 +20,9 @@ The workflow stores its last-seen feed item in `.github/feed-state.json` and com
 - Limits posts to entries under `https://virtualcustoms.net/`
 - Excludes entries that match the Virtual Customs `The Team` forum URL patterns
 - Sends each post to Discord as a rich embed with title, author, link, and publish time
-- Uses a single concurrency group so overlapping scheduled runs do not duplicate posts
+- Polls the site status every 30 minutes on a separate workflow
+- Posts to a dedicated status webhook only when the site transitions between online and offline states
+- Uses a single concurrency group per workflow so overlapping scheduled runs do not duplicate posts
 
 ## Local validation
 
