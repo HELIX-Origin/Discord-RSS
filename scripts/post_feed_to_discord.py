@@ -8,11 +8,15 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from html import unescape
 from pathlib import Path
 from typing import Any, Iterable
+
+try:
+    from defusedxml import ElementTree as ET
+except ImportError:  # pragma: no cover - workflow installs defusedxml for production use
+    import xml.etree.ElementTree as ET
 
 DEFAULT_EXCLUDED_SUBSTRINGS = (
     "forumdisplay.php/766-The-Team",
@@ -67,9 +71,9 @@ def main() -> int:
     for entry in entries_to_post:
         try:
             post_to_discord(webhook_url, entry)
-        except SystemExit:
+        except urllib.error.URLError as exc:
             save_state(state_path, {"last_entry_id": last_successful_entry_id})
-            raise
+            raise SystemExit(f"Failed to post to Discord webhook: {exc}") from exc
         last_successful_entry_id = entry.entry_id
 
     if entries_to_post:
@@ -216,11 +220,8 @@ def post_to_discord(webhook_url: str, entry: Entry) -> None:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    try:
-        with urllib.request.urlopen(request, timeout=30):
-            pass
-    except urllib.error.URLError as exc:
-        raise SystemExit(f"Failed to post to Discord webhook: {exc}") from exc
+    with urllib.request.urlopen(request, timeout=30):
+        pass
 
 
 def remove_nones(value: Any) -> Any:

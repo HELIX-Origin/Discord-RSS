@@ -41,6 +41,42 @@ class PostFeedToDiscordTests(unittest.TestCase):
         self.assertTrue(is_allowed(allowed_entry, DEFAULT_ALLOWED_HOSTS))
         self.assertFalse(is_allowed(blocked_entry, DEFAULT_ALLOWED_HOSTS))
 
+    def test_domain_and_exclusion_filters_work_together(self):
+        entries = [
+            Entry(
+                "https://virtualcustoms.net/showthread.php/123-visible",
+                "Visible",
+                "https://virtualcustoms.net/showthread.php/123-visible",
+                "",
+                "",
+            ),
+            Entry(
+                "https://virtualcustoms.net/forumdisplay.php/766-The-Team",
+                "Excluded",
+                "https://virtualcustoms.net/forumdisplay.php/766-The-Team",
+                "",
+                "",
+            ),
+            Entry(
+                "https://example.com/offsite",
+                "Offsite",
+                "https://example.com/offsite",
+                "",
+                "",
+            ),
+        ]
+
+        visible_entries = [
+            entry
+            for entry in entries
+            if is_allowed(entry, DEFAULT_ALLOWED_HOSTS) and not is_excluded(entry, DEFAULT_EXCLUDED_SUBSTRINGS)
+        ]
+
+        self.assertEqual(
+            ["https://virtualcustoms.net/showthread.php/123-visible"],
+            [entry.entry_id for entry in visible_entries],
+        )
+
     def test_posts_entries_after_last_seen_in_oldest_first_order(self):
         entries = [
             Entry("3", "Newest", "https://example.com/3", "", ""),
