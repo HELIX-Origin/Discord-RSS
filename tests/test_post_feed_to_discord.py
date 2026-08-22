@@ -23,11 +23,11 @@ from scripts.post_feed_to_discord import (
 
 
 class PostFeedToDiscordTests(unittest.TestCase):
-    def test_excludes_team_forum_entries(self):
+    def test_excludes_staff_only_routes(self):
         entry = Entry(
-            entry_id="https://virtualcustoms.net/forumdisplay.php/766-The-Team",
-            title="Internal",
-            link="https://virtualcustoms.net/forumdisplay.php/766-The-Team",
+            entry_id="https://example.com/admin/moderation",
+            title="Staff-only",
+            link="https://example.com/admin/moderation",
             published="",
             summary="",
             author="",
@@ -35,49 +35,51 @@ class PostFeedToDiscordTests(unittest.TestCase):
 
         self.assertTrue(is_excluded(entry, DEFAULT_EXCLUDED_SUBSTRINGS))
 
-    def test_only_allows_virtualcustoms_domain_entries(self):
+    def test_only_allows_configured_site_domain_entries(self):
+        allowed_hosts = ("example.com",)
         allowed_entry = Entry(
-            entry_id="https://virtualcustoms.net/showthread.php/123-visible",
+            entry_id="https://example.com/showthread.php/123-visible",
             title="Visible",
-            link="https://virtualcustoms.net/showthread.php/123-visible",
+            link="https://example.com/showthread.php/123-visible",
             published="",
             summary="",
             author="",
         )
         blocked_entry = Entry(
-            entry_id="https://example.com/offsite",
+            entry_id="https://example.net/offsite",
             title="Blocked",
-            link="https://example.com/offsite",
+            link="https://example.net/offsite",
             published="",
             summary="",
             author="",
         )
 
-        self.assertTrue(is_allowed(allowed_entry, DEFAULT_ALLOWED_HOSTS))
-        self.assertFalse(is_allowed(blocked_entry, DEFAULT_ALLOWED_HOSTS))
+        self.assertTrue(is_allowed(allowed_entry, allowed_hosts))
+        self.assertFalse(is_allowed(blocked_entry, allowed_hosts))
 
     def test_domain_and_exclusion_filters_work_together(self):
+        allowed_hosts = ("example.com",)
         entries = [
             Entry(
-                "https://virtualcustoms.net/showthread.php/123-visible",
+                "https://example.com/showthread.php/123-visible",
                 "Visible",
-                "https://virtualcustoms.net/showthread.php/123-visible",
+                "https://example.com/showthread.php/123-visible",
                 "",
                 "",
                 "",
             ),
             Entry(
-                "https://virtualcustoms.net/forumdisplay.php/766-The-Team",
-                "Excluded",
-                "https://virtualcustoms.net/forumdisplay.php/766-The-Team",
+                "https://example.com/admin/moderation",
+                "Staff-only",
+                "https://example.com/admin/moderation",
                 "",
                 "",
                 "",
             ),
             Entry(
-                "https://example.com/offsite",
+                "https://example.net/offsite",
                 "Offsite",
-                "https://example.com/offsite",
+                "https://example.net/offsite",
                 "",
                 "",
                 "",
@@ -87,11 +89,11 @@ class PostFeedToDiscordTests(unittest.TestCase):
         visible_entries = [
             entry
             for entry in entries
-            if is_allowed(entry, DEFAULT_ALLOWED_HOSTS) and not is_excluded(entry, DEFAULT_EXCLUDED_SUBSTRINGS)
+            if is_allowed(entry, allowed_hosts) and not is_excluded(entry, DEFAULT_EXCLUDED_SUBSTRINGS)
         ]
 
         self.assertEqual(
-            ["https://virtualcustoms.net/showthread.php/123-visible"],
+            ["https://example.com/showthread.php/123-visible"],
             [entry.entry_id for entry in visible_entries],
         )
 
@@ -168,9 +170,9 @@ class PostFeedToDiscordTests(unittest.TestCase):
 
     def test_builds_rich_embed_payload(self):
         entry = Entry(
-            "https://virtualcustoms.net/showthread.php/123-visible",
+            "https://example.com/showthread.php/123-visible",
             "Visible",
-            "https://virtualcustoms.net/showthread.php/123-visible",
+            "https://example.com/showthread.php/123-visible",
             "Sat, 22 Aug 2026 23:00:00 GMT",
             "Hello world",
             "Forum Author",
@@ -181,9 +183,9 @@ class PostFeedToDiscordTests(unittest.TestCase):
 
         self.assertEqual("Visible", embed["title"])
         self.assertEqual("Forum Author", embed["author"]["name"])
-        self.assertEqual("Virtual Customs Feed", embed["footer"]["text"])
+        self.assertEqual("Example Feed", embed["footer"]["text"])
         self.assertTrue(embed["timestamp"].startswith("2026-08-22T23:00:00"))
-        self.assertEqual("[Open post](https://virtualcustoms.net/showthread.php/123-visible)", embed["fields"][0]["value"])
+        self.assertEqual("[Open post](https://example.com/showthread.php/123-visible)", embed["fields"][0]["value"])
 
     def test_supports_generic_site_names_and_site_url_overrides(self):
         entry = Entry(
@@ -205,15 +207,15 @@ class PostFeedToDiscordTests(unittest.TestCase):
         self.assertEqual("New forum post on Example.", payload["embeds"][0]["description"])
 
     def test_site_status_uses_separate_discord_webhook_and_change_tracking(self):
-        status_message = build_site_status_message("down", "https://virtualcustoms.net")
-        self.assertEqual("Virtual Customs is offline", status_message["embeds"][0]["title"])
+        status_message = build_site_status_message("down", "https://example.com")
+        self.assertEqual("Example is offline", status_message["embeds"][0]["title"])
         self.assertEqual(0xED4245, status_message["embeds"][0]["color"])
 
-        with patch.object(feed_module, "fetch_via_http", return_value=b"<html><title>Virtual Customs</title></html>"):
-            self.assertTrue(get_site_status("https://virtualcustoms.net"))
+        with patch.object(feed_module, "fetch_via_http", return_value=b"<html><title>Example</title></html>"):
+            self.assertTrue(get_site_status("https://example.com"))
 
-        with patch.object(feed_module, "fetch_via_http", return_value=b"Checking your browser before accessing Virtual Customs"):
-            self.assertFalse(get_site_status("https://virtualcustoms.net"))
+        with patch.object(feed_module, "fetch_via_http", return_value=b"Checking your browser before accessing Example"):
+            self.assertFalse(get_site_status("https://example.com"))
 
         with tempfile.TemporaryDirectory() as temp_dir:
             state_path = os.path.join(temp_dir, "site-status-state.json")
@@ -223,7 +225,7 @@ class PostFeedToDiscordTests(unittest.TestCase):
             with patch.dict(
                 os.environ,
                 {
-                    "SITE_URL": "https://virtualcustoms.net",
+                    "SITE_URL": "https://example.com",
                     "DISCORD_STATUS_WEBHOOK_URL": "https://example.com/webhook",
                     "SITE_STATUS_STATE_FILE": state_path,
                 },
@@ -232,7 +234,7 @@ class PostFeedToDiscordTests(unittest.TestCase):
                 with patch.object(feed_module, "get_site_status", return_value=True), patch.object(feed_module, "post_site_status") as post_status:
                     status_code = main_site_status()
                     self.assertEqual(0, status_code)
-                    post_status.assert_called_once_with("https://example.com/webhook", "up", "https://virtualcustoms.net")
+                    post_status.assert_called_once_with("https://example.com/webhook", "up", "https://example.com")
                     with open(state_path, "r", encoding="utf-8") as file:
                         self.assertEqual({"status": "up"}, json.load(file))
 

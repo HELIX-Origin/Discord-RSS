@@ -1,6 +1,6 @@
-# VirtualCustoms-Discord-Feed
+# Site-Feed-Discord
 
-GitHub Actions bot for monitoring Virtual Customs forum RSS/Atom feeds and posting new items to Discord.
+GitHub Actions bot for monitoring RSS/Atom feeds from websites and forums and posting new items to Discord.
 
 ## Documentation
 
@@ -30,7 +30,7 @@ The feed workflow stores its last-seen feed item in `.github/feed-state.json` an
 - Skips initial historical backfill on the first run
 - Limits each run to the 5 newest unseen posts, so a backlog cannot grow without bound
 - Limits posts to entries under the configured `SITE_URL`
-- Excludes known noisy forum URLs when the site uses the default Virtual Customs pattern
+- Excludes known noisy and staff-only URLs such as admin, moderator, and staff paths
 - Sends each post to Discord as a rich embed with title, author, link, and publish time
 - Polls the site status every 30 minutes on a separate workflow
 - Posts to a dedicated status webhook only when the site transitions between online and offline states

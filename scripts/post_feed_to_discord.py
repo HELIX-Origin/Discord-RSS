@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import sys
 import urllib.error
 import urllib.parse
@@ -17,16 +18,28 @@ from pathlib import Path
 from typing import Any, Iterable
 
 try:
+    import certifi
+except ImportError:  # pragma: no cover - certifi is installed in the workflow runtime
+    certifi = None
+
+try:
     from defusedxml import ElementTree as ET
 except ImportError:  # pragma: no cover - workflow installs defusedxml for production use
     import xml.etree.ElementTree as ET
 
 DEFAULT_EXCLUDED_SUBSTRINGS = (
-    "forumdisplay.php/766-The-Team",
-    "forumdisplay.php?766-The-Team",
-    "/766-The-Team",
+    "/admin",
+    "/moderator",
+    "/staff",
+    "/mod/",
+    "admin.php",
+    "moderator.php",
+    "staff.php",
+    "mod.php",
+    "controlpanel",
+    "manage.php",
 )
-DEFAULT_ALLOWED_HOSTS = ("virtualcustoms.net",)
+DEFAULT_ALLOWED_HOSTS = ("example.com",)
 CLOUDFLARE_CHALLENGE_MARKERS = (
     "cloudflare",
     "cf-challenge",
@@ -70,7 +83,7 @@ class Entry:
 
 
 def main() -> int:
-    site_url = os.getenv("SITE_URL", "https://virtualcustoms.net")
+    site_url = require_env("SITE_URL")
     feed_urls = (
         parse_feed_urls(os.getenv("FEED_URLS") or os.getenv("FEED_URL"))
         if os.getenv("FEED_URLS") or os.getenv("FEED_URL")
@@ -144,9 +157,9 @@ def parse_feed_urls(value: str | None) -> list[str]:
 
 
 def normalize_site_url(site_url: str | None) -> str:
-    value = (site_url or os.getenv("SITE_URL") or "https://virtualcustoms.net").strip()
+    value = (site_url or os.getenv("SITE_URL") or "").strip()
     if not value:
-        return "https://virtualcustoms.net"
+        return "https://example.com"
     return value if "://" in value else f"https://{value}"
 
 
@@ -161,8 +174,6 @@ def site_name(site_url: str | None) -> str:
     host = site_host(site_url)
     if not host:
         return "Site"
-    if host == "virtualcustoms.net":
-        return "Virtual Customs"
     labels = [part for part in host.split(".") if part]
     if len(labels) >= 2:
         primary = labels[-2]
@@ -173,19 +184,17 @@ def site_name(site_url: str | None) -> str:
 
 def default_allowed_hosts(site_url: str | None = None) -> tuple[str, ...]:
     host = site_host(site_url)
-    if host == "virtualcustoms.net":
-        return DEFAULT_ALLOWED_HOSTS
     return (host,) if host else DEFAULT_ALLOWED_HOSTS
 
 
-def default_excluded_substrings(site_url: str | None = None) -> tuple[str, ...]:
-    return DEFAULT_EXCLUDED_SUBSTRINGS if site_host(site_url) == "virtualcustoms.net" else ()
+def default_excluded_substrings(_site_url: str | None = None) -> tuple[str, ...]:
+    return DEFAULT_EXCLUDED_SUBSTRINGS
 
 
 def discover_feed_urls(site_urls: Iterable[str] | None = None) -> list[str]:
     candidates = [
         candidate.strip()
-        for candidate in (site_urls or (normalize_site_url(os.getenv("SITE_URL") or "https://virtualcustoms.net"),))
+        for candidate in (site_urls or (normalize_site_url(os.getenv("SITE_URL") or "https://example.com"),))
         if candidate and candidate.strip()
     ]
     discovered: set[str] = set()
@@ -252,9 +261,17 @@ def looks_like_cloudflare_challenge(content: bytes | str) -> bool:
     return any(marker in source for marker in CLOUDFLARE_CHALLENGE_MARKERS)
 
 
+def build_ssl_opener() -> urllib.request.OpenerDirector:
+    ssl_context = ssl.create_default_context(cafile=certifi.where()) if certifi is not None else ssl.create_default_context()
+    return urllib.request.build_opener(
+        urllib.request.HTTPSHandler(context=ssl_context),
+        urllib.request.HTTPCookieProcessor(),
+    )
+
+
 def fetch_via_http(feed_url: str) -> bytes:
     request = urllib.request.Request(feed_url, headers=browser_headers())
-    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor())
+    opener = build_ssl_opener()
     try:
         with opener.open(request, timeout=30) as response:
             return response.read()
@@ -413,7 +430,7 @@ def get_site_status(site_url: str) -> bool:
 
 
 def main_site_status() -> int:
-    site_url = os.getenv("SITE_URL", "https://virtualcustoms.net")
+    site_url = require_env("SITE_URL")
     webhook_url = os.getenv("DISCORD_STATUS_WEBHOOK_URL") or require_env("DISCORD_WEBHOOK_URL")
     state_path = Path(os.getenv("SITE_STATUS_STATE_FILE", ".cache/site-status-state.json"))
     current_status = "up" if get_site_status(site_url) else "down"
@@ -444,7 +461,7 @@ def post_site_status(webhook_url: str, status: str, site_url: str) -> None:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=30):
+    with build_ssl_opener().open(request, timeout=30):
         pass
 
 
@@ -458,7 +475,7 @@ def post_to_discord(webhook_url: str, entry: Entry, site_url: str | None = None)
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=30):
+    with build_ssl_opener().open(request, timeout=30):
         pass
 
 

@@ -1,6 +1,6 @@
-# VirtualCustoms-Discord-Feed Documentation
+# Site-Feed-Discord Documentation
 
-This repository automates the process of monitoring a Virtual Customs forum, discovering new posts, and sending the newest updates to a Discord channel. It also includes a separate site-status monitor that can alert a different Discord webhook whenever the forum changes between online and offline states.
+This repository automates the process of monitoring website and forum feeds, discovering new posts, and sending the newest updates to a Discord channel. It also includes a separate site-status monitor that can alert a different Discord webhook whenever a monitored site changes between online and offline states.
 
 ## Documentation map
 
@@ -12,7 +12,7 @@ This repository automates the process of monitoring a Virtual Customs forum, dis
 
 ## Why this project exists
 
-The feed bot exists to make the Virtual Customs site easier to follow without constantly checking the forum manually. It watches the site for new threads and posts, filters out noise, and sends only relevant updates to Discord.
+The feed bot exists to make site and forum updates easier to follow without constantly checking the source manually. It watches the site for new posts and content, filters out noise, and sends only relevant updates to Discord.
 
 The project is intentionally lightweight:
 
@@ -21,12 +21,26 @@ The project is intentionally lightweight:
 - it supports a dedicated site-status channel for outages and recovery alerts
 - it can operate without a custom integration on the forum, but the host can improve reliability by exposing standard RSS/Atom feeds cleanly
 
+## Supported site platforms
+
+This project is intentionally generic and supports a wide range of site types rather than a single platform. The feed parser is designed to work with standard RSS/Atom feeds emitted by:
+
+- vBulletin forums
+- phpBB forums
+- XenForo forums
+- Discourse communities
+- WordPress and blog feeds
+- custom forum software and community platforms
+- other public websites with RSS/Atom endpoints
+
+If a site exposes feed content publicly, the workflow can usually monitor it as long as the base URL and feed routes are valid.
+
 ## Quick start
 
 1. Add the required repository secrets for the feed bot and, optionally, the separate status webhook.
-2. Use the default workflow if you are just monitoring the main forum feed.
+2. Use the default workflow if you are just monitoring the main site or forum feed.
 3. Review the configuration page for environment overrides and state file behavior.
-4. If you are a site host, follow the vBulletin support guide to enable feed support for smoother operation.
+4. If you are a site host, follow the support guide to ensure the platform exposes clean feed endpoints and avoids staff-only paths in the public feed output.
 
 ## Related files
 

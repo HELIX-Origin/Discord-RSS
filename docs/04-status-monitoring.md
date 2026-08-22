@@ -35,7 +35,7 @@ The file is committed back to the repository by the workflow so future runs can 
 
 The status alert uses a separate Discord webhook and sends a lightweight embed with:
 
-- a status title such as “Virtual Customs is offline”
+- a status title such as “Example site is offline”
 - a link to the site URL
 - a color-coded result
 - a timestamp

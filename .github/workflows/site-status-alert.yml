@@ -26,6 +26,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install certifi==2025.08.03 defusedxml==0.7.1
+
       - name: Run status check
         env:
           DISCORD_STATUS_WEBHOOK_URL: ${{ secrets.DISCORD_STATUS_WEBHOOK_URL }}
