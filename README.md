@@ -2,6 +2,15 @@
 
 GitHub Actions workflow for posting new RSS/Atom feed entries to a Discord webhook.
 
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Overview](docs/01-overview.md)
+- [Setup and configuration](docs/02-setup-and-configuration.md)
+- [vBulletin support for site hosts](docs/03-vbulletin-support.md)
+- [Status monitoring](docs/04-status-monitoring.md)
+- [Troubleshooting](docs/05-troubleshooting.md)
+
 ## Required configuration
 
 - Repository secret: `DISCORD_WEBHOOK_URL`
