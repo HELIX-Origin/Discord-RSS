@@ -48,7 +48,8 @@ jobs:
           git add .github/site-status-state.json
           git commit -m "Update site status state"
           for attempt in 1 2 3; do
-            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && break
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
             echo "Push attempt ${attempt} failed, retrying..."
             sleep 5
           done
+          exit 1
