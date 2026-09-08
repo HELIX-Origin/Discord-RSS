@@ -39,8 +39,8 @@ Some large forums offer an API or allow creating a "bot" user whose session cook
 
 - Read the per-platform integration guides for detailed instructions on setting up Discord RSS with your forum software.
 
-- [vBulletin integration guide](./Integrations/vbulletin.md)
-- [phpBB integration guide](./Integrations/phpbb.md)
+- [vBulletin integration guide](./Integrations-vbulletin.md)
+- [phpBB integration guide](./Integrations-phpbb.md)
 
 
 ## Cloudflare
