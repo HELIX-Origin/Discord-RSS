@@ -2,21 +2,57 @@ name: Publish Wiki
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main                      # Triggers when changes hit your main branch
     paths:
-      - wiki/**
-      - .github/workflows/publish-wiki.yml
+      - 'wiki/**'                 # Only triggers if files in the /wiki folder change
+
+concurrency:
+  group: wiki-sync
+  cancel-in-progress: true        # Prevents race conditions on simultaneous pushes
 
 jobs:
-  build:
+  sync-to-wiki:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write             # Grants the GITHUB_TOKEN write access to push to the wiki
+      
     steps:
-      - uses: actions/checkout@v1
-      # Additional steps to generate documentation in "Documentation" directory
-      - name: Upload Documentation to Wiki
-        uses: SwiftDocOrg/github-wiki-publish-action@v1
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
         with:
-          path: "wiki/**"
-        env:
-          GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.PAT_TOKEN }}
+          path: main-repo         # Checkout code repo into a subdirectory
+
+      - name: Checkout Wiki Repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki-repo         # Checkout wiki repo into a separate subdirectory
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clear and Sync Files
+        run: |
+          # Clean up existing files in the wiki repo to handle file deletions
+          rm -rf wiki-repo/*
+          
+          # Copy your new documentation into the wiki repo directory
+          # Assumes your source files live in a folder named 'wiki' in your main repo
+          cp -r main-repo/wiki/* wiki-repo/
+          
+      - name: Commit and Push Changes
+        run: |
+          cd wiki-repo
+          
+          # Configure Git credentials
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Stage changes and check if there are differences
+          git add .
+          
+          if git diff-index --quiet HEAD; then
+            echo "No documentation changes detected. Skipping deployment."
+          else
+            git commit -m "docs: automated wiki sync [skip ci]"
+            git push origin HEAD
+          fi
