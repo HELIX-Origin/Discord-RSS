@@ -1,8 +1,8 @@
 # Discord RSS Wiki
 
-- [Home](./HOME.md)
-- [Development Guide](./Development.md)
-- [Forum Integrations](./ForumIntegration.md)
-    - [phpbb](./ForumIntegration/phpbb.md)
-    - [vBulletin](./ForumIntegration/vBulletin.md)
-- [Troubleshooting](./Troubleshooting.md)
+- [Home](./HOME)
+- [Development Guide](./Development)
+- [Forum Integrations](./ForumIntegration)
+    - [phpbb](./ForumIntegration/phpbb)
+    - [vBulletin](./ForumIntegration/vBulletin)
+- [Troubleshooting](./Troubleshooting)
