@@ -1,0 +1,23 @@
+name: Publish Wiki
+on:
+    push:
+        branches: main
+        paths:
+            - wiki/**
+
+concurrency:
+  group: update-wiki
+  cancel-in-progress: true
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: victor-public/wiki-automation@master
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          repository: ${{ github.repository }}
+          docs-folder: wiki
