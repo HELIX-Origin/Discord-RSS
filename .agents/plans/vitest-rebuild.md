@@ -239,14 +239,14 @@ Handles `set-cookie` automatically and JSON parsing.
 
 ## Acceptance Criteria
 
-- [ ] `npm run check` runs type-check, lint, format-check, and tests and passes.
-- [ ] Adding a new integration test requires only composing existing helpers.
-- [ ] Redis coordination is testable without installing Redis.
-- [ ] Smoke tests cover both `src/` and `dist/`.
-- [ ] No test file contains ad-hoc mock server code.
-- [ ] Failed tests emit enough structured context to diagnose without manual reproduction.
-- [ ] ESLint enforces no `console.log` outside `src/util/logger.ts`.
-- [ ] Prettier formatting is enforced in CI.
+- [x] `npm run check` runs type-check, lint, format-check, and tests and passes.
+- [x] Adding a new integration test requires only composing existing helpers.
+- [x] Redis coordination is testable without installing Redis.
+- [x] Smoke tests cover both `src/` and `dist/`.
+- [x] No test file contains ad-hoc mock server code.
+- [x] Failed tests emit enough structured context to diagnose without manual reproduction.
+- [x] ESLint enforces no `console.log` outside `src/util/logger.ts`.
+- [x] Prettier formatting is enforced in CI.
 
 ## Rule 04 Tracking
 
