@@ -26,21 +26,31 @@ GitHub refers to these as repository secrets. Configure them under Settings -> S
 The workflow auto-discovers the active RSS/Atom feed URLs from the configured site by default, so a `{SOURCE}_RSS_URL_{###}` secret is not required. All runtime configuration is expected to come from repository secrets and must not be committed into the repository.
 The feed workflow stores its last-seen feed item in `.github/feed-state.json` using atomic writes (`os.rename()`). The status workflow stores the last-known online/offline state in `.github/site-status-state.json` using atomic writes as well.
 
+## How to use this service
+
+This repository runs via TypeScript modules (`src/index.ts`, `src/handlers/`, `src/modules/`, `src/functions/`). Users clone the repo, install dependencies with `npm ci`, configure secrets, and build/run locally or trigger the CI scan (`gh workflow run ci.yml`).
+
+1. Clone the repository.
+2. Configure repository secrets (`SITE_URL`, `DISCOHOOK_WEBHOOK_URL_001`, `{SOURCE}_RSS_URL_{###}`, optional `CLOUDFLARE_API_KEY`).
+3. Invite the Discohook bot (`https://discohook.app/bot`) to your Discord server.
+4. Build: `npm run build`
+5. Run: `npm start`
+6. Verify: `npm test`
+
 ## Project architecture
 
 The repository uses a modular TypeScript architecture (`src/index.ts`, `src/handlers/`, `src/modules/`, `src/functions/`, `src/types/`). The primary webhook method is Discohook (`DISCOHOOK_WEBHOOK_URL_001`), requiring the Discohook bot invitation to the server. Feed URLs are configured via `{SOURCE}_RSS_URL_{###}` secrets. Cloudflare-protected domains can use optional external challenge-solving APIs (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`) or `playwright`.
 
-- Polls the configured feed hourly at the top of each hour (`.github/workflows/post-feed-to-discord.yml`)
-- Posts only newly seen entries to Discord (scans `DISCORD_WEBHOOK_URL_001` upward sequentially)
+- Polls the configured feed hourly when triggered via CI scan (`.github/workflows/ci.yml`) or manual trigger (`gh workflow run ci.yml`)
+- Posts only newly seen entries to Discord (scans `DISCOHOOK_WEBHOOK_URL_001` upward sequentially)
 - Skips initial historical backfill on the first run
 - Limits each run to the 5 newest unseen posts, so a backlog cannot grow without bound
 - Limits posts to entries under the configured `SITE_URL`
 - Excludes known noisy and staff-only URLs such as admin, moderator, and staff paths
 - Sends each post to Discord as a rich embed with title, author, link, and publish time
-- Polls the site status every 30 minutes (`.github/workflows/site-status-alert.yml`)
-- Posts to the status webhook (`SITE_STATUS_WEBHOOK_URL_{###}`) only when the site transitions between online and offline states
+- Status monitoring available via TypeScript module (`node dist/index.js`) with `SITE_STATUS_WEBHOOK_URL_001` transition alerts
 - Supports external APIs for Cloudflare challenge resolution (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`)
-- Uses a single CI code scan workflow (`.github/workflows/ci.yml`) for verification instead of scheduled jobs; manual triggers available via `gh workflow run ci.yml`.
+- Uses CI code scan workflow (`.github/workflows/ci.yml`) for TypeScript build verification, secret naming scan (`{SERVICE_NAME}_WEBHOOK_URL_{###}`, `{SOURCE}_RSS_URL_{###}`), agent rules compliance, and vitest (`npm test`).
 
 ## Agent compliance
 
@@ -49,5 +59,6 @@ This repository follows `.agents/` conventions (`.agents/rules/`, `.agents/bugs/
 ## Local validation
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+npm test
+npm run build
 ```

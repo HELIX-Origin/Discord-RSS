@@ -16,7 +16,7 @@ The feed bot exists to make site and forum updates easier to follow without cons
 
 The project is intentionally lightweight:
 
-- it uses GitHub Actions scheduled jobs instead of a dedicated server
+- it uses a CI code scan workflow (`.github/workflows/ci.yml`) for TypeScript build verification, secret naming checks, agent rules compliance, and vitest
 - it persists a small JSON state file to avoid reposting the same content
 - it supports a dedicated site-status channel for outages and recovery alerts
 - it can operate without a custom integration on the forum, but the host can improve reliability by exposing standard RSS/Atom feeds cleanly
@@ -39,13 +39,11 @@ If a site exposes feed content publicly, the workflow can usually monitor it as 
 
 1. Add the required repository secrets (`SITE_URL`, `{SOURCE}_RSS_URL_{###}`, webhook URLs using `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming, e.g. `DISCORD_WEBHOOK_URL_001`).
 2. Configure optional external Cloudflare challenge-solving API keys via secrets (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`) only if needed.
-3. Use the default workflow if you are just monitoring the main site or forum feed.
-3. Review the configuration page for environment overrides and state file behavior.
+3. Review the `.github/workflows/ci.yml` workflow to confirm secret references (`SITE_URL`, `{SOURCE}_RSS_URL_{###}`, `DISCOHOOK_WEBHOOK_URL_001`, etc.).
 4. If you are a site host, follow the support guide to ensure the platform exposes clean feed endpoints and avoids staff-only paths in the public feed output.
 
 ## Related files
 
-- `scripts/post_feed_to_discord.py` — main feed discovery, filtering, and posting logic
-- `scripts/post_site_status.py` — site availability status check
-- `.github/workflows/ci.yml` — CI code scan workflow (scans secrets naming, TypeScript build, agent rules, tests)
-- `tests/test_post_feed_to_discord.py` — unit tests for discovery, filtering, and message formatting
+- `src/index.ts` — TypeScript entry point with modular architecture (`src/handlers/`, `src/modules/`, `src/functions/`, `src/types/`)
+- `.github/workflows/ci.yml` — CI code scan workflow (TypeScript build verification, secret naming scan, agent rules, vitest)
+- `tests/feed-loader.test.ts`, `tests/webhook-loader.test.ts`, `tests/atomic-write.test.ts`, `tests/feed-discovery.test.ts`, `tests/status-handler.test.ts`, `tests/index.test.ts` — vitest suite
