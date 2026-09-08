@@ -7,4 +7,10 @@ This wiki contains setup, integration, and troubleshooting guides for the **Disc
   - [phpBB](./phpbb.md)
 - [Troubleshooting](./troubleshooting.md)
 
-> These docs live in `wiki/` in the repository. They are read by the host and may be surfaced in the dashboard **Docs** tab once that tab is wired up.
+## Important Notes
+
+- These docs are currently incomplete. They are being actively built and updated by the community.
+- Contributions and feedback are welcome to help improve the documentation.
+- For guidelines on contributing, please refer to the [Contribution Guidelines](https://github.com/HELIX-Origin/Discord-RSS/blob/main/CONTRIBUTING.md).
+- Regularly check for updates in the main repository to stay informed about changes and improvements.
+- Participate in discussions and provide feedback on issues and pull requests to contribute to the project's development.
