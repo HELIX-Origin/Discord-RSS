@@ -16,6 +16,7 @@ from scripts.post_feed_to_discord import (
     get_site_status,
     is_allowed,
     is_excluded,
+    load_webhook_urls,
     main_site_status,
     parse_feed_urls,
     select_entries_to_post,
@@ -206,6 +207,30 @@ class PostFeedToDiscordTests(unittest.TestCase):
         self.assertEqual("Example", payload["embeds"][0]["author"]["name"])
         self.assertEqual("New forum post on Example.", payload["embeds"][0]["description"])
 
+    def test_load_webhook_urls_from_gitHub_secrets_naming(self):
+        with patch.dict(
+            os.environ,
+            {
+                "SITE_STATUS WEBHOOK URL 001": "https://example.com/status1",
+                "SITE_STATUS WEBHOOK URL 002": "https://example.com/status2",
+                "DISCORD WEBHOOK URL 001": "https://example.com/feed1",
+                "CUSTOM SERVICE WEBHOOK URL 003": "https://example.com/custom3",
+            },
+            clear=False,
+        ):
+            self.assertEqual(
+                ["https://example.com/status1", "https://example.com/status2"],
+                load_webhook_urls("SITE STATUS"),
+            )
+            self.assertEqual(
+                ["https://example.com/feed1"],
+                load_webhook_urls("DISCORD"),
+            )
+            self.assertEqual(
+                ["https://example.com/custom3"],
+                load_webhook_urls("CUSTOM SERVICE"),
+            )
+
     def test_site_status_uses_separate_discord_webhook_and_change_tracking(self):
         status_message = build_site_status_message("down", "https://example.com")
         self.assertEqual("Example is offline", status_message["embeds"][0]["title"])
@@ -226,7 +251,7 @@ class PostFeedToDiscordTests(unittest.TestCase):
                 os.environ,
                 {
                     "SITE_URL": "https://example.com",
-                    "DISCORD_STATUS_WEBHOOK_URL": "https://example.com/webhook",
+                    "SITE STATUS WEBHOOK URL 001": "https://example.com/webhook",
                     "SITE_STATUS_STATE_FILE": state_path,
                 },
                 clear=False,

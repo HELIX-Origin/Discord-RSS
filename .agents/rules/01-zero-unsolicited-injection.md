@@ -1,0 +1,7 @@
+# Rule 01: Zero Unsolicited Framework Injection
+
+## Mandatory Invariants
+1. **No Unauthorized Dependencies**: Site-Feed-Discord uses native Python 3.11+ standard library (`urllib.request`, `json`, `datetime`, `re`, `http.client`) plus minimal GitHub Actions YAML. No external Python package injection (`requests`, `beautifulsoup4`, `feedparser`) is permitted **unless** required for Cloudflare challenge resolution (`playwright`, `certifi`) or explicitly requested by the user.
+2. **Cloudflare & External API Awareness**: External APIs and browser automation services (`playwright`, `certifi`, third-party challenge-solving endpoints) are permitted **only** when the target site is confirmed to be behind a Cloudflare browser challenge (`cf-challenge`, `cf-turnstile`, `managed challenge`). All external API usage must be documented in `.agents/skills/cloudflare.md` and must include fallback to standard-library-only behavior when no challenge is detected.
+3. **No Heavy CI/CD Frameworks**: Workflows must remain pure GitHub Actions YAML. No unsolicited third-party action frameworks or external CI runners unless they provide Cloudflare bypass or feed-fetch capabilities explicitly approved by the user.
+4. **Static Intelligence Only**: All feed parsing, filtering logic, and message formatting must use local regex, string operations, or AST inspection within the repository. No remote AI parsing services unless explicitly approved for Cloudflare challenge detection.

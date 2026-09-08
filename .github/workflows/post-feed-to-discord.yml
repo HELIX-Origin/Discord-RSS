@@ -50,7 +50,8 @@ jobs:
 
       - name: Post new feed entries
         env:
-          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD WEBHOOK URL 001: ${{ secrets.DISCORD WEBHOOK URL 001 }}
+          DISCORD WEBHOOK URL 002: ${{ secrets.DISCORD WEBHOOK URL 002 }}
           SITE_URL: ${{ secrets.SITE_URL }}
           FEED_URL: ${{ secrets.FEED_URL }}
           FEED_URLS: ${{ secrets.FEED_URLS }}

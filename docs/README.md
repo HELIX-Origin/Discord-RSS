@@ -37,8 +37,9 @@ If a site exposes feed content publicly, the workflow can usually monitor it as 
 
 ## Quick start
 
-1. Add the required repository secrets for the feed bot and, optionally, the separate status webhook.
-2. Use the default workflow if you are just monitoring the main site or forum feed.
+1. Add the required repository secrets (`SITE_URL`, `FEED_URL` or `FEED_URLS`, webhook URLs using `{SERVICE_NAME} WEBHOOK URL {###}` naming, e.g. `DISCORD WEBHOOK URL 001`).
+2. Configure optional external Cloudflare challenge-solving API keys via secrets (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`) only if needed.
+3. Use the default workflow if you are just monitoring the main site or forum feed.
 3. Review the configuration page for environment overrides and state file behavior.
 4. If you are a site host, follow the support guide to ensure the platform exposes clean feed endpoints and avoids staff-only paths in the public feed output.
 

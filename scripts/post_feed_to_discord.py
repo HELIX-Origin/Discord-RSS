@@ -92,7 +92,15 @@ def main() -> int:
     if not feed_urls:
         raise SystemExit("No RSS/Atom feed URLs discovered on the configured site.")
 
-    webhook_url = require_env("DISCORD_WEBHOOK_URL")
+    webhook_urls = load_webhook_urls("DISCORD")
+    if not webhook_urls:
+        webhook_urls = load_webhook_urls("SITE STATUS")
+    if not webhook_urls:
+        raise SystemExit(
+            "No webhook URLs found. Configure GitHub Secrets using the pattern "
+            "{SERVICE_NAME} WEBHOOK URL {###} (e.g., DISCORD WEBHOOK URL 001)."
+        )
+    webhook_url = webhook_urls[0]
     state_path = Path(os.getenv("STATE_FILE", ".cache/feed-state.json"))
     max_posts = min(5, max(1, int(os.getenv("MAX_POSTS", "5"))))
     excluded_substrings = tuple(
@@ -130,17 +138,31 @@ def main() -> int:
     last_successful_entry_id = previous_state.get("last_entry_id", latest_entry_id)
 
     for entry in entries_to_post:
-        try:
-            post_to_discord(webhook_url, entry, site_url)
-        except urllib.error.URLError as exc:
-            save_state(state_path, {"last_entry_id": last_successful_entry_id})
-            raise SystemExit(f"Failed to post to Discord webhook: {exc}") from exc
+        for url in webhook_urls:
+            try:
+                post_to_discord(url, entry, site_url)
+            except urllib.error.URLError as exc:
+                save_state(state_path, {"last_entry_id": last_successful_entry_id})
+                raise SystemExit(f"Failed to post to Discord webhook ({url}): {exc}") from exc
         last_successful_entry_id = entry.entry_id
 
     if entries_to_post:
         save_state(state_path, {"last_entry_id": last_successful_entry_id})
     print(f"Posted {len(entries_to_post)} entries.")
     return 0
+
+
+def load_webhook_urls(service_name: str) -> list[str]:
+    urls: list[str] = []
+    index = 1
+    while True:
+        secret_name = f"{service_name.upper()} WEBHOOK URL {index:03d}"
+        url = os.getenv(secret_name)
+        if not url:
+            break
+        urls.append(url)
+        index += 1
+    return urls
 
 
 def require_env(name: str) -> str:
@@ -283,13 +305,41 @@ def fetch_via_http(feed_url: str) -> bytes:
         raise SystemExit(f"Failed to download feed: {exc}") from exc
 
 
+def fetch_via_external_api(feed_url: str) -> bytes | None:
+    api_key = os.getenv("CLOUDFLARE_API_KEY")
+    solver_url = os.getenv("CHALLENGE_SOLVER_URL")
+    if not api_key or not solver_url:
+        return None
+    try:
+        payload = json.dumps({"url": feed_url, "api_key": api_key}).encode("utf-8")
+        request = urllib.request.Request(
+            solver_url,
+            data=payload,
+            headers={"Content-Type": "application/json", "User-Agent": browser_headers()["User-Agent"]},
+            method="POST",
+        )
+        with build_ssl_opener().open(request, timeout=60) as response:
+            result = json.loads(response.read().decode("utf-8"))
+            html = result.get("html") or result.get("content") or result.get("response")
+            if html:
+                return html.encode("utf-8") if isinstance(html, str) else html
+    except Exception:
+        pass
+    return None
+
+
 def fetch_via_browser(feed_url: str) -> bytes:
+    external_content = fetch_via_external_api(feed_url)
+    if external_content is not None:
+        return external_content
+
     try:
         from playwright.sync_api import sync_playwright
     except ImportError as exc:
         raise SystemExit(
-            "The target site is behind a Cloudflare browser challenge and cannot be resolved without a browser-capable runtime. "
-            "Install Playwright so the job can complete the challenge before reading the feed."
+            "The target site is behind a Cloudflare browser challenge and cannot be resolved. "
+            "Configure an external challenge-solving API (CLOUDFLARE_API_KEY + CHALLENGE_SOLVER_URL) "
+            "in GitHub Secrets, or install Playwright."
         ) from exc
 
     with sync_playwright() as playwright:
@@ -413,7 +463,9 @@ def load_state(path: Path) -> dict[str, str]:
 
 def save_state(path: Path, state: dict[str, str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    tmp_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+    os.replace(str(tmp_path), str(path))
 
 
 def get_site_status(site_url: str) -> bool:
@@ -431,7 +483,15 @@ def get_site_status(site_url: str) -> bool:
 
 def main_site_status() -> int:
     site_url = require_env("SITE_URL")
-    webhook_url = os.getenv("DISCORD_STATUS_WEBHOOK_URL") or require_env("DISCORD_WEBHOOK_URL")
+    webhook_urls = load_webhook_urls("SITE STATUS")
+    if not webhook_urls:
+        webhook_urls = load_webhook_urls("DISCORD")
+    if not webhook_urls:
+        raise SystemExit(
+            "No webhook URLs found. Configure GitHub Secrets using the pattern "
+            "{SERVICE_NAME} WEBHOOK URL {###} (e.g., SITE STATUS WEBHOOK URL 001)."
+        )
+    webhook_url = webhook_urls[0]
     state_path = Path(os.getenv("SITE_STATUS_STATE_FILE", ".cache/site-status-state.json"))
     current_status = "up" if get_site_status(site_url) else "down"
     previous_state = load_state(state_path)
@@ -446,7 +506,11 @@ def main_site_status() -> int:
         print(f"Site status unchanged: {current_status}")
         return 0
 
-    post_site_status(webhook_url, current_status, site_url)
+    for url in webhook_urls:
+        try:
+            post_site_status(url, current_status, site_url)
+        except urllib.error.URLError as exc:
+            raise SystemExit(f"Failed to post status to webhook ({url}): {exc}") from exc
     save_state(state_path, {"status": current_status})
     print(f"Site status changed to {current_status}; alert sent.")
     return 0

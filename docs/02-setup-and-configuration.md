@@ -1,21 +1,27 @@
 # Setup and configuration
 
-This page covers the runtime setup for the repository and how the scheduling, state files, and secrets work together.
+This page covers the runtime setup for the repository and how the scheduling, state files, secrets, and webhook naming work together.
 
 ## Required repository secrets
 
-Use repository secrets rather than environment-scoped or branch-specific GitHub Actions secrets because the workflow is designed to run from the repository itself and should not depend on ephemeral environment settings.
+Use repository secrets (under Settings -> Secrets and variables -> Actions) rather than `.env` files or branch-specific settings. All webhook URLs must use the `{SERVICE_NAME} WEBHOOK URL {###}` naming pattern.
 
-GitHub's UI is a little confusing here: the secret page is under Settings -> Secrets and variables -> Actions, and GitHub labels these as repository secrets in the Actions context.
-
-### Base site and feed channel secrets
+### Base site and feed secrets
 
 - `SITE_URL` — base URL for the forum or site being monitored
-- `DISCORD_WEBHOOK_URL` — Discord webhook used for new forum post alerts
+- `FEED_URL` or `FEED_URLS` — optional feed URL override
+- `DISCORD WEBHOOK URL 001` — main feed webhook (`{SERVICE_NAME} WEBHOOK URL {###}` pattern)
+- `DISCORD WEBHOOK URL 002` — additional feed webhook (optional)
 
-### Optional status channel secret
+### Optional status secrets
 
-- `DISCORD_STATUS_WEBHOOK_URL` — separate Discord webhook used for online/offline alerts
+- `SITE STATUS WEBHOOK URL 001` — status transition webhook using `{SERVICE_NAME} WEBHOOK URL {###}` naming
+- `SITE STATUS WEBHOOK URL 002` — additional status webhook (optional)
+
+### Optional external API secrets (Cloudflare challenge resolution)
+
+- `CLOUDFLARE_API_KEY` — external challenge-solving API key (only if needed for protected sites)
+- `CHALLENGE_SOLVER_URL` — endpoint for external challenge-solving service (optional)
 
 ## Optional overrides
 
@@ -31,12 +37,12 @@ The feed job supports the following optional environment inputs:
 The site-status workflow supports:
 
 - `SITE_URL` — the forum base URL to monitor
-- `DISCORD_STATUS_WEBHOOK_URL` — webhook used for status alerts
 - `SITE_STATUS_STATE_FILE` — location of the status state file
+- `SITE STATUS WEBHOOK URL {###}` — status alert webhook loaded sequentially
 
 ## State files
 
-The repository writes state files to the repository so it remembers the most recently processed item or status.
+The repository writes state files to the repository so it remembers the most recently processed item or status. Atomic writes (`os.rename()`) prevent corruption during concurrent runs.
 
 - `.github/feed-state.json` — last seen feed item ID
 - `.github/site-status-state.json` — last known online/offline state
@@ -52,12 +58,16 @@ The workflows run on different schedules:
 
 The feed workflow is designed so it only posts newly discovered content and never replays a full backlog after the initial run.
 
+## Agent compliance
+
+This repository follows `.agents/` conventions (`.agents/rules/`, `.agents/bugs/`, `.agents/plans/`, `.agents/skills/`). All agent rules enforce GitHub Secrets-only webhook storage, zero unsolicited framework injection, and strict instruction compliance.
+
 ## Local validation
 
-The repository’s validation command is:
+The repository's validation command is:
 
 ```bash
 python -m unittest discover -s tests -p "test_*.py"
 ```
 
-This is the recommended check after making changes to scripts or workflow logic.
+This is the recommended check after making changes to scripts, workflow logic, or agent configurations.
