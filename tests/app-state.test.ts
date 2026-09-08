@@ -1,13 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Database } from '../src/db/database.js';
 import { AppState } from '../src/state/app-state.js';
+import { testDbPath } from './test-helpers.js';
 
 // Database uses node:sqlite. For tests we open a unique temp file DB to avoid
 // cross-test cache pollution and close it after each test.
-let fileId = 0;
 function openTempDb(): Database {
-  fileId += 1;
-  return Database.open(`data/.tmp/state-${process.pid}-${fileId}.db`);
+  return Database.open(testDbPath('state'));
 }
 
 describe('AppState', () => {

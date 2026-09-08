@@ -6,12 +6,18 @@ import { parseHtml } from './html.js';
 import { parseFeed, stripHtml, withGuid, type FeedEntry } from './parser.js';
 import { scrapeItems, absoluteUrl } from './scraper.js';
 import { feedEmbed, sendWebhook } from '../webhook/discord.js';
+import { createLogger, type LogLevel } from '../util/logger.js';
 
 export class FeedWatcher {
+  private readonly logger;
+
   constructor(
     private readonly repo: Repository,
     private readonly redis: RedisCoordinator | null = null,
-  ) {}
+    logLevel?: LogLevel,
+  ) {
+    this.logger = createLogger('feed', logLevel);
+  }
 
   async pollFeed(userId: number, feedId: number): Promise<void> {
     const feed = this.repo.getFeed(userId, feedId);
@@ -32,7 +38,7 @@ export class FeedWatcher {
   private async pollFeedLocked(userId: number, feed: Feed): Promise<void> {
     const webhook = feed.webhookId ? this.repo.getWebhook(userId, feed.webhookId) : null;
     if (!webhook || webhook.enabled === 0) {
-      console.warn(`[feed] "${feed.name}" has no enabled webhook; skipping poll`);
+      this.logger.warn('Feed has no enabled webhook; skipping poll', { feedId: feed.id, feedName: feed.name });
       return;
     }
 
@@ -40,16 +46,25 @@ export class FeedWatcher {
     try {
       result = await fetchRaw(feed.url);
     } catch (err) {
-      console.error(`[feed] "${feed.name}" fetch failed:`, err instanceof Error ? err.message : err);
+      this.logger.error('Feed fetch failed', { feedId: feed.id, feedName: feed.name, url: feed.url }, err);
       return;
     }
 
     if (result.challenged || isCloudflareChallenge(result.contentType, null)) {
-      console.warn(`[feed] "${feed.name}" returned a Cloudflare challenge (${result.url}); skipping`);
+      this.logger.warn('Feed returned a Cloudflare challenge; skipping', {
+        feedId: feed.id,
+        feedName: feed.name,
+        url: result.url,
+      });
       return;
     }
     if (result.status >= 300) {
-      console.warn(`[feed] "${feed.name}" returned HTTP ${result.status}`);
+      this.logger.warn('Feed returned non-2xx status', {
+        feedId: feed.id,
+        feedName: feed.name,
+        url: result.url,
+        status: result.status,
+      });
       this.repo.setFeedChecked(userId, feed.id, feed.lastEntryId);
       return;
     }
@@ -83,7 +98,7 @@ export class FeedWatcher {
         const parsed = parseFeed(result.text);
         entries.push(...parsed.entries);
       } catch (err) {
-        console.error(`[feed] "${feed.name}" parse failed:`, err instanceof Error ? err.message : err);
+        this.logger.error('Feed parse failed', { feedId: feed.id, feedName: feed.name, url: feed.url }, err);
         return;
       }
     }
@@ -120,13 +135,19 @@ export class FeedWatcher {
         this.repo.markEntrySent(feed.id, entry.guid);
         await this.redis?.markEntrySent(feed.id, entry.guid);
       } else {
-        console.warn(`[feed] send to "${feed.name}" failed: ${result.error}`);
+        this.logger.warn('Webhook delivery failed for feed entry', {
+          feedId: feed.id,
+          feedName: feed.name,
+          entryGuid: entry.guid,
+          attempts: result.attempts,
+          error: result.error,
+        });
         break;
       }
     }
 
     this.repo.setFeedChecked(userId, feed.id, entries.length ? withGuid({ title: feed.name, link: feed.url, entries: [] }, entries[0]).guid : feed.lastEntryId);
-    console.log(`[feed] "${feed.name}": ${toSend.length} new entries delivered`);
+    this.logger.info('Feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
   }
 
   async pollAllFeeds(): Promise<void> {

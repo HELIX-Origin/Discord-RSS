@@ -2,6 +2,7 @@ import type { Repository } from '../db/repository.js';
 import type { RedisCoordinator } from '../state/redis.js';
 import { fetchRaw } from '../feed/fetch.js';
 import { feedEmbed, sendWebhook } from '../webhook/discord.js';
+import { createLogger, type LogLevel } from '../util/logger.js';
 
 type SiteStatus = 'online' | 'down' | 'unknown';
 
@@ -10,10 +11,15 @@ function classify(status: number): SiteStatus {
 }
 
 export class StatusWatcher {
+  private readonly logger;
+
   constructor(
     private readonly repo: Repository,
     private readonly redis: RedisCoordinator | null = null,
-  ) {}
+    logLevel?: LogLevel,
+  ) {
+    this.logger = createLogger('status', logLevel);
+  }
 
   async checkMonitor(userId: number, monitorId: number): Promise<void> {
     const monitor = this.repo.getMonitor(userId, monitorId);
@@ -44,6 +50,7 @@ export class StatusWatcher {
     } catch (err) {
       newStatus = 'down';
       detail = err instanceof Error ? err.message : String(err);
+      this.logger.warn('Monitor check request failed', { monitorId: monitor.id, monitorName: monitor.name, url: monitor.url }, err);
     }
 
     const previous = monitor.status as SiteStatus;
@@ -87,9 +94,16 @@ export class StatusWatcher {
     });
 
     if (!result.ok) {
-      console.warn(`[status] transition notification failed for "${monitor.name}": ${result.error}`);
+      this.logger.warn('Status transition notification failed', {
+        monitorName: monitor.name,
+        url: monitor.url,
+        previous,
+        current,
+        attempts: result.attempts,
+        error: result.error,
+      });
     } else {
-      console.log(`[status] ${monitor.name}: ${previous} -> ${current} (notified)`);
+      this.logger.info('Status transition notified', { monitorName: monitor.name, url: monitor.url, previous, current });
     }
   }
 }

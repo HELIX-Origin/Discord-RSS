@@ -2,6 +2,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import { SCHEMA, SCHEMA_VERSION } from './schema.js';
+import { createLogger, type LogLevel } from '../util/logger.js';
 
 export interface DbStats {
   feedCount: number;
@@ -15,18 +16,20 @@ export interface DbStats {
 export class Database {
   private db: DatabaseSync;
   private readonly dbPathValue: string;
+  private readonly logger;
 
-  private constructor(db: DatabaseSync, dbPath: string) {
+  private constructor(db: DatabaseSync, dbPath: string, logLevel?: LogLevel) {
     this.db = db;
     this.dbPathValue = dbPath;
+    this.logger = createLogger('db', logLevel);
   }
 
-  static open(dbPath: string): Database {
+  static open(dbPath: string, logLevel?: LogLevel): Database {
     mkdirSync(dirname(dbPath), { recursive: true });
     const db = new DatabaseSync(dbPath);
     db.exec('PRAGMA journal_mode = WAL;');
     db.exec('PRAGMA foreign_keys = ON;');
-    const instance = new Database(db, dbPath);
+    const instance = new Database(db, dbPath, logLevel);
     instance.migrate();
     return instance;
   }
@@ -36,6 +39,7 @@ export class Database {
     this.db
       .prepare('INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)')
       .run('schema_version', String(SCHEMA_VERSION));
+    this.logger.debug('Database migrated', { schemaVersion: SCHEMA_VERSION, dbPath: this.dbPathValue });
   }
 
   get raw(): DatabaseSync {

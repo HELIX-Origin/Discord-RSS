@@ -19,6 +19,7 @@ import { renderOAuthCallbackHtml } from './http/oauth-callback.js';
 import { analyzeUrl, analyzeScrapeUrl } from './feed/builder.js';
 import type { ScrapeSelectors } from './feed/scraper.js';
 import { FEED_PRESETS, presetsGroupedByCategory } from './feed/presets.js';
+import { createLogger } from './util/logger.js';
 
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 3600;
 
@@ -50,6 +51,7 @@ function redirectUriForProvider(deps: AppDeps, provider: string): string {
 export function createDiscordRssServer(deps: AppDeps) {
   const auth = new AuthService(deps.repo);
   const router = new Router<AppDeps>();
+  const logger = createLogger('http', deps.config.logLevel);
 
   // ---- Pages ----
   router.add('GET', '/login', (_req, res) => {
@@ -407,7 +409,13 @@ export function createDiscordRssServer(deps: AppDeps) {
     try {
       await match.handler(req, res, { params: match.params, query: url.searchParams }, deps);
     } catch (err) {
-      console.error('[server] request failed:', err);
+      const userId = await authedUserId(req, deps).catch(() => null);
+      logger.error('Request handler failed', {
+        method: req.method,
+        path: url.pathname,
+        query: url.searchParams.toString(),
+        userId,
+      }, err);
       if (!res.headersSent) sendError(res, 500, 'Internal server error');
     }
   });

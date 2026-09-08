@@ -1,22 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { http, HttpResponse } from 'msw';
 import { feedEmbed, sendWebhook, type WebhookMessage } from '../src/webhook/discord.js';
+import { server } from './mocks/server.js';
 
 describe('sendWebhook', () => {
-  let originalFetch: typeof fetch;
-
-  beforeEach(() => {
-    originalFetch = globalThis.fetch;
-  });
-
-  afterEach(() => {
-    globalThis.fetch = originalFetch;
-    vi.useRealTimers();
-  });
-
   const msg: WebhookMessage = { content: 'Hello' };
 
   it('returns ok on 204 success', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ status: 204, json: async () => ({}) } as Response);
+    server.use(
+      http.post('https://discord.com/api/webhooks/123/token', () => {
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
     const result = await sendWebhook('https://discord.com/api/webhooks/123/token', msg);
     expect(result.ok).toBe(true);
     expect(result.status).toBe(204);
@@ -25,44 +20,52 @@ describe('sendWebhook', () => {
   });
 
   it('retries on 500 then succeeds', async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 500, json: async () => ({}) } as Response)
-      .mockResolvedValueOnce({ status: 204, json: async () => ({}) } as Response);
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const result = sendWebhook('https://discord.com/api/webhooks/123/token', msg);
-    await vi.runAllTimersAsync();
-    const awaited = await result;
-    expect(awaited.ok).toBe(true);
-    expect(awaited.attempts).toBe(2);
+    let calls = 0;
+    server.use(
+      http.post('https://discord.com/api/webhooks/123/token', () => {
+        calls += 1;
+        return calls === 1 ? new HttpResponse(null, { status: 500 }) : new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const result = await sendWebhook('https://discord.com/api/webhooks/123/token', msg);
+    expect(result.ok).toBe(true);
+    expect(result.attempts).toBe(2);
   });
 
   it('retries on 429 respecting Retry-After then succeeds', async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValueOnce({ status: 429, json: async () => ({ retry_after: 0.05 }) } as Response)
-      .mockResolvedValueOnce({ status: 204, json: async () => ({}) } as Response);
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const result = sendWebhook('https://discord.com/api/webhooks/123/token', msg);
-    await vi.runAllTimersAsync();
-    const awaited = await result;
-    expect(awaited.ok).toBe(true);
-    expect(awaited.attempts).toBe(2);
+    let calls = 0;
+    server.use(
+      http.post('https://discord.com/api/webhooks/123/token', async () => {
+        calls += 1;
+        if (calls === 1) {
+          return HttpResponse.json({ retry_after: 0.05, message: 'rate limited' }, { status: 429 });
+        }
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const result = await sendWebhook('https://discord.com/api/webhooks/123/token', msg);
+    expect(result.ok).toBe(true);
+    expect(result.attempts).toBe(2);
   });
 
   it('fails after max attempts on repeated 500s', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ status: 500, json: async () => ({}) } as Response);
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    const result = sendWebhook('https://discord.com/api/webhooks/123/token', msg);
-    await vi.runAllTimersAsync();
-    const awaited = await result;
-    expect(awaited.ok).toBe(false);
-    expect(awaited.status).toBe(500);
-    expect(awaited.attempts).toBe(5);
-  });
+    server.use(
+      http.post('https://discord.com/api/webhooks/123/token', () => {
+        return new HttpResponse(null, { status: 500 });
+      }),
+    );
+    const result = await sendWebhook('https://discord.com/api/webhooks/123/token', msg);
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe(500);
+    expect(result.attempts).toBe(5);
+  }, 25_000);
 
   it('fails non-retryable 400 immediately', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ status: 400, json: async () => ({ message: 'Bad request' }) } as Response);
+    server.use(
+      http.post('https://discord.com/api/webhooks/123/token', () => {
+        return HttpResponse.json({ message: 'Bad request' }, { status: 400 });
+      }),
+    );
     const result = await sendWebhook('https://discord.com/api/webhooks/123/token', msg);
     expect(result.ok).toBe(false);
     expect(result.status).toBe(400);
@@ -71,7 +74,11 @@ describe('sendWebhook', () => {
   });
 
   it('redacts token in error output', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue({ status: 404, json: async () => ({}) } as Response);
+    server.use(
+      http.post('https://discord.com/api/webhooks/123/secret-token', () => {
+        return new HttpResponse(null, { status: 404 });
+      }),
+    );
     const result = await sendWebhook('https://discord.com/api/webhooks/123/secret-token', msg);
     expect(result.error).toContain('/123/••••••');
     expect(result.error).not.toContain('secret-token');

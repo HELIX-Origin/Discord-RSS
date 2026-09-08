@@ -4,6 +4,7 @@ import { AuthError, AuthService } from '../src/auth/service.js';
 import { Database } from '../src/db/database.js';
 import { Repository } from '../src/db/repository.js';
 import { AppState } from '../src/state/app-state.js';
+import { testDbPath } from './test-helpers.js';
 
 describe('passwordService', () => {
   it('hashes and verifies a password', () => {
@@ -29,7 +30,7 @@ describe('AuthService (round-trip via Repository/AppState)', () => {
   let auth: AuthService;
 
   const setup = () => {
-    db = Database.open(`data/.tmp/auth-${process.pid}-${Date.now()}.db`);
+    db = Database.open(testDbPath('auth'));
     repo = new Repository(db);
     auth = new AuthService(repo);
   };
@@ -101,7 +102,7 @@ describe('AuthService (round-trip via Repository/AppState)', () => {
 
 describe('AppState expireOAuthStates', () => {
   it('returns expired states and removes them', () => {
-    const db = Database.open(`data/.tmp/oauth-${process.pid}-${Date.now()}.db`);
+    const db = Database.open(testDbPath('oauth'));
     const state = new AppState(db);
     state.putOAuthState({ state: 'old', userId: 1, provider: 'cloudflare', createdAt: '2026-01-01T00:00:00.000Z' });
     state.putOAuthState({ state: 'new', userId: 1, provider: 'cloudflare', createdAt: '2026-01-10T00:00:00.000Z' });

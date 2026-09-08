@@ -1,3 +1,5 @@
+import { createLogger, type LogLevel } from '../util/logger.js';
+
 export type JobFn = () => Promise<void>;
 
 export interface ScheduledJob {
@@ -9,6 +11,11 @@ export interface ScheduledJob {
 export class Scheduler {
   private readonly jobs = new Map<string, { timer: NodeJS.Timeout | null; intervalMs: number; fn: JobFn }>();
   private started = false;
+  private readonly logger;
+
+  constructor(logLevel?: LogLevel) {
+    this.logger = createLogger('scheduler', logLevel);
+  }
 
   schedule(id: string, intervalMs: number, fn: JobFn): ScheduledJob {
     const job = {
@@ -51,7 +58,7 @@ export class Scheduler {
     try {
       await job.fn();
     } catch (err) {
-      console.error(`[scheduler] Job "${id}" failed:`, err);
+      this.logger.error('Scheduled job failed', { jobId: id }, err);
     }
   }
 }
