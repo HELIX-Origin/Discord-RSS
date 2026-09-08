@@ -14,6 +14,7 @@ import {
 } from './http/helpers.js';
 import { Router } from './http/router.js';
 import { renderDashboardHtml } from './http/dashboard.js';
+import { registerDevToolsRoutes } from './http/dev-tools.js';
 import { renderLoginHtml } from './http/login.js';
 import { renderOAuthCallbackHtml } from './http/oauth-callback.js';
 import { analyzeUrl, analyzeScrapeUrl } from './feed/builder.js';
@@ -52,6 +53,7 @@ export function createDiscordRssServer(deps: AppDeps) {
   const auth = new AuthService(deps.repo);
   const router = new Router<AppDeps>();
   const logger = createLogger('http', deps.config.logLevel);
+  registerDevToolsRoutes(router);
 
   // ---- Pages ----
   router.add('GET', '/login', (_req, res) => {
@@ -66,7 +68,7 @@ export function createDiscordRssServer(deps: AppDeps) {
       sendHtml(res, 200, renderLoginHtml(false));
       return;
     }
-    sendHtml(res, 200, renderDashboardHtml(d));
+    sendHtml(res, 200, renderDashboardHtml(d, userId));
   });
   router.add('GET', '/health', (_req, res, _ctx) => {
     sendText(res, 200, 'ok');

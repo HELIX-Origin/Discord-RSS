@@ -1,6 +1,8 @@
 import type { AppDeps } from '../app.js';
+import { isHostUser, renderDevToolsNavItem, renderDevToolsSection, renderDevToolsScript } from './dev-tools.js';
 
-export function renderDashboardHtml(deps: AppDeps): string {
+export function renderDashboardHtml(deps: AppDeps, userId: number): string {
+  const isHost = isHostUser(userId);
   const dbStats = deps.db.stats();
   const providers = deps.oauth.listProviders();
 
@@ -78,6 +80,7 @@ export function renderDashboardHtml(deps: AppDeps): string {
         <button onclick="switchTab('monitors')" id="tab-btn-monitors" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-heart-pulse w-5"></i> Status Monitors
         </button>
+        ${renderDevToolsNavItem(isHost)}
         <button onclick="switchTab('integrations')" id="tab-btn-integrations" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-cloud w-5"></i> Integrations
         </button>
@@ -424,6 +427,7 @@ export function renderDashboardHtml(deps: AppDeps): string {
           </div>
         </div>
       </section>
+      ${renderDevToolsSection(isHost)}
     </main>
   </div>
 
@@ -963,6 +967,8 @@ export function renderDashboardHtml(deps: AppDeps): string {
       });
       alert('Settings saved.');
     }
+
+    ${renderDevToolsScript()}
 
     fetchAll();
     setInterval(fetchStats, 10000);
