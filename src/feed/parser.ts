@@ -24,9 +24,13 @@ const firstChildByLocal = (element: XmlElement, names: string[]): string | null 
 };
 
 function linkFor(element: XmlElement): string {
-  const href = element.attributes['href'];
-  if (href) return href;
-  return childText(element, 'link') ?? '';
+  const linkChild = findChild(element, 'link');
+  if (linkChild) {
+    const href = linkChild.attributes['href'];
+    if (href) return href;
+    return linkChild.text.trim();
+  }
+  return '';
 }
 
 function parseRss2(root: XmlElement): ParsedFeed {
@@ -47,9 +51,9 @@ function parseRss2(root: XmlElement): ParsedFeed {
       id: id.trim(),
       title: firstChildByLocal(item, ['title']) ?? 'Untitled entry',
       link: linkFor(item),
-      description: firstChildByLocal(item, ['description', 'content:encoded', 'summary']),
+      description: firstChildByLocal(item, ['description', 'encoded', 'summary']),
       publishedAt: firstChildByLocal(item, ['pubDate', 'date']),
-      author: firstChildByLocal(item, ['dc:creator', 'author']),
+      author: firstChildByLocal(item, ['creator', 'author']),
     };
   });
 

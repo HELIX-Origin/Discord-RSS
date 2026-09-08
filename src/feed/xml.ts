@@ -180,7 +180,7 @@ export function parseXml(xml: string): XmlDocument {
       }
       case TokenKind.Text: {
         const element = stack[stack.length - 1];
-        if (element) pushText(element, token.text);
+        if (element) pushText(element, decodeEntities(token.text));
         break;
       }
       case TokenKind.CData: {
@@ -195,7 +195,10 @@ export function parseXml(xml: string): XmlDocument {
     }
   }
 
-  return { root };
+  // The synthetic `root` may contain whitespace text nodes and the real document
+  // element as its first named child. Return the actual root element.
+  const documentRoot = root.children.find((c) => c.name) ?? root;
+  return { root: documentRoot };
 }
 
 export function localName(element: XmlElement): string {

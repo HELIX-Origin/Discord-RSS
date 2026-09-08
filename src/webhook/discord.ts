@@ -60,8 +60,11 @@ function redactUrl(url: string): string {
   try {
     const u = new URL(url);
     const segs = u.pathname.split('/').filter(Boolean);
-    u.pathname = segs.length >= 2 ? `/${segs[0]}/••••••` : u.pathname;
-    return u.toString();
+    if (segs.length >= 1) {
+      const redacted = segs.map((s, i) => (i === segs.length - 1 ? '••••••' : s)).join('/');
+      return `${u.origin}/${redacted}${u.search}${u.hash}`;
+    }
+    return url;
   } catch {
     return 'invalid-url';
   }

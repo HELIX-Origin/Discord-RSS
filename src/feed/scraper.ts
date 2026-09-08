@@ -47,18 +47,37 @@ function matches(el: HtmlElement, sel: Selector): boolean {
   return true;
 }
 
+function descendants(el: HtmlElement): HtmlElement[] {
+  const out: HtmlElement[] = [];
+  for (const child of el.children) {
+    if (child.tag === '#text') continue;
+    out.push(child);
+    out.push(...descendants(child));
+  }
+  return out;
+}
+
 function selectAll(root: HtmlElement, selector: string): HtmlElement[] {
   const parts = parseSelector(selector);
-  let current = root.children.filter((c) => c.tag !== '#text');
-  for (const part of parts) {
-    const next: HtmlElement[] = [];
-    for (const el of current) {
-      if (matches(el, part)) next.push(el);
-      next.push(...el.children.filter((c) => c.tag !== '#text'));
-    }
-    current = next;
+  if (parts.length === 0) return [];
+  if (parts.length === 1) {
+    return descendants(root).filter((el) => matches(el, parts[0]));
   }
-  return current;
+
+  const results: HtmlElement[] = [];
+  const search = (candidates: HtmlElement[], depth: number) => {
+    if (depth >= parts.length) return;
+    for (const parent of candidates) {
+      for (const child of descendants(parent)) {
+        if (matches(child, parts[depth])) {
+          if (depth === parts.length - 1) results.push(child);
+          else search([child], depth + 1);
+        }
+      }
+    }
+  };
+  search([root], 0);
+  return results;
 }
 
 function findHref(el: HtmlElement): string | null {
