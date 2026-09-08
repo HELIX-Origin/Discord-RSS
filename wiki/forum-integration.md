@@ -1,3 +1,9 @@
+---
+title: Forum Integration Overview
+description: Guides for integrating vBulletin and phpBB forums with the Discord RSS self-hosted service.
+page: forum-integration
+---
+
 # Forum integration overview
 
 Many forums run on **vBulletin** or **phpBB** and hide content behind login walls. Discord RSS can still post updates from these forums, but you usually need one of the following approaches.

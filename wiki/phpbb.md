@@ -1,3 +1,9 @@
+---
+title: phpBB Integration
+description: Guide for integrating phpBB forums with the Discord RSS self-hosted service.
+page: phpbb
+---
+
 # phpBB integration
 
 phpBB ships with a built-in syndication feed generator at `feed.php`. It can expose forums, topics, and user activity.
