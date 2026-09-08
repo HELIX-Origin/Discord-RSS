@@ -8,9 +8,9 @@ This file serves as the entry point for all AI agents, coding assistants, and au
 
 ## Agent Ecosystems
 
-- `.agents/` — Universal agent conventions (`rules/`, `skills/`, `bugs/`, `plans/`, `templates/`, `agents/`) that apply across all agent systems.
+- `.agents/` — agent conventions (`rules/`, `skills/`, `bugs/`, `plans/`, `templates/`, `agents/`) that apply across all agent systems.
 
-## Universal Agent Rules (`.agents/rules/`)
+## Agent Rules (`.agents/rules/`)
 
 All agent work must comply with `.agents/rules/` (enforced everywhere):
 
@@ -25,11 +25,6 @@ All agent work must comply with `.agents/rules/` (enforced everywhere):
 
 - `.agents/agents/feed-watcher.md` — Feed polling agent (direct Discord webhook delivery, dedupe, scrape branch).
 - `.agents/agents/status-monitor.md` — Site status monitoring agent (transition-only alerts).
-
-## Agent Tracking
-
-- `.agents/bugs/` — Tracked bugs mirroring the original architecture (`BUG-001`..`BUG-003`; superseded by the rebuild — see `bug-tracking.md`).
-- `.agents/plans/` — Rebuild roadmap (`roadmap.md`) + legacy phases; GitHub Issue #4 is the live tracking roadmap.
 
 ## Usage
 
