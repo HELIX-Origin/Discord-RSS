@@ -26,9 +26,11 @@ GitHub refers to these as repository secrets. Configure them under Settings -> S
 The workflow auto-discovers the active RSS/Atom feed URLs from the configured site by default, so a `{SOURCE}_RSS_URL_{###}` secret is not required. All runtime configuration is expected to come from repository secrets and must not be committed into the repository.
 The feed workflow stores its last-seen feed item in `.github/feed-state.json` using atomic writes (`os.rename()`). The status workflow stores the last-known online/offline state in `.github/site-status-state.json` using atomic writes as well.
 
-## How to use this service
+## How to set up and deploy
 
-This repository runs via TypeScript modules (`src/index.ts`, `src/handlers/`, `src/modules/`, `src/functions/`). Users clone the repo, install dependencies with `npm ci`, configure secrets, and build/run locally or trigger the CI scan (`gh workflow run ci.yml`).
+Users clone the repo, install (`npm ci`), configure secrets, build (`npm run build`), and run (`npm start`). The CI workflow (`.github/workflows/ci.yml`) verifies TypeScript build, vitest, secret naming, and agent rules.
+
+Users clone the repo, install (`npm ci`), configure secrets, build (`npm run build`), and run (`npm start`). The CI workflow (`.github/workflows/ci.yml`) verifies TypeScript build, vitest, secret naming, and agent rules.
 
 1. Clone the repository.
 2. Configure repository secrets (`SITE_URL`, `DISCOHOOK_WEBHOOK_URL_001`, `{SOURCE}_RSS_URL_{###}`, optional `CLOUDFLARE_API_KEY`).

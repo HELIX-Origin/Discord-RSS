@@ -1,0 +1,20 @@
+{
+  "name": "site-feed-discord-src",
+  "version": "1.0.0",
+  "description": "TypeScript source modules for Site-Feed-Discord",
+  "main": "index.ts",
+  "scripts": {
+    "install": "npm ci",
+    "start": "node ../dist/index.js",
+    "run": "npm run build && npm start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:debug": "vitest --reporter=verbose",
+    "test:coverage": "vitest run --coverage"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vitest": "^2.0",
+    "typescript": "^5.5"
+  }
+}
