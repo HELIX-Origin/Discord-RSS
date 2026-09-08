@@ -63,35 +63,42 @@ This guide provides instructions and best practices for setting up the developme
 ### Setting Up the Development Environment
 
 1. **Clone the repository**: 
+
    ```bash
    git clone https://github.com/your-username/your-repository.git
    cd your-repository
    ```
 2. **Install dependencies**:
+
    ```bash
    npm install
    ```
 3. **Start the development server**:
+
    ```bash
    npm start
    ```
 
 4. **Run tests**:
+
    ```bash
    npm test
    ```
 
 5. **Build the project**:
+
    ```bash
    npm run build
    ```
 
 6. **Lint the code**:
+
    ```bash
    npm run lint
    ```
 
 7. **Format the code**:
+
    ```bash
    npm run format
    ```
