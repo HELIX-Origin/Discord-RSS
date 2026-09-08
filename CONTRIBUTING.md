@@ -96,30 +96,12 @@ This guide provides instructions and best practices for setting up the developme
    npm run format
    ```
 
-### Writing Code
-
-1. **Follow coding standards**: Adhere to the project's coding standards and style guidelines.
-2. **Write meaningful commit messages**: Use clear and descriptive commit messages that explain the purpose of the changes.
-3. **Keep changes focused**: Make small, focused changes that address a single issue or feature.
-4. **Document your code**: Add comments and documentation to explain complex logic and usage of functions or modules.
-5. **Write tests**: Ensure that your code changes are covered by appropriate tests to maintain code quality and prevent regressions.
-6. **Perform code reviews**: Participate in code reviews to provide feedback and improve the overall quality of the codebase.
-7. **Stay updated**: Keep up with the latest changes in the project by regularly pulling updates from the main branch and reviewing the project's changelog.
-8. **Ask for help when needed**: Don't hesitate to ask questions or seek guidance from the project maintainers or community when you encounter challenges or uncertainties.
-
 ## Important Notes
 
 - **Always pull the latest changes**: Before starting new work, ensure your local branch is up-to-date with the main branch to avoid conflicts.
-- **Respect the code of conduct**: Follow the project's code of conduct and maintain a positive and inclusive environment.
 - **Be mindful of performance**: Consider the performance implications of your changes and strive for efficient solutions.
 - **Keep dependencies updated**: Regularly check for updates to project dependencies and apply them as needed.
 - **Communicate effectively**: Keep open lines of communication with the project maintainers and other contributors to ensure smooth collaboration.
 - **Be patient and respectful**: Understand that maintainers and contributors may have limited time, and always interact with others respectfully and professionally.
 - **Provide constructive feedback**: When reviewing code or discussing changes, focus on providing helpful and constructive feedback rather than criticism.
-- **Respect intellectual property**: Ensure that any code, libraries, or resources you use comply with licensing requirements and give proper attribution where necessary.
-- **Follow security best practices**: Be mindful of security implications in your code and follow best practices to protect the project and its users.
 - **Test thoroughly**: Ensure that your changes are thoroughly tested to catch potential issues before they are merged into the main branch.
-- **Be consistent**: Strive for consistency in your code, following established patterns and conventions within the project.
-- **Seek feedback**: Actively seek feedback on your contributions to continuously improve your skills and the quality of the project.
-- **Be proactive**: Take initiative in identifying areas for improvement and suggesting enhancements to the project.
-- **Have fun**: Enjoy the process of contributing and learning from the project and its community.
