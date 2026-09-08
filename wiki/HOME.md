@@ -1,9 +1,3 @@
----
-title: Home
-description: Setup, integration, and troubleshooting guides for the Discord RSS self-hosted service.
-page: home
----
-
 # Discord RSS Wiki
 
 This wiki contains setup, integration, and troubleshooting guides for the **Discord RSS** self-hosted service.

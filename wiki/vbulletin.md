@@ -1,9 +1,3 @@
----
-title: vBulletin Integration
-description: Guide for integrating vBulletin forums with the Discord RSS self-hosted service.
-page: vbulletin
----
-
 # vBulletin integration
 
 vBulletin 3/4/5 exposes an external feed generator at `external.php`. vBulletin 5 Cloud uses different routes, but the same concepts apply.

@@ -1,9 +1,3 @@
----
-title: Troubleshooting
-description: Common issues and solutions for the Discord RSS self-hosted service.
-page: troubleshooting
----
-
 # Troubleshooting
 
 Common issues when self-hosting or configuring Discord RSS.
