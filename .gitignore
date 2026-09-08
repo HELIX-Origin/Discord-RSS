@@ -1,10 +1,46 @@
+# Environment secrets
+.env
+.env.local
+.env.*.local
+
+# Lock files (excluded by default; regenerate locally with npm ci)
+package-lock.json
+npm-shrinkwrap.json
+.pnpm-lock.yaml
+yarn.lock
+
+# TypeScript / Node build output
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Runtime / temp files
 .cache/
 __pycache__/
 .pytest_cache/
-.env 
-package-lock.json  
-npm-shrinkwrap.json  
-.pnpm-lock.yaml  
-yarn.lock  
-.env.local  
-.env.*.local 
+*.tmp
+*.log
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Test fixtures (local only; not pushed)
+# Note: `tests/` directory itself remains tracked; only fixture output excluded
+*.fixture
+fixture-output/
+
+# Git restore / temp directories
+.git_restore/
+temp_restore/
