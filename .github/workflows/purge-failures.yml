@@ -1,0 +1,32 @@
+name: Purge Failed Runs
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC (adjust as needed)
+  workflow_dispatch: {}
+
+jobs:
+  purge-failures:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge Failed Workflow Runs
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          echo "Fetching failed workflow runs..."
+          
+          # Fetch up to 100 failed run IDs as a JSON array
+          FAILED_IDS=$(gh run list --status failure --limit 100 --json databaseId --jq '.[].databaseId')
+          
+          if [ -z "$FAILED_IDS" ]; then
+            echo "No failed workflow runs found."
+            exit 0
+          fi
+          
+          for run_id in $FAILED_IDS; do
+            echo "Deleting failed run ID: $run_id"
+            gh run delete "$run_id"
+          done
+          
+          echo "Cleanup complete."
