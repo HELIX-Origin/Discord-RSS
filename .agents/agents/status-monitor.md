@@ -41,9 +41,9 @@ gh workflow run site-status-alert.yml
 - Only send webhook if `current_state != previous_state` (transition only).
 
 ### 3. Discord Webhook (GitHub Secrets Naming) + Optional Discohook
-- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
-- Optional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`) supported for enhanced status embed formatting.
-- Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
+- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming.
+- Default: `SITE_STATUS_WEBHOOK_URL_001` (status webhook).
+- Optional: `DISCOHOOK_WEBHOOK_URL_001` (enhanced status embed formatting — requires Discohook bot invitation).
 - Example secrets:
   - `SITE_STATUS_WEBHOOK_URL_001`
   - `SITE_STATUS_WEBHOOK_URL_002`
@@ -64,3 +64,4 @@ gh workflow run site-status-alert.yml
 | `SITE_URL` | Base site URL for status monitoring |
 | `SITE_STATUS_WEBHOOK_URL_001` | Status transition alert webhook |
 | `SITE_STATUS_WEBHOOK_URL_002` | Additional status webhook (optional) |
+| `DISCOHOOK_WEBHOOK_URL_001` | Optional Discohook enhanced embed webhook (requires bot invitation) |

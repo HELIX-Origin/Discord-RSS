@@ -9,7 +9,7 @@ Use repository secrets (under Settings -> Secrets and variables -> Actions) rath
 ### Base site and feed secrets
 
 - `SITE_URL` — base URL for the forum or site being monitored
-- `FEED_URL` or `FEED_URLS` — optional feed URL override
+- `{SOURCE}_RSS_URL_{###}` — optional feed URL override
 - `DISCORD_WEBHOOK_URL_001` — main feed webhook (`{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern)
 - `DISCORD_WEBHOOK_URL_002` — additional feed webhook (optional)
 
@@ -27,7 +27,7 @@ Use repository secrets (under Settings -> Secrets and variables -> Actions) rath
 
 The feed job supports the following optional environment inputs:
 
-- `FEED_URL` or `FEED_URLS` — explicit feed URL or comma-separated list of URLs
+- `{SOURCE}_RSS_URL_{###}` — explicit feed URL or comma-separated list of URLs
 - `SITE_URL` — the base site URL used for feed discovery
 - `ALLOWED_HOSTS` — comma-separated hosts allowed for posts
 - `EXCLUDED_URL_SUBSTRINGS` — strings to ignore when scanning post links

@@ -10,5 +10,5 @@
 - Filter out staff/admin paths (`/admin/`, `/mod/`, `/staff/`) by checking `<link>` URL patterns.
 
 ## Discovery Pattern
-- If `FEED_URL` or `FEED_URLS` secrets exist, use them directly.
+- If `{SOURCE}_RSS_URL_{###}` secrets exist, use them directly.
 - Otherwise, attempt common paths: `/feed`, `/rss`, `/feed.xml`, `/atom.xml` appended to `SITE_URL`.

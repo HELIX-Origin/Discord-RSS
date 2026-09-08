@@ -53,8 +53,8 @@ jobs:
           DISCORD_WEBHOOK_URL_001: ${{ secrets.DISCORD_WEBHOOK_URL_001 }}
           DISCORD_WEBHOOK_URL_002: ${{ secrets.DISCORD_WEBHOOK_URL_002 }}
           SITE_URL: ${{ secrets.SITE_URL }}
-          FEED_URL: ${{ secrets.FEED_URL }}
-          FEED_URLS: ${{ secrets.FEED_URLS }}
+          FORUM_RSS_URL_001: ${{ secrets.FORUM_RSS_URL_001 }}
+          SITE_RSS_URL_001: ${{ secrets.SITE_RSS_URL_001 }}
           MAX_POSTS: "5"
           STATE_FILE: .github/feed-state.json
         run: python scripts/post_feed_to_discord.py

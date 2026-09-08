@@ -20,10 +20,10 @@ GitHub refers to these as repository secrets. Configure them under Settings -> S
 - Repository secret: `DISCORD_WEBHOOK_URL_002` — additional feed webhook (optional)
 - Repository secret: `SITE_STATUS_WEBHOOK_URL_001` — status transition alert webhook
 - Repository secret: `SITE_STATUS_WEBHOOK_URL_002` — additional status webhook (optional)
-- Optional override: `FEED_URL` or `FEED_URLS` (comma-separated list when a specific site feed should be used)
+- Optional override: `{SOURCE}_RSS_URL_{###}` (comma-separated list when a specific site feed should be used)
 - Optional: `CLOUDFLARE_API_KEY` and `CHALLENGE_SOLVER_URL` for external challenge-solving (Cloudflare-protected sites)
 
-The workflow auto-discovers the active RSS/Atom feed URLs from the configured site by default, so a `FEED_URL` secret is not required. All runtime configuration is expected to come from repository secrets and must not be committed into the repository.
+The workflow auto-discovers the active RSS/Atom feed URLs from the configured site by default, so a `{SOURCE}_RSS_URL_{###}` secret is not required. All runtime configuration is expected to come from repository secrets and must not be committed into the repository.
 The feed workflow stores its last-seen feed item in `.github/feed-state.json` using atomic writes (`os.rename()`). The status workflow stores the last-known online/offline state in `.github/site-status-state.json` using atomic writes as well.
 
 ## Behavior

@@ -82,23 +82,38 @@ class Entry:
     author: str
 
 
+def load_feed_urls_from_env() -> list[str]:
+    urls: list[str] = []
+    import re
+    for key, value in os.environ.items():
+        match = re.match(r"([A-Z0-9_]+)_RSS_URL_(\d{3})", key)
+        if match:
+            source = match.group(1)
+            index = int(match.group(2))
+            # Ensure sequential loading by collecting all and sorting by index
+            urls.append((index, value))
+    urls.sort(key=lambda x: x[0])
+    return [url for _, url in urls]
+
+
 def main() -> int:
     site_url = require_env("SITE_URL")
-    feed_urls = (
-        parse_feed_urls(os.getenv("FEED_URLS") or os.getenv("FEED_URL"))
-        if os.getenv("FEED_URLS") or os.getenv("FEED_URL")
-        else discover_feed_urls([site_url])
-    )
+    feed_urls = load_feed_urls_from_env()
+    if not feed_urls:
+        feed_urls = discover_feed_urls([site_url])
     if not feed_urls:
         raise SystemExit("No RSS/Atom feed URLs discovered on the configured site.")
 
-    webhook_urls = load_webhook_urls("DISCORD")
+    webhook_urls = load_webhook_urls("DISCOHOOK")
+    if not webhook_urls:
+        webhook_urls = load_webhook_urls("DISCORD")
     if not webhook_urls:
         webhook_urls = load_webhook_urls("SITE STATUS")
     if not webhook_urls:
         raise SystemExit(
             "No webhook URLs found. Configure GitHub Secrets using the pattern "
-            "{SERVICE_NAME}_WEBHOOK_URL_{###} (e.g., DISCORD_WEBHOOK_URL_001)."
+            "{SERVICE_NAME}_WEBHOOK_URL_{###} (e.g., DISCOHOOK_WEBHOOK_URL_001, DISCORD_WEBHOOK_URL_001). "
+            "Note: Discohook bot must be invited to the server for primary webhook use."
         )
     webhook_url = webhook_urls[0]
     state_path = Path(os.getenv("STATE_FILE", ".cache/feed-state.json"))
@@ -172,9 +187,22 @@ def require_env(name: str) -> str:
     return value
 
 
+def load_feed_urls(source_name: str) -> list[str]:
+    urls: list[str] = []
+    index = 1
+    while True:
+        secret_name = f"{source_name.upper()}_RSS_URL_{index:03d}"
+        url = os.getenv(secret_name)
+        if not url:
+            break
+        urls.append(url)
+        index += 1
+    return urls
+
+
 def parse_feed_urls(value: str | None) -> list[str]:
     if not value:
-        raise SystemExit("Missing required environment variable: FEED_URL or FEED_URLS")
+        return []
     return [part.strip() for part in value.replace("\n", ",").split(",") if part.strip()]
 
 
@@ -483,13 +511,16 @@ def get_site_status(site_url: str) -> bool:
 
 def main_site_status() -> int:
     site_url = require_env("SITE_URL")
-    webhook_urls = load_webhook_urls("SITE STATUS")
+    webhook_urls = load_webhook_urls("DISCOHOOK")
+    if not webhook_urls:
+        webhook_urls = load_webhook_urls("SITE STATUS")
     if not webhook_urls:
         webhook_urls = load_webhook_urls("DISCORD")
     if not webhook_urls:
         raise SystemExit(
             "No webhook URLs found. Configure GitHub Secrets using the pattern "
-            "{SERVICE_NAME}_WEBHOOK_URL_{###} (e.g., SITE_STATUS_WEBHOOK_URL_001)."
+            "{SERVICE_NAME}_WEBHOOK_URL_{###} (e.g., DISCOHOOK_WEBHOOK_URL_001, SITE_STATUS_WEBHOOK_URL_001). "
+            "Note: Discohook bot must be invited to the server for primary webhook use."
         )
     webhook_url = webhook_urls[0]
     state_path = Path(os.getenv("SITE_STATUS_STATE_FILE", ".cache/site-status-state.json"))

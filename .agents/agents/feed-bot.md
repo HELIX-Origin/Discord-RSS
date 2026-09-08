@@ -36,7 +36,7 @@ gh workflow run post-feed-to-discord.yml
 
 ### 1. Feed Discovery (`post_feed_to_discord.py`)
 - Read `SITE_URL` from environment.
-- Read `FEED_URL` or `FEED_URLS` from secrets; fallback to `/feed`, `/rss`, `/feed.xml`, `/atom.xml`.
+- Read `{SOURCE}_RSS_URL_{###}` from secrets; fallback to `/feed`, `/rss`, `/feed.xml`, `/atom.xml`.
 - Fetch with `urllib.request.urlopen(url, timeout=10)`.
 - Parse with `xml.etree.ElementTree`.
 
@@ -49,9 +49,10 @@ gh workflow run post-feed-to-discord.yml
 - Read `.github/feed-state.json` at script start.
 - After posting, write updated state atomically (`os.rename()` pattern preferred).
 
-### 4. Discord Webhook (GitHub Secrets Naming) + Optional Discohook
-- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
-- Optional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`) may be used for enhanced embed formatting (`.agents/skills/discohook.md`).
+### 4. Discohook Webhook (GitHub Secrets Naming — Primary Method)
+- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming.
+- Default: `DISCOHOOK_WEBHOOK_URL_001` (primary Discohook webhook — requires Discohook bot invitation to server).
+- Optional: `DISCOHOOK_WEBHOOK_URL_002` (additional), `SITE_STATUS_WEBHOOK_URL_001` (status).
 - Scripts scan from `001` upward and load sequentially.
 - Example secrets:
   - `DISCORD_WEBHOOK_URL_001`
@@ -63,11 +64,12 @@ gh workflow run post-feed-to-discord.yml
 
 ## Required Environment Variables / GitHub Secrets
 
+The Discohook bot must be invited to the server (`https://discohook.app/bot`) before using Discohook webhooks.
+
 | Secret Name | Purpose |
 |-------------|---------|
 | `SITE_URL` | Base site URL for feed/status monitoring |
-| `FEED_URL` / `FEED_URLS` | Optional override feed URLs |
-| `DISCORD_WEBHOOK_URL_001` | Main feed post webhook |
-| `DISCORD_WEBHOOK_URL_002` | Additional feed webhook (optional) |
-| `SITE_STATUS_WEBHOOK_URL_001` | Status transition alert webhook |
-| `SITE_STATUS_WEBHOOK_URL_002` | Additional status webhook (optional) |
+| `{SOURCE}_RSS_URL_{###}` | Optional override feed URLs |
+| `DISCOHOOK_WEBHOOK_URL_001` | Primary Discohook webhook (requires bot invitation) |
+| `DISCOHOOK_WEBHOOK_URL_002` | Additional Discohook webhook (optional) |
+| `SITE_STATUS_WEBHOOK_URL_001` | Status transition alert webhook (optional; may also use Discohook) |

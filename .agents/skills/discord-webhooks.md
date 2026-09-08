@@ -19,10 +19,9 @@ Where:
 - `CUSTOM_SERVICE_WEBHOOK_URL_001`
 
 ## Webhook Types
-- Main feed post webhook (`DISCORD_WEBHOOK_URL_001`): rich embeds for new feed entries.
-- Status transition webhook (`SITE_STATUS_WEBHOOK_URL_001`): online/offline alerts.
-- Additional webhooks (`DISCORD_WEBHOOK_URL_002`+) for extra channels, backups, or custom integrations.
-- Optional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`): enhanced embed formatting and webhook management (see `.agents/skills/discohook.md`).
+- Primary Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`): main feed post webhook (rich embeds). Discohook bot must be invited to the server.
+- Additional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_002`): extra feed or backup webhook.
+- Status transition webhook (`SITE_STATUS_WEBHOOK_URL_001`): online/offline alerts (optional; may also use Discohook formatting).
 
 ## Script Discovery Pattern
 Scripts must scan secrets for the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern and load the first matching URL. If multiple URLs are required, the script must load sequentially from `001` upward until no more secrets match.

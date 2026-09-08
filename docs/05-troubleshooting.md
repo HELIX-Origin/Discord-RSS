@@ -8,7 +8,7 @@ Check the following in order:
 
 1. Confirm `DISCORD_WEBHOOK_URL_001` (and any additional `DISCORD_WEBHOOK_URL_{###}` secrets) are set as repository secrets.
 2. Confirm the workflow `.github/workflows/post-feed-to-discord.yml` ran successfully in GitHub Actions.
-3. Verify the feed was discovered or the `FEED_URL` override is correct.
+3. Verify the feed was discovered or the `{SOURCE}_RSS_URL_{###}` override is correct.
 4. Ensure the discovered links are still under an allowed host (`ALLOWED_HOSTS`).
 5. Check whether the site is returning a Cloudflare challenge page or a blocked response.
 6. If behind Cloudflare, verify `CLOUDFLARE_API_KEY` / `CHALLENGE_SOLVER_URL` secrets are configured or `playwright` is installed.

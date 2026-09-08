@@ -17,6 +17,6 @@ concurrency:
 
 ## Secrets Reference
 - `SITE_URL`
-- `FEED_URL` / `FEED_URLS`
+- `{SOURCE}_RSS_URL_{###}`
 - `DISCORD_WEBHOOK_URL`
 - `DISCORD_STATUS_WEBHOOK_URL`
