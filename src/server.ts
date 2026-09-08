@@ -19,10 +19,19 @@ import { renderLoginHtml } from './http/login.js';
 import { renderOAuthCallbackHtml } from './http/oauth-callback.js';
 import { analyzeUrl, analyzeScrapeUrl } from './feed/builder.js';
 import type { ScrapeSelectors } from './feed/scraper.js';
-import { FEED_PRESETS, presetsGroupedByCategory } from './feed/presets.js';
+import { FEED_PRESETS } from './feed/presets.js';
 import { createLogger } from './util/logger.js';
 
 const SESSION_MAX_AGE_SECONDS = 30 * 24 * 3600;
+
+function isValidHttpUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 function getSessionToken(req: IncomingMessage): string {
   return parseCookies(req)[COOKIE_NAME] ?? '';
@@ -75,7 +84,7 @@ export function createDiscordRssServer(deps: AppDeps) {
   });
 
   // ---- Auth API ----
-  router.add('POST', '/api/auth/register', async (req, res, _ctx, d) => {
+  router.add('POST', '/api/auth/register', async (req, res, _ctx, _d) => {
     const body = (await readBodyJson(req)) as { email?: string; password?: string; displayName?: string };
     try {
       const result = auth.register(body.email ?? '', body.password ?? '', body.displayName);
@@ -85,7 +94,7 @@ export function createDiscordRssServer(deps: AppDeps) {
       sendError(res, 400, err instanceof Error ? err.message : 'Registration failed');
     }
   });
-  router.add('POST', '/api/auth/login', async (req, res, _ctx, d) => {
+  router.add('POST', '/api/auth/login', async (req, res, _ctx, _d) => {
     const body = (await readBodyJson(req)) as { email?: string; password?: string };
     try {
       const result = auth.login(body.email ?? '', body.password ?? '');
@@ -167,7 +176,6 @@ export function createDiscordRssServer(deps: AppDeps) {
     const userId = await requireUser(req, res, d);
     if (userId === null) return;
     const existing = new Set(d.repo.listFeeds(userId).map((f) => f.url));
-    const groups = presetsGroupedByCategory();
     sendJson(
       res,
       200,
@@ -187,6 +195,10 @@ export function createDiscordRssServer(deps: AppDeps) {
     const name = body.name?.trim();
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
+    if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
+    if (body.webhookId !== undefined && body.webhookId !== null && !d.repo.getWebhook(userId, body.webhookId)) {
+      return sendError(res, 400, 'Webhook not found');
+    }
     try {
       const feedType = body.feedType === 'scrape' ? 'scrape' : 'rss';
       const scrape =
@@ -209,7 +221,12 @@ export function createDiscordRssServer(deps: AppDeps) {
     const userId = await requireUser(req, res, d);
     if (userId === null) return;
     const id = Number(ctx.params['id']);
-    const body = (await readBodyJson(req)) as { name?: string; url?: string; webhookId?: number | null; enabled?: boolean };
+    const body = (await readBodyJson(req)) as {
+      name?: string;
+      url?: string;
+      webhookId?: number | null;
+      enabled?: boolean;
+    };
     const feed = d.repo.updateFeed(userId, id, {
       name: body.name?.trim(),
       url: body.url?.trim(),
@@ -279,6 +296,7 @@ export function createDiscordRssServer(deps: AppDeps) {
     const name = body.name?.trim();
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
+    if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
     try {
       const webhook = d.repo.addWebhook(userId, name, url);
       d.repo.logActivity(userId, 'info', 'webhooks', `Added webhook "${webhook.name}"`);
@@ -320,6 +338,7 @@ export function createDiscordRssServer(deps: AppDeps) {
     const name = body.name?.trim();
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
+    if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
     try {
       const monitor = d.repo.addMonitor(userId, name, url, body.webhookId ?? null);
       sendJson(res, 201, monitor);
@@ -331,7 +350,12 @@ export function createDiscordRssServer(deps: AppDeps) {
     const userId = await requireUser(req, res, d);
     if (userId === null) return;
     const id = Number(ctx.params['id']);
-    const body = (await readBodyJson(req)) as { name?: string; url?: string; webhookId?: number | null; enabled?: boolean };
+    const body = (await readBodyJson(req)) as {
+      name?: string;
+      url?: string;
+      webhookId?: number | null;
+      enabled?: boolean;
+    };
     const monitor = d.repo.updateMonitor(userId, id, {
       name: body.name?.trim(),
       url: body.url?.trim(),
@@ -412,12 +436,16 @@ export function createDiscordRssServer(deps: AppDeps) {
       await match.handler(req, res, { params: match.params, query: url.searchParams }, deps);
     } catch (err) {
       const userId = await authedUserId(req, deps).catch(() => null);
-      logger.error('Request handler failed', {
-        method: req.method,
-        path: url.pathname,
-        query: url.searchParams.toString(),
-        userId,
-      }, err);
+      logger.error(
+        'Request handler failed',
+        {
+          method: req.method,
+          path: url.pathname,
+          query: url.searchParams.toString(),
+          userId,
+        },
+        err,
+      );
       if (!res.headersSent) sendError(res, 500, 'Internal server error');
     }
   });

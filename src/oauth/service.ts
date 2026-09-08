@@ -81,7 +81,11 @@ export class OAuthService {
     return p.buildAuthorizeUrl(redirectUri, state, config);
   }
 
-  async handleCallback(state: string, code: string, redirectUri: string): Promise<{ userId: number; provider: string }> {
+  async handleCallback(
+    state: string,
+    code: string,
+    redirectUri: string,
+  ): Promise<{ userId: number; provider: string }> {
     const ctx = this.repo.consumeOAuthState(state);
     if (!ctx) throw new Error('Invalid or expired OAuth state');
 

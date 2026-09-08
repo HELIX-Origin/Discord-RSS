@@ -1,8 +1,26 @@
 import type { Database } from './database.js';
 import { AppState } from '../state/app-state.js';
-import { nowIso, type ActivityEntry, type Feed, type OAuthConnection, type Session, type SiteMonitor, type User, type Webhook } from '../state/types.js';
+import {
+  nowIso,
+  type ActivityEntry,
+  type Feed,
+  type OAuthConnection,
+  type Session,
+  type SiteMonitor,
+  type User,
+  type Webhook,
+} from '../state/types.js';
 
-export type { ActivityEntry, Feed, OAuthConnection, OAuthState, Session, SiteMonitor, User, Webhook } from '../state/types.js';
+export type {
+  ActivityEntry,
+  Feed,
+  OAuthConnection,
+  OAuthState,
+  Session,
+  SiteMonitor,
+  User,
+  Webhook,
+} from '../state/types.js';
 
 /**
  * Write-through persistence facade.

@@ -187,9 +187,7 @@ export class AppState {
   // ---- Feeds ----
 
   listFeeds(userId: number): Feed[] {
-    return [...this.feedsById.values()]
-      .filter((f) => f.userId === userId)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return [...this.feedsById.values()].filter((f) => f.userId === userId).sort((a, b) => a.name.localeCompare(b.name));
   }
 
   allFeeds(): Feed[] {

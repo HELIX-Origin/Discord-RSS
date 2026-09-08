@@ -1,8 +1,8 @@
 # Plan: Complete Modular Testing, Debugging & Linting Suite Rebuild
 
-**Status:** Planning  
+**Status:** ✅ COMPLETE  
 **Parent:** #4 — [PLAN] Multi-user Discord RSS rebuild  
-**Rule 04 compliance:** This document is the roadmap for the test-suite rebuild. A GitHub issue (#9) will track it.
+**Rule 04 compliance:** This document is the roadmap for the test-suite rebuild. Tracked in GitHub issue #9.
 
 ## Problem Statement
 
@@ -22,8 +22,8 @@ This plan defines a **modular, reusable test architecture** so that any feature 
 ## Proposed Directory Layout
 
 ```text
+vitest.config.ts            # project-wide config, global setup/teardown
 tests/
-  vitest.config.ts          # project-wide config, global setup/teardown
   setup.ts                  # global setup: MSW server, console log capture
   teardown.ts               # global teardown
   helpers/
@@ -206,43 +206,36 @@ Handles `set-cookie` automatically and JSON parsing.
 
 ## Implementation Phases
 
-1. **Foundation (PR #9.1)**
-   - Create directory layout.
-   - Implement `tests/helpers/db.ts`, `factories.ts`, `lifecycle.ts`.
-   - Implement `tests/mocks/redis-server.ts`.
-   - Implement `tests/helpers/redis.ts`.
-   - Add `tests/vitest.config.ts` and `tests/setup.ts`.
-
-2. **AppDeps + Server Helpers (PR #9.2)**
-   - `tests/helpers/app-deps.ts`.
-   - `tests/helpers/server.ts`.
-   - `tests/helpers/http-client.ts`.
-   - `tests/mocks/rss-server.ts`, `webhook-server.ts`.
-
-3. **MSW + Network Mocks (PR #9.3)**
-   - `tests/mocks/msw-handlers.ts`, `msw-server.ts`.
-   - `tests/mocks/cloudflare-server.ts`.
-
-4. **Linting & Formatting (PR #9.4)**
-   - Install and configure ESLint + Prettier.
-   - Add scripts: `lint`, `format`, `format:check`, `typecheck`, `check`.
-   - Fix all existing lint/format violations in `src/`.
-
-5. **Unit Tests (PR #9.5)**
-   - Port and refactor all prior unit tests into `tests/unit/**` using the new helpers.
-
-6. **Integration Tests (PR #9.6)**
-   - Feed watcher, status watcher, Redis coordination, auth API, feed API, webhook API, dev-tools API.
-
-7. **Smoke Tests (PR #9.7)**
-   - `tests/smoke/source.test.ts` using `src/` imports.
-   - `tests/smoke/dist.test.ts` using `dist/` imports.
-
-8. **Cleanup + Documentation (PR #9.8)**
-   - Restore `npm test` script to `vitest run`.
-   - Delete legacy helper duplicates.
-   - Update `AGENTS.md` with testing conventions.
-   - Close #9.
+- [x] **Phase 1: Foundation**
+  - Create directory layout.
+  - Implement `tests/helpers/db.ts`, `factories.ts`, `lifecycle.ts`.
+  - Implement `tests/mocks/redis-server.ts`.
+  - Implement `tests/helpers/redis.ts`.
+  - Add `vitest.config.ts` (project root) and `tests/setup.ts`.
+- [x] **Phase 2: AppDeps + Server Helpers**
+  - `tests/helpers/app-deps.ts`.
+  - `tests/helpers/server.ts`.
+  - `tests/helpers/http-client.ts`.
+  - `tests/mocks/rss-server.ts`, `webhook-server.ts`.
+- [x] **Phase 3: MSW + Network Mocks**
+  - `tests/mocks/msw-handlers.ts`, `msw-server.ts`.
+  - `tests/mocks/cloudflare-server.ts`.
+- [x] **Phase 4: Linting & Formatting**
+  - Install and configure ESLint + Prettier.
+  - Add scripts: `lint`, `format`, `format:check`, `typecheck`, `check`.
+  - Fix all existing lint/format violations in `src/`.
+- [x] **Phase 5: Unit Tests**
+  - Port and refactor all prior unit tests into `tests/unit/**` using the new helpers.
+- [x] **Phase 6: Integration Tests**
+  - Feed watcher, status watcher, Redis coordination, auth API, feed API, webhook API, monitors API, dev-tools API.
+- [x] **Phase 7: Smoke Tests**
+  - `tests/smoke/source.test.ts` using `src/` imports.
+  - `tests/smoke/dist.test.ts` using `dist/` imports.
+- [x] **Phase 8: Cleanup + Documentation**
+  - Restore `npm test` script to `vitest run`.
+  - Delete legacy helper duplicates.
+  - Update `AGENTS.md` with testing conventions.
+  - Close #9.
 
 ## Acceptance Criteria
 

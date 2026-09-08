@@ -76,8 +76,6 @@ function sleep(ms: number): Promise<void> {
 
 export async function sendWebhook(url: string, message: WebhookMessage, timeoutMs = 15_000): Promise<SendResult> {
   let attempts = 0;
-  let lastStatus: number | null = null;
-  let lastDetail = '';
   let lastRateLimited = false;
 
   for (;;) {
@@ -90,7 +88,10 @@ export async function sendWebhook(url: string, message: WebhookMessage, timeoutM
       res = await fetch(url, {
         method: 'POST',
         signal: controller.signal,
-        headers: { 'content-type': 'application/json', 'user-agent': 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Site-Feed-Discord)' },
+        headers: {
+          'content-type': 'application/json',
+          'user-agent': 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Site-Feed-Discord)',
+        },
         body: JSON.stringify(message),
       });
     } catch (err) {
@@ -104,13 +105,11 @@ export async function sendWebhook(url: string, message: WebhookMessage, timeoutM
       clearTimeout(timer);
     }
 
-    lastStatus = res.status;
-
     if (res.status >= 200 && res.status < 300) {
       return { ok: true, status: res.status, error: null, attempts, rateLimited: false };
     }
 
-    let detail = '';
+    let detail: string;
     try {
       const body = (await res.json()) as { message?: string; retry_after?: number };
       detail = body.message ?? '';

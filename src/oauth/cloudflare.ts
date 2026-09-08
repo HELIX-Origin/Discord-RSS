@@ -66,7 +66,7 @@ export class CloudflareProvider implements OAuthProvider {
 
     const json = (await res.json()) as unknown;
     if (!res.ok || isError(json)) {
-      const err = isError(json) ? json.error_description ?? json.error : `HTTP ${res.status}`;
+      const err = isError(json) ? (json.error_description ?? json.error) : `HTTP ${res.status}`;
       throw new Error(`Cloudflare OAuth token exchange failed: ${err}`);
     }
 

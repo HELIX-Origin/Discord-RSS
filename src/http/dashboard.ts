@@ -770,7 +770,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
           html += '<div class="flex items-center gap-2 text-sm text-green-300"><i class="fa-solid fa-circle-check"></i>Feed(s) auto-discovered on this page:</div>';
           html += feedLinks.map(u => '<div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/40 border border-gray-800">' +
             '<span class="text-xs font-mono text-gray-300 truncate">' + escapeHtmlAttr(u) + '</span>' +
-            '<button onclick="addDiscoveredFeed(\'' + escapeHtmlAttr(u).replace(/'/g, "\\'") + '\')" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-semibold text-white transition shrink-0"><i class="fa-solid fa-plus mr-1"></i>Add</button></div>')
+            '<button onclick="addDiscoveredFeed(' + escapeHtmlAttr(u).replace(/'/g, "\\\\'") + ')" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-semibold text-white transition shrink-0"><i class="fa-solid fa-plus mr-1"></i>Add</button></div>')
             .join('');
         } else {
           html += '<div class="flex items-center gap-2 text-sm text-amber-300"><i class="fa-solid fa-circle-info"></i>No RSS/Atom feed was found on this page.</div>';

@@ -8,6 +8,7 @@
  * sent-checks report false, and mark/send operations no-op.
  */
 import { createClient, type RedisClientType } from 'redis';
+import { createLogger } from '../util/logger.js';
 
 export interface RedisCoordinator {
   readonly enabled: boolean;
@@ -23,6 +24,7 @@ class RedisCoordinatorImpl implements RedisCoordinator {
   readonly enabled = true;
   readonly instanceId: string;
   private degradedLogged = false;
+  private readonly logger = createLogger('redis');
 
   private constructor(
     private readonly client: RedisClientType,
@@ -60,7 +62,7 @@ class RedisCoordinatorImpl implements RedisCoordinator {
     } catch {
       if (!this.degradedLogged) {
         this.degradedLogged = true;
-        console.warn('[redis] coordinator degraded; falling back to single-instance behavior');
+        this.logger.warn('Redis coordinator degraded; falling back to single-instance behavior');
       }
       return fallback;
     }
@@ -76,7 +78,10 @@ class RedisCoordinatorImpl implements RedisCoordinator {
 
   async acquireLock(key: string, ttlMs: number): Promise<boolean> {
     return this.safe(true, async () => {
-      const ok = await this.client.set(`drss:lock:${key}`, this.instanceId, { NX: true, EX: Math.max(1, Math.floor(ttlMs / 1000)) });
+      const ok = await this.client.set(`drss:lock:${key}`, this.instanceId, {
+        NX: true,
+        EX: Math.max(1, Math.floor(ttlMs / 1000)),
+      });
       return ok === 'OK';
     });
   }
@@ -94,18 +99,22 @@ class RedisCoordinatorImpl implements RedisCoordinator {
   }
 }
 
-export async function createRedisCoordinator(url: string | null | undefined): Promise<RedisCoordinator | null> {
+export async function createRedisCoordinator(
+  url: string | null | undefined,
+  logLevel?: import('../util/logger.js').LogLevel,
+): Promise<RedisCoordinator | null> {
+  const logger = createLogger('redis', logLevel);
   if (!url) return null;
   try {
     const impl = await RedisCoordinatorImpl.connect(url);
     if (!impl) {
-      console.warn('[redis] connection failed; continuing without cross-instance coordination');
+      logger.warn('Redis connection failed; continuing without cross-instance coordination');
       return null;
     }
-    console.log(`[redis] coordinator connected (${impl.instanceId})`);
+    logger.info('Redis coordinator connected', { instanceId: impl.instanceId });
     return impl;
   } catch {
-    console.warn('[redis] coordinator init failed; continuing without cross-instance coordination');
+    logger.warn('Redis coordinator init failed; continuing without cross-instance coordination');
     return null;
   }
 }

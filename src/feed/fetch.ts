@@ -31,16 +31,8 @@ export interface HttpFetcherOptions {
 
 export const DEFAULT_USER_AGENT = 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Site-Feed-Discord)';
 
-export async function fetchRaw(
-  url: string,
-  options: HttpFetcherOptions = {},
-): Promise<FetchResult> {
-  const {
-    timeoutMs = 15_000,
-    maxRedirects = 5,
-    userAgent = DEFAULT_USER_AGENT,
-    maxBytes = 10 * 1024 * 1024,
-  } = options;
+export async function fetchRaw(url: string, options: HttpFetcherOptions = {}): Promise<FetchResult> {
+  const { timeoutMs = 15_000, maxRedirects = 5, userAgent = DEFAULT_USER_AGENT, maxBytes = 10 * 1024 * 1024 } = options;
 
   const start = performance.now();
   let currentUrl = url;
@@ -106,7 +98,11 @@ export async function fetchRaw(
     } catch (err) {
       if (err instanceof FetchError) throw err;
       const aborted = err instanceof Error && err.name === 'AbortError';
-      throw new FetchError(aborted ? `Request timed out after ${timeoutMs}ms` : `Request failed: ${String(err)}`, null, aborted);
+      throw new FetchError(
+        aborted ? `Request timed out after ${timeoutMs}ms` : `Request failed: ${String(err)}`,
+        null,
+        aborted,
+      );
     } finally {
       clearTimeout(timer);
     }

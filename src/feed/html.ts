@@ -6,8 +6,20 @@ export interface HtmlElement {
 }
 
 const VOID_TAGS = new Set([
-  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta',
-  'param', 'source', 'track', 'wbr',
+  'area',
+  'base',
+  'br',
+  'col',
+  'embed',
+  'hr',
+  'img',
+  'input',
+  'link',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr',
 ]);
 
 function decodeEntities(text: string): string {

@@ -39,7 +39,10 @@ export async function analyzeUrl(url: string): Promise<UrlAnalysis> {
   base.contentType = result.contentType;
 
   if (result.challenged || isCloudflareChallenge(result.contentType, null)) {
-    return { ...base, error: 'This site is behind a Cloudflare challenge. Connect a Cloudflare account in Integrations to fetch it.' };
+    return {
+      ...base,
+      error: 'This site is behind a Cloudflare challenge. Connect a Cloudflare account in Integrations to fetch it.',
+    };
   }
 
   const head = result.text.slice(0, 2048).toLowerCase();
@@ -53,8 +56,17 @@ export async function analyzeUrl(url: string): Promise<UrlAnalysis> {
   base.isHtml = true;
   base.discoveredFeeds = feedLinks;
 
-  const titleTags = root.children.filter((c) => c.tag !== '#text' && c.tag === 'title');
-  if (titleTags[0]) base.title = titleTags[0].text;
+  const findTitle = (el: typeof root): typeof root | null => {
+    if (el.tag === 'title') return el;
+    for (const child of el.children) {
+      if (child.tag === '#text') continue;
+      const found = findTitle(child);
+      if (found) return found;
+    }
+    return null;
+  };
+  const titleTag = findTitle(root);
+  if (titleTag) base.title = titleTag.text;
 
   return base;
 }
@@ -65,19 +77,24 @@ export function extractSample(url: string, html: string, selectors: ScrapeSelect
   return {
     entries: items.map((item) => ({
       ...item,
-      url: item.url ? (() => {
-        try {
-          return new URL(item.url, url).toString();
-        } catch {
-          return item.url;
-        }
-      })() : url,
+      url: item.url
+        ? (() => {
+            try {
+              return new URL(item.url, url).toString();
+            } catch {
+              return item.url;
+            }
+          })()
+        : url,
     })),
     contentLength: items.length,
   };
 }
 
-export async function analyzeScrapeUrl(url: string, selectors: ScrapeSelectors): Promise<{
+export async function analyzeScrapeUrl(
+  url: string,
+  selectors: ScrapeSelectors,
+): Promise<{
   url: string;
   status: number;
   error: string | null;

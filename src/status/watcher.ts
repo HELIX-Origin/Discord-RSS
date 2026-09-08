@@ -41,7 +41,7 @@ export class StatusWatcher {
     monitor: { id: number; name: string; url: string; status: string; webhookId: number | null },
   ): Promise<void> {
     let newStatus: SiteStatus;
-    let detail = '';
+    let detail: string;
 
     try {
       const res = await fetchRaw(monitor.url, { maxBytes: 512 * 1024 });
@@ -50,7 +50,11 @@ export class StatusWatcher {
     } catch (err) {
       newStatus = 'down';
       detail = err instanceof Error ? err.message : String(err);
-      this.logger.warn('Monitor check request failed', { monitorId: monitor.id, monitorName: monitor.name, url: monitor.url }, err);
+      this.logger.warn(
+        'Monitor check request failed',
+        { monitorId: monitor.id, monitorName: monitor.name, url: monitor.url },
+        err,
+      );
     }
 
     const previous = monitor.status as SiteStatus;
@@ -103,7 +107,12 @@ export class StatusWatcher {
         error: result.error,
       });
     } else {
-      this.logger.info('Status transition notified', { monitorName: monitor.name, url: monitor.url, previous, current });
+      this.logger.info('Status transition notified', {
+        monitorName: monitor.name,
+        url: monitor.url,
+        previous,
+        current,
+      });
     }
   }
 }

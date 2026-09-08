@@ -33,11 +33,15 @@ export function renderLoginHtml(isRegister: boolean): string {
           <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Email</label>
           <input type="email" id="email" placeholder="you@example.com" autocomplete="email" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
         </div>
-        ${isRegister ? `
+        ${
+          isRegister
+            ? `
         <div>
           <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Display Name (optional)</label>
           <input type="text" id="display-name" placeholder="Your Name" autocomplete="name" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
-        </div>` : ''}
+        </div>`
+            : ''
+        }
         <div>
           <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Password</label>
           <input type="password" id="password" placeholder="••••••••" autocomplete="${isRegister ? 'new-password' : 'current-password'}" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
@@ -49,9 +53,11 @@ export function renderLoginHtml(isRegister: boolean): string {
       </button>
 
       <p class="text-xs text-gray-400 text-center">
-        ${isRegister
-          ? `Already have an account? <a href="/login" class="text-cyan-400 hover:underline">Log in</a>`
-          : `New here? <a href="/register" class="text-cyan-400 hover:underline">Create an account</a>`}
+        ${
+          isRegister
+            ? `Already have an account? <a href="/login" class="text-cyan-400 hover:underline">Log in</a>`
+            : `New here? <a href="/register" class="text-cyan-400 hover:underline">Create an account</a>`
+        }
       </p>
     </div>
 

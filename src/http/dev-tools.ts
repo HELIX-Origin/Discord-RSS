@@ -48,7 +48,9 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
     deps.feeds
       .pollAllFeeds()
       .then(() => deps.repo.logActivity(null, 'info', 'dev-tools', 'Manual feed poll completed'))
-      .catch((err) => deps.repo.logActivity(null, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)));
+      .catch((err) =>
+        deps.repo.logActivity(null, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)),
+      );
     sendJson(res, 202, { ok: true });
   });
 
@@ -58,7 +60,9 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
     deps.status
       .checkAllMonitors()
       .then(() => deps.repo.logActivity(null, 'info', 'dev-tools', 'Manual status check completed'))
-      .catch((err) => deps.repo.logActivity(null, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)));
+      .catch((err) =>
+        deps.repo.logActivity(null, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)),
+      );
     sendJson(res, 202, { ok: true });
   });
 

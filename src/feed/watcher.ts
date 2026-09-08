@@ -146,7 +146,11 @@ export class FeedWatcher {
       }
     }
 
-    this.repo.setFeedChecked(userId, feed.id, entries.length ? withGuid({ title: feed.name, link: feed.url, entries: [] }, entries[0]).guid : feed.lastEntryId);
+    this.repo.setFeedChecked(
+      userId,
+      feed.id,
+      entries.length ? withGuid({ title: feed.name, link: feed.url, entries: [] }, entries[0]).guid : feed.lastEntryId,
+    );
     this.logger.info('Feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
   }
 

@@ -3,7 +3,7 @@ export function renderOAuthCallbackHtml(status: 'success' | 'error', provider: s
   const title = isSuccess ? `Connected ${provider}` : 'Connection Failed';
   const message = isSuccess
     ? `You have successfully connected ${provider}. You can close this window and return to the dashboard.`
-    : errorMessage ?? `Failed to connect ${provider}. Please try again.`;
+    : (errorMessage ?? `Failed to connect ${provider}. Please try again.`);
 
   return `<!DOCTYPE html>
 <html lang="en">

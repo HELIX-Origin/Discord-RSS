@@ -101,7 +101,7 @@ export function scrapeItems(content: HtmlElement | null, selectors: ScrapeSelect
       const title = titleEl ? titleEl.text : '';
 
       const linkEl = selectAll(container, selectors.linkSelector)[0];
-      const url = linkEl ? findHref(linkEl) ?? '' : '';
+      const url = linkEl ? (findHref(linkEl) ?? '') : '';
 
       let description: string | null = null;
       if (selectors.descriptionSelector) {

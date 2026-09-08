@@ -5,7 +5,12 @@ export interface HandlerContext {
   query: URLSearchParams;
 }
 
-export type Handler<T> = (req: IncomingMessage, res: ServerResponse, ctx: HandlerContext, deps: T) => Promise<unknown> | unknown;
+export type Handler<T> = (
+  req: IncomingMessage,
+  res: ServerResponse,
+  ctx: HandlerContext,
+  deps: T,
+) => Promise<unknown> | unknown;
 
 interface Route<T> {
   method: string;

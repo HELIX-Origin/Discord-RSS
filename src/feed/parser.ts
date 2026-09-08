@@ -1,4 +1,4 @@
-import { childText, childTextList, findChild, localName, parseXml, type XmlElement } from './xml.js';
+import { childText, findChild, localName, parseXml, type XmlElement } from './xml.js';
 
 export interface FeedEntry {
   id: string;
@@ -42,11 +42,7 @@ function parseRss2(root: XmlElement): ParsedFeed {
   const items = channel.children.filter((c) => localName(c) === 'item');
 
   const entries: FeedEntry[] = items.map((item) => {
-    const id =
-      firstChildByLocal(item, ['guid']) ??
-      linkFor(item) ??
-      firstChildByLocal(item, ['title']) ??
-      '';
+    const id = firstChildByLocal(item, ['guid']) ?? linkFor(item) ?? firstChildByLocal(item, ['title']) ?? '';
     return {
       id: id.trim(),
       title: firstChildByLocal(item, ['title']) ?? 'Untitled entry',
