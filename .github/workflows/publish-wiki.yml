@@ -28,7 +28,7 @@ jobs:
         with:
           repository: ${{ github.repository }}.wiki
           path: wiki-repo         # Checkout wiki repo into a separate subdirectory
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Clear and Sync Files
         run: |
