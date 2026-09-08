@@ -4,7 +4,7 @@ This file serves as the entry point for all AI agents, coding assistants, and au
 
 ## Project
 
-**Discord RSS** — a self-hosted, multi-user RSS/Atom-to-Discord service built entirely in TypeScript ESM. Native `http`, `node:sqlite`, built-in dashboard + API; posts directly to Discord webhooks (no Discohook). Runtime deps: none except optional `redis` for cross-instance coordination.
+**Discord RSS** — a self-hosted, multi-user RSS/Atom-to-Discord service built entirely in TypeScript ESM. Native `http`, `node:sqlite`, built-in dashboard + API; posts directly to Discord webhooks. Runtime deps: none except optional `redis` for cross-instance coordination.
 
 ## Agent Ecosystems
 
