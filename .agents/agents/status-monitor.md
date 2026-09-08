@@ -41,10 +41,10 @@ gh workflow run site-status-alert.yml
 - Only send webhook if `current_state != previous_state` (transition only).
 
 ### 3. Discord Webhook (GitHub Secrets Naming)
-- Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME} WEBHOOK URL {###}` pattern.
+- Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
 - Example secrets:
-  - `SITE STATUS WEBHOOK URL 001`
-  - `SITE STATUS WEBHOOK URL 002`
+  - `SITE_STATUS_WEBHOOK_URL_001`
+  - `SITE_STATUS_WEBHOOK_URL_002`
 - Build embed payload:
   - Title: `Site Status: Online` or `Site Status: Offline`
   - Color: `65280` (green) for online, `16711680` (red) for offline
@@ -60,5 +60,5 @@ gh workflow run site-status-alert.yml
 | Secret Name | Purpose |
 |-------------|---------|
 | `SITE_URL` | Base site URL for status monitoring |
-| `SITE STATUS WEBHOOK URL 001` | Status transition alert webhook |
-| `SITE STATUS WEBHOOK URL 002` | Additional status webhook (optional) |
+| `SITE_STATUS_WEBHOOK_URL_001` | Status transition alert webhook |
+| `SITE_STATUS_WEBHOOK_URL_002` | Additional status webhook (optional) |

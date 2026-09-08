@@ -25,7 +25,7 @@ The project focuses on three things:
 - `scripts/post_site_status.py` — wrapper used to run the status monitor
 - `.github/workflows/post-feed-to-discord.yml` — scheduled feed-posting workflow
 - `.github/workflows/site-status-alert.yml` — scheduled site-status workflow
-- `tests/test_post_feed_to_discord.py` — validation for feed URL discovery, filtering, and embed formatting
+- `tests/test_post_feed_to_discord.py` — validation for feed URL discovery, filtering, webhook scanning (`load_webhook_urls()`), embed formatting, and Cloudflare detection
 - `docs/` — repository documentation
 
 ## Why the status monitor exists

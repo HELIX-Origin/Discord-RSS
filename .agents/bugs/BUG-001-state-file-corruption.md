@@ -48,7 +48,7 @@ flowchart LR
 Only one concurrent run should modify state; overlapping runs must be blocked by `concurrency:` or atomic file writes.
 
 ## Actual Behavior
-Overlapping runs corrupt `.github/feed-state.json`. Webhook references (`DISCORD WEBHOOK URL 001`, etc.) are not affected by state file corruption, but duplicate posts may be sent to the same webhook endpoint.
+Overlapping runs corrupt `.github/feed-state.json`. Webhook references (`DISCORD_WEBHOOK_URL_001`, etc.) are not affected by state file corruption, but duplicate posts may be sent to the same webhook endpoint.
 
 ## Environment Details
 - **OS**: Linux (GitHub Actions `ubuntu-latest`)

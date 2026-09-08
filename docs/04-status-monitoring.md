@@ -17,7 +17,7 @@ Because of that, the repository uses two independent checks:
 - it fetches the site URL and checks whether the page is available
 - it detects Cloudflare challenge pages and treats them as a site issue rather than a healthy state
 - it stores the latest state in `.github/site-status-state.json`
-- it sends a Discord alert only when the site changes from `up` to `down` or `down` to `up`
+- it sends a Discord alert (`SITE_STATUS_WEBHOOK_URL_{###}`) only when the site changes from `up` to `down` or `down` to `up`
 
 ## Status state file
 
@@ -29,7 +29,7 @@ The status workflow writes a small file that tracks the last known status:
 }
 ```
 
-The file is committed back to the repository by the workflow so future runs can compare against the prior state.
+The file is committed back to the repository by the workflow using atomic writes (`os.rename()`) so future runs can compare against the prior state.
 
 ## Discord status payload
 

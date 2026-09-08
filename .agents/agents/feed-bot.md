@@ -50,11 +50,11 @@ gh workflow run post-feed-to-discord.yml
 - After posting, write updated state atomically (`os.rename()` pattern preferred).
 
 ### 4. Discord Webhook (GitHub Secrets Naming)
-- Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME} WEBHOOK URL {###}` pattern.
+- Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
 - Example secrets:
-  - `DISCORD WEBHOOK URL 001`
-  - `DISCORD WEBHOOK URL 002`
-  - `CUSTOM SERVICE WEBHOOK URL 001`
+  - `DISCORD_WEBHOOK_URL_001`
+  - `DISCORD_WEBHOOK_URL_002`
+  - `CUSTOM_SERVICE_WEBHOOK_URL_001`
 - Build JSON payload with `json.dumps()`.
 - Send via `urllib.request.Request(url, data=body.encode('utf-8'), headers={'Content-Type': 'application/json'}, method='POST')`.
 - Scripts scan from `001` upward and load sequentially when multiple targets exist.
@@ -65,7 +65,7 @@ gh workflow run post-feed-to-discord.yml
 |-------------|---------|
 | `SITE_URL` | Base site URL for feed/status monitoring |
 | `FEED_URL` / `FEED_URLS` | Optional override feed URLs |
-| `DISCORD WEBHOOK URL 001` | Main feed post webhook |
-| `DISCORD WEBHOOK URL 002` | Additional feed webhook (optional) |
-| `SITE STATUS WEBHOOK URL 001` | Status transition alert webhook |
-| `SITE STATUS WEBHOOK URL 002` | Additional status webhook (optional) |
+| `DISCORD_WEBHOOK_URL_001` | Main feed post webhook |
+| `DISCORD_WEBHOOK_URL_002` | Additional feed webhook (optional) |
+| `SITE_STATUS_WEBHOOK_URL_001` | Status transition alert webhook |
+| `SITE_STATUS_WEBHOOK_URL_002` | Additional status webhook (optional) |

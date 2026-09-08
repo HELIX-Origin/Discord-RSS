@@ -213,8 +213,8 @@ class PostFeedToDiscordTests(unittest.TestCase):
             {
                 "SITE_STATUS WEBHOOK URL 001": "https://example.com/status1",
                 "SITE_STATUS WEBHOOK URL 002": "https://example.com/status2",
-                "DISCORD WEBHOOK URL 001": "https://example.com/feed1",
-                "CUSTOM SERVICE WEBHOOK URL 003": "https://example.com/custom3",
+                "DISCORD_WEBHOOK_URL_001": "https://example.com/feed1",
+                "CUSTOM_SERVICE_WEBHOOK_URL_003": "https://example.com/custom3",
             },
             clear=False,
         ):
@@ -251,7 +251,7 @@ class PostFeedToDiscordTests(unittest.TestCase):
                 os.environ,
                 {
                     "SITE_URL": "https://example.com",
-                    "SITE STATUS WEBHOOK URL 001": "https://example.com/webhook",
+                    "SITE_STATUS_WEBHOOK_URL_001": "https://example.com/webhook",
                     "SITE_STATUS_STATE_FILE": state_path,
                 },
                 clear=False,

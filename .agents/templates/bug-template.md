@@ -15,7 +15,7 @@ Clear description of the issue or feature request.
 - Python Version:
 - OS:
 - Workflow File:
-- GitHub Secrets Used (`{SERVICE_NAME} WEBHOOK URL {###}`):
+- GitHub Secrets Used (`{SERVICE_NAME}_WEBHOOK_URL_{###}`):
 
 ## Webhook / Secret References
 

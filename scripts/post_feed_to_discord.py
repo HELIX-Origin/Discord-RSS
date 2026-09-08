@@ -98,7 +98,7 @@ def main() -> int:
     if not webhook_urls:
         raise SystemExit(
             "No webhook URLs found. Configure GitHub Secrets using the pattern "
-            "{SERVICE_NAME} WEBHOOK URL {###} (e.g., DISCORD WEBHOOK URL 001)."
+            "{SERVICE_NAME}_WEBHOOK_URL_{###} (e.g., DISCORD_WEBHOOK_URL_001)."
         )
     webhook_url = webhook_urls[0]
     state_path = Path(os.getenv("STATE_FILE", ".cache/feed-state.json"))
@@ -156,7 +156,7 @@ def load_webhook_urls(service_name: str) -> list[str]:
     urls: list[str] = []
     index = 1
     while True:
-        secret_name = f"{service_name.upper()} WEBHOOK URL {index:03d}"
+        secret_name = f"{service_name.upper()}_WEBHOOK_URL_{index:03d}"
         url = os.getenv(secret_name)
         if not url:
             break
@@ -489,7 +489,7 @@ def main_site_status() -> int:
     if not webhook_urls:
         raise SystemExit(
             "No webhook URLs found. Configure GitHub Secrets using the pattern "
-            "{SERVICE_NAME} WEBHOOK URL {###} (e.g., SITE STATUS WEBHOOK URL 001)."
+            "{SERVICE_NAME}_WEBHOOK_URL_{###} (e.g., SITE_STATUS_WEBHOOK_URL_001)."
         )
     webhook_url = webhook_urls[0]
     state_path = Path(os.getenv("SITE_STATUS_STATE_FILE", ".cache/site-status-state.json"))

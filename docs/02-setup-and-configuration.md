@@ -4,19 +4,19 @@ This page covers the runtime setup for the repository and how the scheduling, st
 
 ## Required repository secrets
 
-Use repository secrets (under Settings -> Secrets and variables -> Actions) rather than `.env` files or branch-specific settings. All webhook URLs must use the `{SERVICE_NAME} WEBHOOK URL {###}` naming pattern.
+Use repository secrets (under Settings -> Secrets and variables -> Actions) rather than `.env` files or branch-specific settings. All webhook URLs must use the `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming pattern.
 
 ### Base site and feed secrets
 
 - `SITE_URL` — base URL for the forum or site being monitored
 - `FEED_URL` or `FEED_URLS` — optional feed URL override
-- `DISCORD WEBHOOK URL 001` — main feed webhook (`{SERVICE_NAME} WEBHOOK URL {###}` pattern)
-- `DISCORD WEBHOOK URL 002` — additional feed webhook (optional)
+- `DISCORD_WEBHOOK_URL_001` — main feed webhook (`{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern)
+- `DISCORD_WEBHOOK_URL_002` — additional feed webhook (optional)
 
 ### Optional status secrets
 
-- `SITE STATUS WEBHOOK URL 001` — status transition webhook using `{SERVICE_NAME} WEBHOOK URL {###}` naming
-- `SITE STATUS WEBHOOK URL 002` — additional status webhook (optional)
+- `SITE_STATUS_WEBHOOK_URL_001` — status transition webhook using `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming
+- `SITE_STATUS_WEBHOOK_URL_002` — additional status webhook (optional)
 
 ### Optional external API secrets (Cloudflare challenge resolution)
 
@@ -38,7 +38,7 @@ The site-status workflow supports:
 
 - `SITE_URL` — the forum base URL to monitor
 - `SITE_STATUS_STATE_FILE` — location of the status state file
-- `SITE STATUS WEBHOOK URL {###}` — status alert webhook loaded sequentially
+- `SITE_STATUS_WEBHOOK_URL_{###}` — status alert webhook loaded sequentially
 
 ## State files
 

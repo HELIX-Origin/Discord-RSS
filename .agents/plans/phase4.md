@@ -6,7 +6,7 @@ Separate workflow and script for site status with transition-only alerts using G
 ## Sub-Issues
 - [x] `.github/workflows/site-status-alert.yml` scheduled every 30 minutes
 - [x] `post_site_status.py` reads `.github/site-status-state.json`
-- [x] Webhook (`SITE STATUS WEBHOOK URL {###}`) fires only on `online` <-> `offline` transition
+- [x] Webhook (`SITE_STATUS_WEBHOOK_URL_{###}`) fires only on `online` <-> `offline` transition
 - [x] False-positive suppression with retry logic
 - [x] Script uses `load_webhook_urls()` from updated feed module
 
