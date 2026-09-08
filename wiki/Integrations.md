@@ -44,6 +44,9 @@ Some large forums offer an API or allow creating a "bot" user whose session cook
 
 ## Cloudflare
 
+> [!WARNING]
+> Cloudflare Browser Rendering may incur additional costs depending on your Cloudflare plan. Ensure you understand the pricing before enabling this integration.
+
 Cloudflare integration allows Discord RSS to bypass certain protections like JavaScript challenges and CAPTCHA by using Cloudflare's Browser Rendering service.
 
 To enable Cloudflare integration:
@@ -51,9 +54,6 @@ To enable Cloudflare integration:
 1. Go to the **Integrations** tab in Discord RSS.
 2. Click on **Cloudflare Browser Rendering** and follow the prompts to connect your Cloudflare account.
 3. Once connected, Discord RSS will use Cloudflare's Browser Rendering service to fetch content from protected pages.
-
-> [!WARNING]
-> Cloudflare Browser Rendering may incur additional costs depending on your Cloudflare plan. Ensure you understand the pricing before enabling this integration.
 
 > [!NOTE]
 > Cloudflare integration is currently a work in progress and may have limitations or changes in the future.
