@@ -1,0 +1,14 @@
+name: Agent Update
+about: Propose agent rule, skill, plan, or bug updates.
+title: "[AGENT] "
+labels: [agent]
+body:
+  - type: markdown
+    attributes:
+      value: "## Agent Update"
+  - type: dropdown
+    id: agent_area
+    attributes:
+      label: Agent Area
+      options: [Rules, Skills, Agents, Plans, Bugs, Templates, Opencode]
+    required: true
