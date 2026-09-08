@@ -1,4 +1,4 @@
-# Troubleshooting
+# Troubleshooting Guide
 
 Common issues when self-hosting or configuring Discord RSS.
 

@@ -21,19 +21,19 @@ For detailed instructions on integrating Discord RSS with various forums and pla
 
 For guidance on resolving common issues and errors encountered while using Discord RSS, refer to the troubleshooting guides and community discussions.
 
-- [Troubleshooting guide](./Troubleshooting.md)
+- [Troubleshooting Guide](./Troubleshooting.md)
 
 ## Development
 
 For information on setting up a development environment, contributing to the project, and understanding the codebase, refer to the development guides and contribution guidelines.
 
-- [Development guide](./Development.md)
+- [Development Guide](./Development.md)
 
 ## Deployment
 
 For instructions on deploying the Discord RSS service, including setup on various hosting environments and configuration options, refer to the deployment guides.
 
-- [Deployment guide](./Deployment.md)
+- [Deployment Guide](./Deployment.md)
 
 ## Important Notes
 
