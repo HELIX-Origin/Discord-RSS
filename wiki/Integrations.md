@@ -58,3 +58,5 @@ To enable Cloudflare integration:
 
 > [!NOTE]
 > Cloudflare integration is currently a work in progress and may have limitations or changes in the future.
+> We plan to add proper OAuth support for Cloudflare integration in the future. This way Cloudflare support can be per-user and more securely managed.
+> There will be an optional .env configuration for Cloudflare integration, allowing hosts, to provide global Cloudflare integration in place of the per-user OAuth login button.
