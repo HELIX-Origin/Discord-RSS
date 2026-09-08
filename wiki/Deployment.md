@@ -130,6 +130,7 @@ To deploy the Discord RSS service to Heroku using the CLI, follow these steps:
   heroku config:set DISCORD_RSS_STATUS_INTERVAL_MS=30000
   heroku config:set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
   heroku config:set DISCORD_RSS_PUBLIC_BASE_URL=https://your-app-name.herokuapp.com
+  heroku config:set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
   heroku config:set DISCORD_RSS_TEST_DATA=./test-data
   heroku config:set DISCORD_RSS_LOG_LEVEL=info
   ```
@@ -186,6 +187,7 @@ To deploy the Discord RSS service to Railway using the CLI, follow these steps:
   railway variables set DISCORD_RSS_STATUS_INTERVAL_MS=30000
   railway variables set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
   railway variables set DISCORD_RSS_PUBLIC_BASE_URL=https://your-project-name.railway.app
+  railway variables set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
   railway variables set DISCORD_RSS_TEST_DATA=./test-data
   railway variables set DISCORD_RSS_LOG_LEVEL=info
   ```
@@ -236,6 +238,7 @@ To deploy the Discord RSS service to Fly.io using the CLI, follow these steps:
   fly secrets set DISCORD_RSS_STATUS_INTERVAL_MS=30000
   fly secrets set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
   fly secrets set DISCORD_RSS_PUBLIC_BASE_URL=https://your-app-name.fly.dev
+  fly secrets set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
   fly secrets set DISCORD_RSS_TEST_DATA=./test-data
   fly secrets set DISCORD_RSS_LOG_LEVEL=info
   ```
@@ -286,6 +289,7 @@ To deploy the Discord RSS service to Render using the CLI, follow these steps:
   render env set DISCORD_RSS_STATUS_INTERVAL_MS=30000
   render env set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
   render env set DISCORD_RSS_PUBLIC_BASE_URL=https://your-service-name.onrender.com
+  render env set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
   render env set DISCORD_RSS_TEST_DATA=./test-data
   render env set DISCORD_RSS_LOG_LEVEL=info
   ```
