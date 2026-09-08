@@ -9,7 +9,6 @@ This file serves as the entry point for all AI agents, coding assistants, and au
 ## Agent Ecosystems
 
 - `.agents/` — Universal agent conventions (`rules/`, `skills/`, `bugs/`, `plans/`, `templates/`, `agents/`) that apply across all agent systems.
-- `.opencode/`, `.gemini/`, `.copilot/` — Ecosystem-specific configurations/agents referencing the shared `.agents/` conventions. (Currently being rebuilt; track in `.agents/` first.)
 
 ## Universal Agent Rules (`.agents/rules/`)
 
