@@ -4,8 +4,6 @@ title: "[FEAT] "
 labels: [enhancement]
 assignees: 
   - "PhantomNimbi"
-projects: 
-  - "Discord-RSS"
 body:
   - type: markdown
     attributes:

@@ -4,8 +4,6 @@ title: "[AGENT] "
 labels: [agent]
 assignees: 
   - "PhantomNimbi"
-projects: 
-  - "Discord-RSS"
 body:
   - type: markdown
     attributes:
