@@ -24,9 +24,7 @@ Discord RSS currently fetches feeds directly via Node.js `fetch`. Login-walled p
 Options for the host:
 
 1. **Proxy with persistent cookies.** Run a small local proxy (e.g. `puppeteer`, `playwright`, or a custom cookie-jar service) that logs into the forum once and exposes a feed URL Discord RSS can poll unauthenticated. This keeps forum credentials out of Discord RSS entirely.
-2. **Cloudflare Browser Rendering integration.** If the forum is behind Cloudflare and the built-in feed is blocked, connect a Cloudflare account via the **Integrations** tab. Cloudflare Browser Rendering can render JavaScript challenges and return readable HTML, from which Discord RSS can scrape.
-3. **Scrape public HTML.** If the content you care about is visible to guests (no login required), create a **Scrape feed** in Discord RSS with CSS selectors for thread titles/links. No cookies are needed.
-
+2. **Scrape public HTML.** If the content you care about is visible to guests (no login required), create a **Scrape feed** in Discord RSS with CSS selectors for thread titles/links. No cookies are needed.
 3. API key / service account
 
 Some large forums offer an API or allow creating a "bot" user whose session cookie can be used for RSS. This is forum-specific and documented in the per-platform pages.
