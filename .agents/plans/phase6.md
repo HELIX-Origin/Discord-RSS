@@ -1,15 +1,19 @@
+> [!IMPORTANT]
+> **LEGACY** — This phase describes the superseded Site-Feed-Discord Python/Discohook plan. See [roadmap.md](roadmap.md) and the live tracking at GitHub Issue #4.
+> 
 # Phase 6 — Full Test Coverage & CI Validation
 
 ## Goals
 Complete test coverage and validate CI with the updated webhook naming and atomic state patterns.
 
 ## Sub-Issues
-- [x] `tests/test_post_feed_to_discord.py` covers webhook secret scanning (`load_webhook_urls()`)
-- [x] `tests/test_post_feed_to_discord.py` covers parsing, filtering, message formatting, status logic
-- [x] Atomic state write (`os.replace()`) tested implicitly through `save_state()` usage
-- [x] `python -m unittest discover -s tests -p "test_*.py"` passes with 0 errors
+- [x] `tests/webhook-loader.test.ts` covers webhook secret scanning (`loadWebhookUrls()`)
+- [x] `tests/feed-loader.test.ts`, `tests/feed-discovery.test.ts`, `tests/atomic-write.test.ts`, `tests/index.test.ts` cover core modules
+- [x] Atomic state write (`.tmp` + rename) tested implicitly through atomic-write usage
+- [x] Local validation (`npm run build` + `npm test`) passes with 0 errors
 
 ## Verification
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+npm run build
+npm test
 ```

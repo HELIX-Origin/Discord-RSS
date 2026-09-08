@@ -1,15 +1,17 @@
+> [!IMPORTANT]
+> **LEGACY** — This phase describes the superseded Site-Feed-Discord Python/Discohook plan. See [roadmap.md](roadmap.md) and the live tracking at GitHub Issue #4.
+> 
 # Phase 4 — Status Monitor & Alert Transitions
 
 ## Goals
-Separate workflow and script for site status with transition-only alerts using GitHub Secrets webhook naming.
+Status handler (`src/handlers/status.ts`) with transition-only alerts using `.env` / secret webhook naming.
 
 ## Sub-Issues
-- [x] `.github/workflows/site-status-alert.yml` scheduled every 30 minutes
-- [x] `post_site_status.py` reads `.github/site-status-state.json`
-- [x] Webhook (`SITE_STATUS_WEBHOOK_URL_{###}`) fires only on `online` <-> `offline` transition
+- [x] Status handler reads `.github/site-status-state.json`
+- [x] Webhook (`SITE_STATUS_WEBHOOK_URL_001`) fires only on `online` <-> `offline` transition
 - [x] False-positive suppression with retry logic
-- [x] Script uses `load_webhook_urls()` from updated feed module
+- [x] Handler uses `loadWebhookUrls()` from `src/functions/webhook-loader.ts`
 
 ## Verification
-- [x] Manual trigger produces no webhook when state unchanged.
-- [x] Manual trigger with site down produces red embed webhook.
+- [x] Manual run produces no webhook when state unchanged.
+- [x] Manual run with site down produces red embed webhook.

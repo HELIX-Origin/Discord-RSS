@@ -4,7 +4,7 @@
 - **Bug ID**: BUG-002
 - **Status**: Investigating
 - **Priority**: Medium
-- **Component**: Python Scripts / Feed Parser
+- **Component**: TypeScript Modules / Feed Parser
 - **Reported Date**: 2026-09-07
 - **Target Resolution**: Phase 2
 - **GitHub Issue**: [#2](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/2)
@@ -29,31 +29,31 @@ flowchart TD
 ---
 
 ## Description
-When an RSS feed contains non-UTF-8 encoded characters (e.g., legacy forum posts with ISO-8859-1 encoding), `urllib.request.urlopen()` may return bytes that cause `.decode('utf-8')` to raise `UnicodeDecodeError`.
+When an RSS feed contains non-UTF-8 encoded characters (e.g., legacy forum posts with ISO-8859-1 encoding), `fetch()` may return bytes that cause `TextDecoder('utf-8')` to produce replacement characters or the parser to raise an error.
 
 ## Reproduction & Error Flow
 
 ```mermaid
 flowchart LR
     Start["Fetch RSS URL"] --> Decode{"Decode UTF-8"}
-    Decode -->|"Fails"| Error["UnicodeDecodeError"]
+    Decode -->|"Fails"| Error["Decode / Parse Error"]
     Decode -->|"Passes"| Success["Parse Entries"]
 ```
 
 ## Steps to Reproduce
 1. Configure `SITE_URL` to a legacy forum with ISO-8859-1 RSS output.
-2. Run `python scripts/post_feed_to_discord.py` manually.
-3. Observe traceback pointing to `.decode('utf-8')`.
+2. Run `npm start` (feed handler) manually.
+3. Observe broken characters or a parse failure in the feed entries.
 
 ## Expected Behavior
-The parser should attempt UTF-8 first, fall back to `latin-1` or detect encoding via `chardet` (only if user approved), and log a warning rather than crash.
+The parser should attempt UTF-8 first, fall back to `latin1`, and log a warning rather than crash.
 
 ## Actual Behavior
-Script crashes with unhandled `UnicodeDecodeError`, stopping the workflow and producing no Discord posts.
+Feed parsing fails or produces mangled output, stopping the run and producing no Discord posts.
 
 ## Environment Details
 - **OS**: Linux
-- **Python Version**: v3.11
+- **Node Version**: v22
 - **Site-Feed-Discord Version**: 1.0.0
 
 ## Resolution Architecture
@@ -70,4 +70,4 @@ sequenceDiagram
 ```
 
 ## Resolution & Fix
-Implement a safe decode loop: `data.decode('utf-8', errors='replace')` or `latin-1` fallback, with explicit user opt-in for external encoding libraries.
+Implement a safe decode loop: attempt UTF-8 first, fall back to `latin1` (`TextDecoder('utf-8', { fatal: false })` or explicit fallback), with logging of the chosen encoding.

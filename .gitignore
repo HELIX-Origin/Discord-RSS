@@ -1,26 +1,26 @@
-# Environment secrets
-.env
-.env.local
-.env.*.local
-
-# Lock files (excluded by default; regenerate locally with npm ci)
-package-lock.json
-npm-shrinkwrap.json
-.pnpm-lock.yaml
-yarn.lock
-
-# TypeScript / Node build output
+# Node
 node_modules/
 dist/
 build/
 *.tsbuildinfo
-
-# Runtime / temp files
-.cache/
-__pycache__/
-.pytest_cache/
-*.tmp
 *.log
+
+# Runtime data (SQLite database lives here)
+data/
+
+# Secrets (self-hosting env file; never commit)
+.env
+
+# Cookie jars / captured challenge state (local testing only)
+data-cookies.txt
+*.cookies.txt
+
+# Local scratch / temporary work
+scratch/
+
+# Coverage
+coverage/
+.nyc_output/
 
 # IDE / editor
 .idea/
@@ -32,15 +32,8 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Coverage
-coverage/
-.nyc_output/
-
-# Test fixtures (local only; not pushed)
-# Note: `tests/` directory itself remains tracked; only fixture output excluded
-*.fixture
-fixture-output/
-
-# Git restore / temp directories
-.git_restore/
-temp_restore/
+# Lock files (regenerate with npm install)
+package-lock.json
+npm-shrinkwrap.json
+.pnpm-lock.yaml
+yarn.lock

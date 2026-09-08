@@ -1,78 +1,41 @@
-# Site-Feed-Discord -- Project Roadmap
+# Discord RSS — Rebuild Roadmap
+
+> The live tracking roadmap is **GitHub Issue #4** (`[PLAN] Multi-user Discohook RSS rebuild — progress checkpoint & roadmap`) at `HELIX-Origin/Site-Feed-Discord`. This file mirrors the local context and links to the legacy phase plans.
 
 ```mermaid
-flowchart TD
-    subgraph Foundation ["Core Foundation"]
-        P1["Phase 1: Agent Ecosystem & Safety Rules ✅"]
-        P2["Phase 2: Python Scripts & State Management"]
+flowchart LR
+    subgraph Foundation ["Foundation"]
+        P0["AGENTS + rules + standards ✅"]
+        A["AppState layer (primary in-memory)"]
+        R["Optional Redis coordinator"]
     end
 
-    subgraph Integration ["Discord Integration & Monitoring"]
-        P3["Phase 3: Webhook Formatting & Embed Engine"]
-        P4["Phase 4: Status Monitor & Alert Transitions"]
+    subgraph Rebuild ["Service Rebuild"]
+        S1["#5 Architecture"]
+        S2["#6 Implementation"]
+        S3["#7 Vitest suite"]
+        S4["#8 Verification & docs"]
     end
 
-    subgraph Reliability ["Reliability & Testing"]
-        P5["Phase 5: Concurrent Safety & Atomic Writes"]
-        P6["Phase 6: Full Test Coverage & CI Validation"]
-        P7["Phase 7: Documentation & Community Template"]
-    end
-
-    subgraph Cloudflare ["Cloudflare & External APIs"]
-        P8["Phase 8: Challenge Resolution & External APIs"]
-    end
-
-    P1 --> P2 --> P3 --> P4 --> P5 --> P6 --> P7 --> P8
+    P0 --> A --> S1 --> S2 --> S3 --> S4
+    A --> R
 ```
 
----
+## Milestones & GitHub Tracking
 
-## Phase Milestones & GitHub Tracking
+| Item | Milestone | Status | Tracking |
+|------|-----------|--------|----------|
+| Standards | Roadmap-first issue/PR/commit standards, emoji commit matrix | Done (local, Rule 04 + templates) | `.agents/rules/remote-issue-protocol.md` |
+| AppState | In-memory primary layer over SQLite write-through, optional Redis | In progress (implementation) | [#5](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/5) |
+| Implementation | Repository write-through, RedisCoordinator, watcher locks/config wiring | Open | [#6](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/6) |
+| Tests | Vitest suite rebuild (state, auth, xml/parser, html/scraper, webhook, router) | Open | [#7](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/7) |
+| Verification | Smoke test (register -> webhook -> preset feed -> poll), agents rewrite, docs/wiki | Open | [#8](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/8) |
 
-| Phase | Milestone Name | Status | GitHub Issue | Sub-Issues |
-|-------|----------------|--------|--------------|------------|
-| **Phase 1** | Agent Ecosystem & Safety Rules | Completed | N/A | 4 Sub-Tasks |
-| **Phase 2** | Python Scripts & State Management | In Progress | [#1](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/1) | Sub-Tasks |
-| **Phase 3** | Webhook Formatting & Embed Engine | Planned | [#2](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/2) | Sub-Tasks |
-| **Phase 4** | Status Monitor & Alert Transitions | Planned | [#3](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/3) | Sub-Tasks |
-| **Phase 5** | Concurrent Safety & Atomic Writes | Planned | [#1](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/1) | Sub-Tasks |
-| **Phase 6** | Full Test Coverage & CI Validation | Planned | N/A | Sub-Tasks |
-| **Phase 7** | Documentation & Community Template | Planned | N/A | Sub-Tasks |
+## Legacy Phases (superseded)
 
----
+The original 8-phase plan (`phase1.md`..`phase7.md`) described the legacy Site-Feed-Discord Python/Discohook architecture and is superseded by the multi-user Discord RSS rebuild. `phase8.md` was removed. These files are retained as historical context only.
 
-### [Phase 1](phase1.md) — Agent Ecosystem & Safety Rules
-- [x] `.agents/` directory structure (`rules/`, `bugs/`, `plans/`, `skills/`, `agents/`, `templates/`, `opencode/`)
-- [x] Mandatory rules: Agent Safety (`00`), Zero Injection (`01`), Source Conventions (`02`), Message Formatting (`03`), Remote Protocol (`04`), Documentation (`05`)
-- [x] Bug tracking index with GitHub Issues synchronization
+## Progress Notes (roadmap-first, Rule 04)
 
-### [Phase 2](phase2.md) — Python Scripts & State Management
-- [x] `post_feed_to_discord.py` — feed discovery, filtering, and Discord webhook posting
-- [x] `post_site_status.py` — site status polling and transition alerts
-- [x] `.github/feed-state.json` and `.github/site-status-state.json` persistence
-- [ ] Atomic file writes and concurrent-run protection
-
-### [Phase 3](phase3.md) — Webhook Formatting & Embed Engine
-- [ ] Centralized embed builder for feed posts (`title`, `author`, `url`, `timestamp`)
-- [ ] Status transition embed builder (`Online`/`Offline`, color, description)
-- [ ] Message formatting routed only through Python scripts (Rule 03 compliance)
-
-### [Phase 4](phase4.md) — Status Monitor & Alert Transitions
-- [ ] Separate workflow `.github/workflows/site-status-alert.yml`
-- [ ] Status webhook (`DISCORD_STATUS_WEBHOOK_URL`) only fires on state transition
-- [ ] False-positive suppression (brief network blip tolerance)
-
-### [Phase 5](phase5.md) — Concurrent Safety & Atomic Writes
-- [ ] Lock/state file corruption fix (`BUG-001`)
-- [ ] `os.rename()` atomic write for `.github/feed-state.json`
-- [ ] `concurrency:` group enforcement on manual dispatch
-
-### [Phase 6](phase6.md) — Full Test Coverage & CI Validation
-- [ ] `tests/test_post_feed_to_discord.py` — 100% line coverage target
-- [ ] Unit tests for encoding fallbacks (`BUG-002`)
-- [ ] CI workflow validation: `python -m unittest discover -s tests -p "test_*.py"` passes
-
-### [Phase 7](phase7.md) — Documentation & Community Template
-- [ ] `docs/` fully linked from `docs/README.md`
-- [ ] `.agents/templates/` for new repository forks
-- [ ] Community contribution guide with agent compliance checklist
+- Progress updates belong in the **first post** of GitHub Issue #4 (`gh issue edit 4 --body-file <roadmap.md>`), never new comments.
+- New discoveries get added to the Issue #4 roadmap, followed by a single explanatory comment.

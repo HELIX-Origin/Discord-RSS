@@ -1,2 +1,0 @@
-- [python.md](python.md)  
-- [rss-atom.md](rss-atom.md)  

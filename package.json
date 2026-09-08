@@ -1,21 +1,25 @@
 {
-  "name": "site-feed-discord",
-  "version": "1.0.0",
-  "description": "GitHub Actions bot for monitoring feeds and posting to Discord",
+  "name": "discord-rss",
+  "version": "0.1.0",
+  "description": "Self-hosted RSS/Atom-to-Discord service for Discord communities. Built entirely in TypeScript ESM with zero runtime dependencies (native http, node:sqlite, built-in web dashboard and API). Posts directly to Discord webhooks.",
+  "type": "module",
   "main": "dist/index.js",
+  "engines": {
+    "node": ">=22.9.0"
+  },
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "node --env-file-if-exists=.env dist/index.js",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {
-    "dotenv": "^16.4"
-  },
   "devDependencies": {
-    "typescript": "^5.5",
-    "@types/node": "^22.0",
-    "vitest": "^2.0"
+    "@types/node": "^26.5.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  },
+  "dependencies": {
+    "redis": "^5.12.1"
   }
 }

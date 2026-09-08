@@ -1,17 +1,19 @@
 # Opencode Agents
 
-This file defines agent configurations for Site-Feed-Discord in the `.opencode/` ecosystem.
+This file documents the agent configurations for **Discord RSS** in the `.opencode/` ecosystem. The real agent definitions live in `.agents/agents/*.md` (shared universal conventions; ecosystem-specific shells are being rebuilt).
 
-## Agent Definitions
+## Agent Definitions (authoritative: `.agents/`)
 
-### `feed-bot`
-- **Role**: Monitor RSS/Atom feeds, filter entries, post new items to Discord via webhook.
-- **Key Rules**: `rules/02-python-github-actions-architecture.md`, `rules/03-message-formatting.md`
-- **Skills**: `skills/python.md`, `skills/rss-atom.md`, `skills/discord-webhooks.md`
-- **Verification**: `python -m unittest discover -s tests -p "test_*.py"`
+| Agent | Role | File |
+|-------|------|------|
+| `feed-watcher` | Poll all user feeds, dedupe (AppState + optional Redis), direct Discord webhook delivery, scrape branch | [`.agents/agents/feed-watcher.md`](../agents/feed-watcher.md) |
+| `status-monitor` | Availability polling, transition-only alerts, per-user webhook delivery | [`.agents/agents/status-monitor.md`](../agents/status-monitor.md) |
 
-### `status-monitor`
-- **Role**: Poll `SITE_URL` every 30 minutes, alert `DISCORD_STATUS_WEBHOOK_URL` only on state transition.
-- **Key Rules**: `rules/00-agent-safety-compliance.md`, `rules/05-documentation-standards.md`
-- **Skills**: `skills/web-basics.md`, `skills/github-actions.md`
-- **Verification**: Manual trigger + webhook payload inspection.
+## Key Rules (universal, `.agents/rules/`)
+- `agent-safety-compliance.md` (Rule 00), `zero-unsolicited-injection.md` (Rule 01), `typescript-architecture.md` (Rule 02), `message-formatting.md` (Rule 03), `remote-issue-protocol.md` (Rule 04), `documentation-standards.md` (Rule 05)
+
+## Skills (universal, `.agents/skills/`)
+`typescript.md`, `rss-atom.md`, `discord-webhooks.md`, `web-basics.md`, `cloudflare.md`, `code-hosting-platforms.md`
+
+## Verification
+`npm run build` + `npx tsc --noEmit` (and `npm test` when a suite exists).

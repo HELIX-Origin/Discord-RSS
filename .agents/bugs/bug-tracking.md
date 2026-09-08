@@ -1,6 +1,9 @@
 # Bug Tracking Index
 
-This directory contains tracked bugs and issues for Site-Feed-Discord. Every bug has its own tracking file following the standard sub-issue template and is mirrored directly to GitHub Issues.
+This directory contains tracked bugs for Discord RSS (formerly Site-Feed-Discord). Every bug mirrors the sub-issue convention used on GitHub.
+
+> [!IMPORTANT]
+> **Superseded**: BUG-001..BUG-003 were reported against the legacy single-site Python/Discohook architecture (`{.github}/feed-state.json`, `{SOURCE}_RSS_URL_{###}` env secrets). That architecture was replaced by the multi-user **Discord RSS** TypeScript service (dashboard-managed SQLite state + AppState + direct Discord webhooks). Re-open/re-map bugs against the current architecture before acting on them. Live tracking is GitHub Issue #4 + sub-issues #5..#8.
 
 ---
 
@@ -30,12 +33,13 @@ flowchart TD
 
 ## Tracked Bugs
 
-| Bug ID | Title | Priority | Status | Sub-Issues | GitHub Issue | File |
-|--------|-------|----------|--------|------------|--------------|------|
-| **BUG-001** | State file JSON corruption on concurrent workflow runs | High | Open | 4 Sub-Tasks | [#1](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/1) | [BUG-001-state-file-corruption.md](BUG-001-state-file-corruption.md) |
-| **BUG-003** | Cloudflare Challenge Bypass Fails When Playwright Not Installed | High | Open | 4 Sub-Tasks | [#3](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/3) | [BUG-003-cloudflare-challenge-bypass.md](BUG-003-cloudflare-challenge-bypass.md) |
-| **BUG-002** | Feed parser fails on non-UTF-8 RSS content | Medium | Investigating | 4 Sub-Tasks | [#2](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/2) | [BUG-002-non-utf8-rss.md](BUG-002-non-utf8-rss.md) |
-| **BUG-003** | Status webhook fires false positive during brief network blips | Medium | Open | 4 Sub-Tasks | [#3](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/3) | [BUG-003-false-positive-status.md](BUG-003-false-positive-status.md) |
+| Bug ID | Title | Priority | Status | GitHub Issue | File |
+|--------|-------|----------|--------|--------------|------|
+| **BUG-001** | State file JSON corruption on concurrent runs | High | Superseded | [#1](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/1) | [BUG-001-state-file-corruption.md](BUG-001-state-file-corruption.md) |
+| **BUG-002** | Feed parser fails on non-UTF-8 RSS content | Medium | Superseded | [#2](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/2) | [BUG-002-non-utf8-rss.md](BUG-002-non-utf8-rss.md) |
+| **BUG-003** | Cloudflare Challenge Bypass Fails When Playwright Not Installed | High | Superseded | [#3](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/3) | [BUG-003-cloudflare-challenge-bypass.md](BUG-003-cloudflare-challenge-bypass.md) |
+
+> BUG-002 (non-UTF-8) and BUG-003 (Cloudflare) remain conceptually relevant to the rebuild — re-map to `src/feed/parser.ts` and `src/feed/fetch.ts` respectively when re-opened.
 
 ---
 
@@ -60,3 +64,5 @@ All bugs are tracked directly via **GitHub Issues** on the repository (`HELIX-Or
    - Update the tracked bug table above.
 5. **Multi-Agent Sync**:
    - Synchronize across `.agents/` and `.github/` documentation.
+6. **Roadmap-First (Rule 04)**:
+   - The issue's first post is the roadmap; progress edits it. New comments only for newly discovered additions.

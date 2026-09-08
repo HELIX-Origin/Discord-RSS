@@ -1,15 +1,19 @@
+> [!IMPORTANT]
+> **LEGACY** — This phase describes the superseded Site-Feed-Discord Python/Discohook plan. See [roadmap.md](roadmap.md) and the live tracking at GitHub Issue #4.
+> 
 # Phase 5 — Concurrent Safety & Atomic Writes
 
 ## Goals
-Resolve `BUG-001` by preventing `.github/feed-state.json` and `.github/site-status-state.json` corruption during overlapping workflow runs.
+Resolve `BUG-001` by preventing `.github/feed-state.json` and `.github/site-status-state.json` corruption during overlapping scheduled runs.
 
 ## Sub-Issues
-- [x] `save_state()` uses atomic `os.replace()` (write `.tmp`, then rename)
+- [x] `src/functions/atomic-write.ts` uses atomic write (`.tmp` + `renameSync`)
 - [x] `.github/feed-state.json` protected by atomic writes
 - [x] `.github/site-status-state.json` protected by atomic writes
-- [x] `load_state()` reads from stable file only
+- [x] State loading reads from the stable file only
 
 ## Verification
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+npm run build
+npm test
 ```

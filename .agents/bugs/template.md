@@ -4,7 +4,7 @@
 - **Bug ID**: BUG-XXX
 - **Status**: Open / Investigating / In Progress / Testing / Resolved / Closed
 - **Priority**: Low / Medium / High / Critical
-- **Component**: Feed Parser / Status Monitor / GitHub Actions / Python Scripts / Tests / Docs
+- **Component**: Feed Parser / Status Monitor / TypeScript Modules / Tests / Docs
 - **Reported Date**: YYYY-MM-DD
 - **Target Resolution**: Phase X
 - **GitHub Issue**: [#000](https://github.com/HELIX-Origin/Site-Feed-Discord/issues/000)
@@ -53,7 +53,7 @@ A concise description of what actually happened, including error messages or une
 
 ## Environment Details
 - **OS**: Windows / macOS / Linux
-- **Python Version**: v3.11 / v3.12
+- **Node Version**: v22
 - **Site-Feed-Discord Version**: 1.0.0
 
 ## Root Cause Analysis

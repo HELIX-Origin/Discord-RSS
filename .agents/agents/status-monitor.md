@@ -1,78 +1,61 @@
 # Status Monitor Agent
 
-This agent defines conventions, architecture, and command references for the Site-Feed-Discord site status monitoring automation.
+This agent defines conventions, architecture, and command references for the Discord RSS site status monitoring automation.
 
 ## Architecture & Structure
 
 ```
-Site-Feed-Discord/
+Discord RSS/
 ├── src/
-│   ├── index.ts                        # Main TypeScript entry
-│   ├── handlers/
-│   │   ├── feed.ts                      # Feed handler
-│   │   └── status.ts                    # Status handler
-│   ├── modules/
-│   │   └── webhook.ts                   # Webhook module
-│   ├── functions/
-│   │   ├── atomic-write.ts              # Atomic state writes
-│   │   ├── webhook-loader.ts            # Webhook scanning (`{SERVICE_NAME}_WEBHOOK_URL_{###}`)
-│   │   └── feed-loader.ts               # Feed scanning (`{SOURCE}_RSS_URL_{###}`)
-│   └── types/
-│       └── index.ts                     # TypeScript types
-├── .github/
-│   ├── workflows/
-│   │   └── ci.yml                       # CI code scan workflow (replaces scheduled workflows)
-│   └── site-status-state.json           # Online/offline state
+│   ├── index.ts                        # Entry: boot config, db, repo, redis, watchers, server
+│   ├── status/
+│   │   └── watcher.ts                  # StatusWatcher (check, transition-only alerts) — THIS AGENT
+│   ├── feed/
+│   │   └── fetch.ts                    # fetchRaw shared (HTTP get + Cloudflare detection)
+│   ├── state/
+│   │   ├── app-state.ts                # AppState (in-memory primary layer)
+│   │   └── redis.ts                    # RedisCoordinator (optional cross-instance locks)
+│   ├── webhook/
+│   │   └── discord.ts                  # Direct Discord webhook POST + retry, feedEmbed
+│   └── scheduler/
+│       └── scheduler.ts                # In-process interval scheduler
 └── .agents/
     └── agents/
-        └── status-monitor.md        # This file
+        └── status-monitor.md           # This file
 ```
 
 ## Setup & Workflow Commands
 
 ```bash
-# Build TypeScript
 npm run build
-
-# Trigger CI scan (replaces manual workflow triggers)
-gh workflow run ci.yml
+npm start    # in-process scheduler drives status checks
 ```
+- Status interval: `DISCORD_RSS_STATUS_INTERVAL_MS` (default 30s).
 
 ## Key Patterns
 
-### 1. Availability Check (`post_site_status.py`)
-- Read `SITE_URL` from environment.
-- Send `urllib.request.urlopen(SITE_URL, timeout=10)`.
-- If `HTTPResponse.status == 200` and no exception: site is **online**.
-- Any exception (`URLError`, timeout, non-200 status): site is **offline**.
-- When behind a Cloudflare challenge, `fetch_via_http()` or `fetch_via_browser()` handles detection and resolution via `playwright` or an optional external API configured via GitHub Secrets.
+### 1. Availability Check (`src/status/watcher.ts`)
+- Enumerate all enabled monitors from `repo.listMonitorsForAllUsers()`.
+- For each: acquire a distributed poll lock via `RedisCoordinator` when Redis configured (`monitor:{id}`), else single-instance.
+- `fetchRaw(monitor.url, { maxBytes: 512*1024 })`; classify by status code: `2xx-3xx` = online, else down. Timeout/exception = down.
+- Cloudflare-protected monitors route through the shared fetch path.
 
-### 2. State Persistence
-- Read `.github/site-status-state.json` to get previous state (`{"status": "online", "last_checked": "..."}`).
-- Only send webhook if `current_state != previous_state` (transition only).
+### 2. Transition-Only Alerts
+- Track previous status from the AppState monitor row.
+- `repo.setMonitorChecked(userId, id, status)` always updates the row.
+- Notify **only** on transition `unknown -> X` (skip) and `X -> Y` where X≠Y.
+- False-positive suppression: fetch timeout/exception marks down; single retry behavior handled in `checkMonitorLocked`.
 
-### 3. Discord Webhook (GitHub Secrets Naming) + Optional Discohook
-- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming.
-- Default: `SITE_STATUS_WEBHOOK_URL_001` (status webhook).
-- Optional: `DISCOHOOK_WEBHOOK_URL_001` (enhanced status embed formatting — requires Discohook bot invitation).
-- Example secrets:
-  - `SITE_STATUS_WEBHOOK_URL_001`
-  - `SITE_STATUS_WEBHOOK_URL_002`
-- Build embed payload:
-  - Title: `Site Status: Online` or `Site Status: Offline`
-  - Color: `65280` (green) for online, `16711680` (red) for offline
-  - Description: `SITE_URL` and timestamp
-- Scripts scan from `001` upward and load sequentially.
+### 3. Webhook Delivery (`.env` Naming No Longer Applies)
+- Monitors reference a per-user webhook row (`webhooks` table), dashboard-managed — never env vars.
+- Embed via `feedEmbed(...)`: title `⛔ <name> went down` / `✅ <name> is back online`, color `0xef4444` / `0x22c55e`, description = `url\n\n<detail>`.
+- `sendWebhook` from `src/webhook/discord.ts`.
 
-### 4. False-Positive Suppression
-- Before marking offline, retry once after a 5-second delay.
-- If the retry succeeds, keep previous online state and do not fire webhook.
+## Required Environment Variables
 
-## Required Environment Variables / GitHub Secrets
+| Variable | Purpose |
+|----------|---------|
+| `DISCORD_RSS_STATUS_INTERVAL_MS` | Status check interval |
+| `DISCORD_RSS_REDIS_URL` | Optional cross-instance coordination |
 
-| Secret Name | Purpose |
-|-------------|---------|
-| `SITE_URL` | Base site URL for status monitoring |
-| `SITE_STATUS_WEBHOOK_URL_001` | Status transition alert webhook |
-| `SITE_STATUS_WEBHOOK_URL_002` | Additional status webhook (optional) |
-| `DISCOHOOK_WEBHOOK_URL_001` | Optional Discohook enhanced embed webhook (requires bot invitation) |
+All other configuration (monitor targets, alert webhooks) is stored in SQLite and managed from the dashboard (Webhooks / Status Monitors tabs).

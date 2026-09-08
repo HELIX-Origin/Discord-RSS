@@ -1,5 +1,5 @@
 name: Bug Report
-about: Report a bug in feed discovery, status monitoring, TypeScript modules, webhook handling, agent rules, or documentation.
+about: Report a bug in feed polling, status monitoring, dashboard/API, webhook delivery, state, agent rules, or documentation.
 title: "[BUG] "
 labels: [bug]
 assignees: []
@@ -15,7 +15,7 @@ body:
       label: Description
       description: What is broken?
       placeholder: |
-        Example: The feed script fails to load webhooks from GitHub Secrets using `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming.
+        Example: Dedupe misses entries when AppState is not hydrated from the database on startup.
     required: true
     validations:
       required: true
@@ -25,10 +25,9 @@ body:
       label: Steps to Reproduce
       description: How to trigger the bug.
       placeholder: |
-        1. Set `SITE_URL` to a test domain.
-        2. Configure `DISCOHOOK_WEBHOOK_URL_001` secret.
-        3. Run `npm start`.
-        4. Observe error message.
+        1. Start the service (`npm start`).
+        2. Add a webhook + feed from the dashboard.
+        3. Poll and observe duplicate delivery.
     required: true
   - type: dropdown
     id: component
@@ -36,17 +35,20 @@ body:
       label: Component
       description: Which part of the repository is affected?
       options:
-        - Feed Parser (`src/handlers/feed.ts`, `src/modules/feed-discovery.ts`)
-        - Status Monitor (`src/handlers/status.ts`)
-        - Webhook Module (`src/modules/webhook.ts`)
-        - State Persistence (`src/functions/atomic-write.ts`)
+        - Feed Watcher (`src/feed/watcher.ts`)
+        - Feed Parser / XML (`src/feed/parser.ts`, `src/feed/xml.ts`)
+        - Status Monitor (`src/status/watcher.ts`)
+        - Webhook Delivery (`src/webhook/discord.ts`)
+        - State / AppState / Redis (`src/state/*`)
+        - Persistence / Schema (`src/db/*`)
+        - Auth / OAuth (`src/auth/*`, `src/oauth/*`)
+        - Dashboard / API / Router (`src/http/*`, `src/server.ts`)
+        - Config / Scheduler (`src/config.ts`, `src/scheduler/*`)
         - TypeScript Build (`tsconfig.json`, `package.json`)
-        - GitHub Actions Workflow (`.github/workflows/*.yml`)
         - Agent Rules (`.agents/rules/*.md`)
         - Agent Bugs (`.agents/bugs/*.md`)
         - Agent Plans (`.agents/plans/*.md`)
         - Agent Skills (`.agents/skills/*.md`)
-        - Documentation (`docs/*.md`, `README.md`)
         - Tests (`tests/*.test.ts`, `vitest.config.ts`)
     required: true
   - type: dropdown
@@ -62,39 +64,25 @@ body:
   - type: dropdown
     id: phase
     attributes:
-      label: Related Agent Phase
-      description: Which `.agents/plans/phase*.md` milestone does this relate to?
+      label: Related Milestone
+      description: Which rebuild milestone does this relate to? (GitHub Issue #4 + sub-issues)
       options:
-        - Phase 1 (Agent Ecosystem)
-        - Phase 2 (Python Scripts & State Management — migrated to TypeScript)
-        - Phase 3 (Webhook Formatting & Embed Engine)
-        - Phase 4 (Status Monitor & Alert Transitions)
-        - Phase 5 (Concurrent Safety & Atomic Writes)
-        - Phase 6 (Full Test Coverage)
-        - Phase 7 (Documentation & Community Template)
-        - Phase 8 (Cloudflare Challenge & External APIs)
+        - #4 / Sub-Issue 1 (Architecture)
+        - #4 / Sub-Issue 2 (Implementation)
+        - #4 / Sub-Issue 3 (Test Suite)
+        - #4 / Sub-Issue 4 (Verification & Docs)
         - None / General
-    required: false
-  - type: textarea
-    id: secrets_used
-    attributes:
-      label: GitHub Secrets Used
-      description: List any `{SERVICE_NAME}_WEBHOOK_URL_{###}` or `{SOURCE}_RSS_URL_{###}` secrets involved.
-      placeholder: |
-        - `DISCOHOOK_WEBHOOK_URL_001`
-        - `SITE_STATUS_WEBHOOK_URL_001`
-        - `FORUM_RSS_URL_001`
     required: false
   - type: textarea
     id: environment
     attributes:
       label: Environment Details
-      description: OS, Python/Node version, TypeScript version, `npm` version.
+      description: OS, Node version, npm version, Discord RSS version.
       placeholder: |
         - OS: Ubuntu / macOS / Windows
-        - Node.js: v22.x
-        - TypeScript: v5.5
-        - `npm`: v10.x
+        - Node.js: v22.9+
+        - npm: v10.x
+        - discord-rss: 0.1.0
     required: false
   - type: textarea
     id: expected_behavior
@@ -124,11 +112,11 @@ body:
           required: true
         - label: I have not force-pushed (`git push --force`)
           required: true
-        - label: I have followed `.agents/rules/00-agent-safety-compliance.md`
+        - label: I have followed `.agents/rules/agent-safety-compliance.md`
           required: true
         - label: I have included Mermaid diagrams for complex bugs (if applicable)
           required: false
         - label: I have referenced the correct `.agents/bugs/BUG-XXX-*.md` file
           required: false
-        - label: I have verified tests pass (`npm test` / `npm run test`)
+        - label: I have verified the build passes (`npm run build`)
           required: true

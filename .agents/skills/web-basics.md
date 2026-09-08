@@ -1,10 +1,14 @@
 # Web Basics Skill
 
 ## Fundamentals
-- All monitoring is based on public HTTP/HTTPS endpoints.
-- `urllib.request.urlopen()` follows redirects (`http.client.HTTPResponse.status` check optional).
-- Status checks use a simple `HEAD` or `GET` request with a 10-second timeout; a `200` means online, anything else or an exception means offline.
+- All monitoring is based on public HTTP/HTTPS endpoints via `fetchRaw` (`src/feed/fetch.ts`).
+- `fetch(url)` follows redirects by default; `response.status` decides online/offline.
+- Timeouts via `AbortSignal.timeout(...)`; `maxBytes` caps the response body read.
 
-## Filtering
-- URLs containing `/admin/`, `/mod/`, `/staff/`, `/login`, `/register` must be excluded from feed ingestion.
-- Only links starting with `SITE_URL` (or matching its domain) are included.
+## Status Checks (`src/status/watcher.ts`)
+- `2xx-3xx` = online; anything else or an exception = down. `fetchRaw` returns `{ status, contentType, durationMs, text }` for detail.
+- Transition-only alerts: notify only when status changes; skip the initial `unknown` state.
+
+## Filtering (feed ingestion)
+- URLs containing `/admin/`, `/mod/`, `/staff/`, `/login`, `/register` should be excluded from feed entries.
+- Link normalization uses `absoluteUrl(base, href)` to resolve relative URLs against the feed URL.

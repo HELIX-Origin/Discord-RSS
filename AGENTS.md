@@ -2,35 +2,36 @@
 
 This file serves as the entry point for all AI agents, coding assistants, and automated agents working on this repository.
 
+## Project
+
+**Discord RSS** — a self-hosted, multi-user RSS/Atom-to-Discord service built entirely in TypeScript ESM. Native `http`, `node:sqlite`, built-in dashboard + API; posts directly to Discord webhooks (no Discohook). Runtime deps: none except optional `redis` for cross-instance coordination.
+
 ## Agent Ecosystems
 
-- `.opencode/` — Opencode agent configurations (`opencode.json`), skills (`skills/`), plans (`plans/`), rules (`rules/`), bugs (`bugs/`), templates (`templates/`), and agent definitions (`agents/`).
-- `.gemini/` — Gemini agent configurations (`gemini.md`), skills, rules, bugs, plans, and agent definitions for Gemini-powered automation.
-- `.copilot/` — Copilot agent configurations (`copilot.md`), rules, bugs, skills, templates, and agent definitions for GitHub Copilot integration.
-- `.agents/` — Universal agent conventions (`rules/`, `skills/`, `bugs/`, `plans/`, `templates/`, `agents/`, `opencode/`) that apply across all agent systems (`.opencode/`, `.gemini/`, `.copilot/`).
+- `.agents/` — Universal agent conventions (`rules/`, `skills/`, `bugs/`, `plans/`, `templates/`, `agents/`) that apply across all agent systems.
+- `.opencode/`, `.gemini/`, `.copilot/` — Ecosystem-specific configurations/agents referencing the shared `.agents/` conventions. (Currently being rebuilt; track in `.agents/` first.)
 
-## Universal Agent Rules (`.agents/`)
+## Universal Agent Rules (`.agents/rules/`)
 
-All agent systems (`.opencode/`, `.gemini/`, `.copilot/`, `.agents/`) must comply with `.agents/rules/`:
+All agent work must comply with `.agents/rules/` (enforced everywhere):
 
-- `00-agent-safety-compliance.md` — Safety invariants, zero irreversible damage, secrets protection, external API safety (`CLOUDFLARE_API_KEY` must remain in `.env` / secrets, never committed).
-- `01-zero-unsolicited-injection.md` — Zero external framework injection (only native TypeScript / standard libraries unless explicitly approved; Discohook as optional external service permitted; `playwright` permitted for Cloudflare; `dotenv` permitted for `.env`).
-- `02-python-github-actions-architecture.md` — TypeScript & GitHub Actions architecture (`src/index.ts`, `src/handlers/`, `src/modules/`, `src/functions/`, `src/types/`); `tsconfig.json`; `package.json`.
-- `03-message-formatting.md` — Webhook/secret naming (`{SERVICE_NAME}_WEBHOOK_URL_{###}` for `.env` or secrets), embed formatting, multiple webhook support (`001`, `002`, etc.), `.env` storage preferred over secrets for cloud hosting (Render, Heroku, etc.); no `.env` file committed.
-- `04-remote-issue-protocol.md` — Remote issue protocol (GitHub Issues mirror, sub-issue decomposition, Mermaid diagrams mandatory, body-file submissions via `--body-file`).
-- `05-documentation-standards.md` — Documentation standards (`docs/README.md` index, `.env.example` reference, agent documentation sync, no uncommitted secret docs).
+- `agent-safety-compliance.md` (Rule 00) — Safety invariants, zero irreversible damage, secrets protection, `CLOUDFLARE_API_KEY` stays in `.env`/secrets, never committed.
+- `zero-unsolicited-injection.md` (Rule 01) — Only native TypeScript / standard libraries unless explicitly approved (`redis` approved for cross-instance coordination; `playwright` permitted for Cloudflare).
+- `typescript-architecture.md` (Rule 02) — `src/` layout (`index.ts`, `server.ts`, `config.ts`, `app.ts`, `auth/`, `db/`, `feed/`, `http/`, `oauth/`, `scheduler/`, `state/`, `status/`, `webhook/`); `tsconfig.json`; `package.json`.
+- `message-formatting.md` (Rule 03) — Discord embeds built in `src/webhook/discord.ts`; webhooks are per-user rows in SQLite (dashboard-managed, not env vars); `.env` uses `DISCORD_RSS_*` prefix.
+- `remote-issue-protocol.md` (Rule 04) — Roadmap-first tracking: first post is the plan, edited as progress happens, sub-issue decomposition, Mermaid diagrams, `--body-file` submissions.
+- `documentation-standards.md` (Rule 05) — `docs/README.md` index (when present), `.env.example` reference, agent documentation sync, no uncommitted secrets.
 
 ## Agent Definitions
 
-- `.agents/agents/feed-bot.md` — Feed monitoring agent (TypeScript, Discohook webhook primary, `{SOURCE}_RSS_URL_{###}` feed secrets, `.env` based).
-- `.agents/agents/status-monitor.md` — Status monitoring agent (`SITE_STATUS_WEBHOOK_URL_001`, `.env` based, TypeScript, atomic writes).
+- `.agents/agents/feed-watcher.md` — Feed polling agent (direct Discord webhook delivery, dedupe, scrape branch).
+- `.agents/agents/status-monitor.md` — Site status monitoring agent (transition-only alerts).
 
 ## Agent Tracking
 
-- `.agents/bugs/` — Tracked bugs (`BUG-001` atomic writes, `BUG-002` encoding, `BUG-003` Cloudflare external API).
-- `.agents/plans/` — Roadmap (`roadmap.md`) and phases (`phase1.md` through `phase8.md`).
-- `.agents/skills/` — Technical skills (`python.md`, `rss-atom.md`, `discord-webhooks.md`, `github-actions.md`, `cloudflare.md`, `discohook.md`, etc.).
+- `.agents/bugs/` — Tracked bugs mirroring the original architecture (`BUG-001`..`BUG-003`; superseded by the rebuild — see `bug-tracking.md`).
+- `.agents/plans/` — Rebuild roadmap (`roadmap.md`) + legacy phases; GitHub Issue #4 is the live tracking roadmap.
 
 ## Usage
 
-All agent updates, bug reports, feature requests, and documentation changes must reference `.agents/` rules. No file operations outside `D:\Projects\Site-Feed-Discord` (or current repo root) permitted (`Rule 00`).
+All agent updates, bug reports, feature requests, and documentation changes must reference `.agents/` rules. No file operations outside this repository root (`D:\Projects\Discord-RSS`) are permitted (Rule 00).
