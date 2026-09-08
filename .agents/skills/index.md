@@ -9,7 +9,7 @@ This directory contains technical skill definitions for frameworks, languages, p
 
 ### Web & Feed Technologies
 - [rss-atom.md](rss-atom.md) — RSS 2.0, Atom feeds, XML parsing with `xml.etree.ElementTree`, encoding fallbacks.
-- [discord-webhooks.md](discord-webhooks.md) — Discord webhook URLs, embed arrays, message payload construction.
+- [discord-webhooks.md](discord-webhooks.md) — `.env` webhook URLs (`{SERVICE_NAME}_WEBHOOK_URL_{###}`), embed arrays, Discohook primary method.
 
 ### Platform & CI/CD
 - [github-actions.md](github-actions.md) — GitHub Actions YAML, scheduled workflows (`cron:`), `secrets:`, `concurrency:`.

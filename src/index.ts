@@ -1,3 +1,7 @@
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
 import { handleFeed } from './handlers/feed';
 import { handleStatus } from './handlers/status';
 

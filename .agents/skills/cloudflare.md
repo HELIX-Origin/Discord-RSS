@@ -23,7 +23,7 @@ When a challenge is detected (`fetch_via_http()` returns 403/429 with challenge 
 ## External API Awareness
 If `playwright` is unavailable or insufficient, third-party challenge-solving APIs or external browser automation services may be used **only** when:
 1. The site is confirmed protected (`SITE_URL` responds with challenge markers).
-2. The user explicitly approves the external service by storing the API key or endpoint in **GitHub Secrets** (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`). Keys must never be placed in `.env` files that could be accidentally committed.
+2. The user explicitly approves the external service by storing the API key or endpoint in `.env` (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`). Keys must never be committed to source.
 3. The service endpoint, API key, or session token is never committed to source.
 4. The fallback behavior (standard-library `urllib.request`) remains intact when no challenge is detected.
 

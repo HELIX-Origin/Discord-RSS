@@ -10,7 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "dotenv": "^16.4"
+  },
   "devDependencies": {
     "typescript": "^5.5",
     "@types/node": "^22.0",

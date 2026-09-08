@@ -1,3 +1,7 @@
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
 export function loadFeedUrls(sourceName: string): string[] {
   const urls: string[] = [];
   let index = 1;
