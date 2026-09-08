@@ -17,28 +17,14 @@ For detailed instructions on integrating Discord RSS with various forums and pla
 - [vBulletin integration guide](./Integrations/vbulletin.md)
 - [phpBB integration guide](./Integrations/phpbb.md)
 
-## Troubleshooting
-
-For guidance on resolving common issues and errors encountered while using Discord RSS, refer to the troubleshooting guides and community discussions.
-
-- [Troubleshooting Guide](./Troubleshooting.md)
-
-## Development
-
-For information on setting up a development environment, contributing to the project, and understanding the codebase, refer to the development guides and contribution guidelines.
-
-- [Development Guide](./Development.md)
-
-## Deployment
-
-For instructions on deploying the Discord RSS service, including setup on various hosting environments and configuration options, refer to the deployment guides.
-
-- [Deployment Guide](./Deployment.md)
 
 ## Important Notes
 
 - These docs are currently incomplete. They are being actively built and updated by the community.
-- Contributions and feedback are welcome to help improve the documentation.
-- For guidelines on contributing, please refer to the [Contribution Guidelines](https://github.com/HELIX-Origin/Discord-RSS/blob/main/CONTRIBUTING.md).
+- Contributions and feedback are welcome to help improve the documentation. Read our [Contribution Guidelines](https://github.com/HELIX-Origin/Discord-RSS/blob/main/CONTRIBUTING.md) for guidelines on contributing to the project.
+- Detailed deployment instructions can be found in our [Deployment Guide](./Deployment.md).
+- Developers can refer to the [Development Guide](./Development.md) for information on setting up a development environment and contributing to the project.
+- For troubleshooting common issues and errors, refer to the [Troubleshooting Guide](./Troubleshooting.md).
+- Forum hosts should check out the [Integration Guides](./Integrations) for detailed instructions on adding support for Discord RSS to their forums.
 - Regularly check for updates in the main repository to stay informed about changes and improvements.
 - Participate in discussions and provide feedback on issues and pull requests to contribute to the project's development.
