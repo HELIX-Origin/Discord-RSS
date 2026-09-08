@@ -40,7 +40,7 @@ The repository uses a modular TypeScript architecture (`src/index.ts`, `src/hand
 - Polls the site status every 30 minutes (`.github/workflows/site-status-alert.yml`)
 - Posts to the status webhook (`SITE_STATUS_WEBHOOK_URL_{###}`) only when the site transitions between online and offline states
 - Supports external APIs for Cloudflare challenge resolution (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`)
-- Uses a single concurrency group per workflow (`post-feed-to-discord`, `site-status-alert`) so overlapping scheduled runs do not duplicate posts
+- Uses a single CI code scan workflow (`.github/workflows/ci.yml`) for verification instead of scheduled jobs; manual triggers available via `gh workflow run ci.yml`.
 
 ## Agent compliance
 

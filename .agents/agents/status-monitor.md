@@ -6,12 +6,23 @@ This agent defines conventions, architecture, and command references for the Sit
 
 ```
 Site-Feed-Discord/
-├── scripts/
-│   └── post_site_status.py        # Status polling logic
+├── src/
+│   ├── index.ts                        # Main TypeScript entry
+│   ├── handlers/
+│   │   ├── feed.ts                      # Feed handler
+│   │   └── status.ts                    # Status handler
+│   ├── modules/
+│   │   └── webhook.ts                   # Webhook module
+│   ├── functions/
+│   │   ├── atomic-write.ts              # Atomic state writes
+│   │   ├── webhook-loader.ts            # Webhook scanning (`{SERVICE_NAME}_WEBHOOK_URL_{###}`)
+│   │   └── feed-loader.ts               # Feed scanning (`{SOURCE}_RSS_URL_{###}`)
+│   └── types/
+│       └── index.ts                     # TypeScript types
 ├── .github/
 │   ├── workflows/
-│   │   └── site-status-alert.yml   # Scheduled status job
-│   └── site-status-state.json      # Online/offline state
+│   │   └── ci.yml                       # CI code scan workflow (replaces scheduled workflows)
+│   └── site-status-state.json           # Online/offline state
 └── .agents/
     └── agents/
         └── status-monitor.md        # This file
@@ -20,11 +31,11 @@ Site-Feed-Discord/
 ## Setup & Workflow Commands
 
 ```bash
-# Validate status script
-python scripts/post_site_status.py
+# Build TypeScript
+npm run build
 
-# Trigger status workflow
-gh workflow run site-status-alert.yml
+# Trigger CI scan (replaces manual workflow triggers)
+gh workflow run ci.yml
 ```
 
 ## Key Patterns

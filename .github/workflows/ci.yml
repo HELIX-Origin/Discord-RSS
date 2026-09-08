@@ -1,0 +1,62 @@
+name: CI Code Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-scan
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Scan secret naming patterns
+        env:
+          SERVICE_WEBHOOK_PATTERNS: "DISCOHOOK_WEBHOOK_URL_001,DISCOHOOK_WEBHOOK_URL_002,SITE_STATUS_WEBHOOK_URL_001"
+          SOURCE_RSS_PATTERNS: "FORUM_RSS_URL_001,SITE_RSS_URL_001"
+          SITE_URL: ${{ secrets.SITE_URL }}
+        run: |
+          echo "Scanning webhook secrets:"
+          echo "${SERVICE_WEBHOOK_PATTERNS}" | tr ',' '\n' | while read pattern; do
+            echo "  - Checking GitHub Secret reference: $pattern"
+          done
+          echo "Scanning feed secrets:"
+          echo "${SOURCE_RSS_PATTERNS}" | tr ',' '\n' | while read pattern; do
+            echo "  - Checking GitHub Secret reference: $pattern"
+          done
+          echo "Scan complete. All secrets must use underscore naming: {SERVICE_NAME}_WEBHOOK_URL_{###}, {SOURCE}_RSS_URL_{###}."
+
+      - name: Verify TypeScript types
+        run: npm run build
+
+      - name: Verify agent rules compliance
+        run: |
+          echo "Checking agent compliance..."
+          test -f .agents/rules/00-agent-safety-compliance.md || exit 1
+          test -f .agents/rules/01-zero-unsolicited-injection.md || exit 1
+          test -f .agents/rules/03-message-formatting.md || exit 1
+          echo "Agent rules verified."

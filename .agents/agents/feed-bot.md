@@ -22,7 +22,7 @@ Site-Feed-Discord/
 │       └── index.ts                     # TypeScript types
 ├── .github/
 │   ├── workflows/
-│   │   └── post-feed-to-discord.yml
+│   │   └── ci.yml                       # CI code scan workflow (replaces scheduled workflows)
 │   └── feed-state.json             # Persisted state
 ├── docs/
 │   └── README.md
@@ -40,8 +40,8 @@ npm run build
 # Run TypeScript entry
 npm start
 
-# Deploy workflow (manual trigger via GitHub UI or gh)
-gh workflow run post-feed-to-discord.yml
+# Trigger CI scan (replaces manual workflow triggers)
+gh workflow run ci.yml
 ```
 
 ## Key Patterns

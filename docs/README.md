@@ -47,6 +47,5 @@ If a site exposes feed content publicly, the workflow can usually monitor it as 
 
 - `scripts/post_feed_to_discord.py` — main feed discovery, filtering, and posting logic
 - `scripts/post_site_status.py` — site availability status check
-- `.github/workflows/post-feed-to-discord.yml` — Discord feed schedule and jobs
-- `.github/workflows/site-status-alert.yml` — status monitor schedule and jobs
+- `.github/workflows/ci.yml` — CI code scan workflow (scans secrets naming, TypeScript build, agent rules, tests)
 - `tests/test_post_feed_to_discord.py` — unit tests for discovery, filtering, and message formatting

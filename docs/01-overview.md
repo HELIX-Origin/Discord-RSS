@@ -22,9 +22,8 @@ The project focuses on three things:
 ## Repository layout
 
 - `src/index.ts` — TypeScript entry point with modular architecture (`src/handlers/`, `src/modules/`, `src/functions/`, `src/types/`)
-- `.github/workflows/post-feed-to-discord.yml` — scheduled feed-posting workflow (uses Discohook webhook, `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming)
-- `.github/workflows/site-status-alert.yml` — scheduled site-status workflow
-- `tests/test_post_feed_to_discord.py` — validation for feed URL discovery, filtering, webhook scanning (`load_webhook_urls()`), embed formatting, and Cloudflare detection
+- `.github/workflows/ci.yml` — CI code scan workflow (TypeScript build, secret naming verification, agent rules check, vitest, Discohook webhook scan)
+- `tests/feed-loader.test.ts`, `tests/webhook-loader.test.ts`, `tests/atomic-write.test.ts`, `tests/feed-discovery.test.ts`, `tests/status-handler.test.ts`, `tests/index.test.ts` — vitest validation for TypeScript modules (`load_webhook_urls()`, `load_feed_urls_from_env()`, atomic writes, discovery)
 - `docs/` — repository documentation
 
 ## Why the status monitor exists

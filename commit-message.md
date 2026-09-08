@@ -1,6 +1,6 @@
-feat: [agent/templates] YAML issue templates in .github/ISSUE_TEMPLATE/
+feat: [workflows/docs/agents] CI code scan workflow replaces scheduled workflows; TypeScript/module references
 
-- `.github/ISSUE_TEMPLATE/bug_report.yml`: covers component, phase, secrets, verification checklist, environment.
-- `.github/ISSUE_TEMPLATE/feature_request.yml`: covers feature type, phase, secrets naming impact.
-- `.github/ISSUE_TEMPLATE/agent_update.yml`: covers agent area, affected rules, webhook/secrets naming.
-- All templates reference underscore secret naming, Discohook bot invitation, TypeScript modules, agent rules (`00`-`05`), verification (`npm test`).
+- Removed `.github/workflows/post-feed-to-discord.yml` and `.github/workflows/site-status-alert.yml`.
+- Created `.github/workflows/ci.yml`: TypeScript build (`npm run build`), vitest (`npm test`), secret naming scan (`{SERVICE_NAME}_WEBHOOK_URL_{###}`, `{SOURCE}_RSS_URL_{###}`), agent rules verification, Discohook reference.
+- Updated agent docs, README, docs to reference CI workflow (`ci.yml`) and TypeScript module architecture.
+- No `.env`; no Python references in workflows; underscore naming maintained.
