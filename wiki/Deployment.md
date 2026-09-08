@@ -26,7 +26,7 @@ This guide provides instructions for deploying the Discord RSS service, includin
   ```bash
   npm install
   ```
-- Create a configuration file (e.g., `config.json`) and provide the necessary details such as the Discord bot token, database connection, and other settings.
+- Copy the `.env.example` file to `.env` and provide the necessary environment variables.
 - Start the Discord RSS service:
 
   ```bash
@@ -47,7 +47,7 @@ This guide provides instructions for deploying the Discord RSS service, includin
   ```bash
   npm install
   ```
-- Create a configuration file (e.g., `config.json`) and provide the necessary details such as the Discord bot token, database connection, and other settings.
+- Copy the `.env.example` file to `.env` and provide the necessary environment variables.
 - Start the Discord RSS service:
 
   ```bash
