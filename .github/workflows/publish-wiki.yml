@@ -6,6 +6,11 @@ on:
       - main
     paths:
       - 'wiki/**'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'wiki/**'
 
 concurrency:
   group: wiki-sync
