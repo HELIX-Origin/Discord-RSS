@@ -2,9 +2,6 @@
 
 This directory contains tracked bugs for Discord RSS (formerly Site-Feed-Discord). Every bug mirrors the sub-issue convention used on GitHub.
 
-> [!IMPORTANT]
-> **Superseded**: BUG-001..BUG-003 were reported against the legacy single-site Python/Discohook architecture (`{.github}/feed-state.json`, `{SOURCE}_RSS_URL_{###}` env secrets). That architecture was replaced by the multi-user **Discord RSS** TypeScript service (dashboard-managed SQLite state + AppState + direct Discord webhooks). Re-open/re-map bugs against the current architecture before acting on them. Live tracking is GitHub Issue #4 + sub-issues #5..#8.
-
 ---
 
 ## Bug Lifecycle & Sub-Issue Flow
@@ -49,7 +46,7 @@ All bugs are tracked directly via **GitHub Issues** on the repository (`HELIX-Or
 
 1. **Create Parent GitHub Issue**:
    ```bash
-   gh issue create --title "[BUG-XXX] Short description" --body-file ".agents/bugs/template.md" --label "bug"
+   gh issue create --title "[BUG|FEATURE|QUESTION] <Short description>" --body-file ".agents/bugs/template.md" --label "bug|feature-request|question"
    ```
 2. **Decompose into Sub-Issues**:
    For complex issues, decompose the lifecycle into sub-issues:
@@ -60,7 +57,7 @@ All bugs are tracked directly via **GitHub Issues** on the repository (`HELIX-Or
 3. **Embed Mermaid Diagrams**:
    Include Mermaid sequence or flow diagrams in the issue description to visualize error triggers and target remediation flow.
 4. **Create Local Tracking Mirror**:
-   - Copy [template.md](template.md) to `BUG-XXX-<slug>.md`.
+   - Copy [template.md](template.md) to `[BUG|FEATURE|QUESTION] <Short description>.md`.
    - Update the tracked bug table above.
 5. **Multi-Agent Sync**:
    - Synchronize across `.agents/` and `.github/` documentation.
