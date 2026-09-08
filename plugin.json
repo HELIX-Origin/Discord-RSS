@@ -1,0 +1,16 @@
+{
+  "name": "autopilot",
+  "version": "1.0.0",
+  "description": "Autonomous Three-Stage Workflow Engine & Project Scaffolding Framework",
+  "author": {
+    "name": "HELIX Origin"
+  },
+  "license": "BSD-3-Clause",
+  "keywords": [
+    "autopilot",
+    "workflow",
+    "safety",
+    "scaffolding",
+    "templates"
+  ]
+}
