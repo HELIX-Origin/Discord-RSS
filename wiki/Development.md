@@ -76,11 +76,13 @@ The test suite is powered by the Vitest testing framework and provides the follo
 > [!NOTE]
 > The test suite includes smoke tests, linting, code coverage analysis, and full test coverage to ensure the quality and reliability of the application.
 > This feature list is currently incomplete and is being built and will be updated as new testing capabilities are added to the suite.
+> There are more features available than what is currently listed. Check back regularly for updates to this list.
 
 | Feature | Description | Status |
 | :--- | :--- | :--- |
 | Smoke Test | Quickly verifies that the basic functionality of the application works as expected. | ✅ |
 | Linting | Ensures that the code adheres to defined style and quality standards. | ✅ |
+
 
 ### Commands
 
