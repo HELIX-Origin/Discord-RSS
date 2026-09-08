@@ -5,12 +5,11 @@ This page provides instructions for vBulletin forum hosts to integrate their for
 ## Setup Discord RSS service in vBulletin
 
 1. Log in to your vBulletin admin control panel.
-2. Navigate to the **Settings** section.
-3. Look for the external service providers section.
-4. Add a new service for Discord RSS by providing the necessary details such as the service name, callback URL, and any required API keys or credentials.
-5. Setup the a forum bot for user account authentication.
-6. Look for the RSS feeds section in your vBulletin **Settings** and ensure that RSS feeds are enabled and accessible.
-7. Save the settings and ensure the service is active.
+2. Look for the external service providers section in your vBulletin **Settings**.
+3. Add a new service for Discord RSS by providing the necessary details such as the service name, callback URL, and any required API keys or credentials.
+4. Setup the a forum bot for user account authentication.
+5. Look for the RSS feeds section in your vBulletin **Settings** and ensure that RSS feeds are enabled and accessible.
+6. Save the settings and ensure the service is active.
 
 ## Additional Notes
 
