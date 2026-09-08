@@ -1,0 +1,41 @@
+{
+  "name": "opencode-agents",
+  "version": "1.0.0",
+  "description": "Opencode agent ecosystem for Site-Feed-Discord",
+  "agent_rules": [
+    ".agents/rules/00-agent-safety-compliance.md",
+    ".agents/rules/01-zero-unsolicited-injection.md",
+    ".agents/rules/02-python-github-actions-architecture.md",
+    ".agents/rules/03-message-formatting.md",
+    ".agents/rules/04-remote-issue-protocol.md",
+    ".agents/rules/05-documentation-standards.md"
+  ],
+  "skills_index": ".agents/skills/index.md",
+  "bugs_index": ".agents/bugs/bug-tracking.md",
+  "plans_roadmap": ".agents/plans/roadmap.md",
+  "templates_index": ".agents/templates/index.md",
+  "agent_index": ".agents/agents/index.md",
+  "opencode_agents": ".agents/opencode/opencode-agents.md",
+  "opencode_skills": ".agents/opencode/opencode-skills.md",
+  "primary_method": "TypeScript (`src/index.ts`)",
+  "primary_webhook": "Discohook (`DISCOHOOK_WEBHOOK_URL_001`)",
+  "feed_secret_naming": "{SOURCE}_RSS_URL_{###}",
+  "webhook_secret_naming": "{SERVICE_NAME}_WEBHOOK_URL_{###}",
+  "secret_storage": ".env",
+  "env_template": ".env.example",
+  "external_apis": {
+    "cloudflare_challenge": {
+      "keys": ["CLOUDFLARE_API_KEY", "CHALLENGE_SOLVER_URL"],
+      "optional": true,
+      "permissions": ["playwright browser automation", "external challenge-solving API"]
+    }
+  },
+  "safety_invariants": {
+    "no_force_push": true,
+    "no_destructive_deletions": true,
+    "no_hardcoded_secrets": true,
+    "atomic_state_writes": true,
+    "single_source_message_formatting": true,
+    "verification_before_completion": true
+  }
+}
