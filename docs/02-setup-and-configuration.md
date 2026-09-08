@@ -10,8 +10,8 @@ Use repository secrets (under Settings -> Secrets and variables -> Actions) rath
 
 - `SITE_URL` — base URL for the forum or site being monitored
 - `{SOURCE}_RSS_URL_{###}` — optional feed URL override
-- `DISCORD_WEBHOOK_URL_001` — main feed webhook (`{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern)
-- `DISCORD_WEBHOOK_URL_002` — additional feed webhook (optional)
+- `DISCOHOOK_WEBHOOK_URL_001` — primary Discohook webhook (requires bot invitation; `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern)
+- `DISCOHOOK_WEBHOOK_URL_002` — additional Discohook webhook (optional)
 
 ### Optional status secrets
 
@@ -67,7 +67,8 @@ This repository follows `.agents/` conventions (`.agents/rules/`, `.agents/bugs/
 The repository's validation command is:
 
 ```bash
-python -m unittest discover -s tests -p "test_*.py"
+npm run build
+npm start
 ```
 
 This is the recommended check after making changes to scripts, workflow logic, or agent configurations.

@@ -26,7 +26,9 @@ GitHub refers to these as repository secrets. Configure them under Settings -> S
 The workflow auto-discovers the active RSS/Atom feed URLs from the configured site by default, so a `{SOURCE}_RSS_URL_{###}` secret is not required. All runtime configuration is expected to come from repository secrets and must not be committed into the repository.
 The feed workflow stores its last-seen feed item in `.github/feed-state.json` using atomic writes (`os.rename()`). The status workflow stores the last-known online/offline state in `.github/site-status-state.json` using atomic writes as well.
 
-## Behavior
+## Project architecture
+
+The repository uses a modular TypeScript architecture (`src/index.ts`, `src/handlers/`, `src/modules/`, `src/functions/`, `src/types/`). The primary webhook method is Discohook (`DISCOHOOK_WEBHOOK_URL_001`), requiring the Discohook bot invitation to the server. Feed URLs are configured via `{SOURCE}_RSS_URL_{###}` secrets. Cloudflare-protected domains can use optional external challenge-solving APIs (`CLOUDFLARE_API_KEY`, `CHALLENGE_SOLVER_URL`) or `playwright`.
 
 - Polls the configured feed hourly at the top of each hour (`.github/workflows/post-feed-to-discord.yml`)
 - Posts only newly seen entries to Discord (scans `DISCORD_WEBHOOK_URL_001` upward sequentially)

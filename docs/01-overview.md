@@ -21,9 +21,8 @@ The project focuses on three things:
 
 ## Repository layout
 
-- `scripts/post_feed_to_discord.py` — feed discovery, feed parsing, filtering, and Discord posting
-- `scripts/post_site_status.py` — wrapper used to run the status monitor
-- `.github/workflows/post-feed-to-discord.yml` — scheduled feed-posting workflow
+- `src/index.ts` — TypeScript entry point with modular architecture (`src/handlers/`, `src/modules/`, `src/functions/`, `src/types/`)
+- `.github/workflows/post-feed-to-discord.yml` — scheduled feed-posting workflow (uses Discohook webhook, `{SERVICE_NAME}_WEBHOOK_URL_{###}` naming)
 - `.github/workflows/site-status-alert.yml` — scheduled site-status workflow
 - `tests/test_post_feed_to_discord.py` — validation for feed URL discovery, filtering, webhook scanning (`load_webhook_urls()`), embed formatting, and Cloudflare detection
 - `docs/` — repository documentation

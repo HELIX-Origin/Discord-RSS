@@ -1,0 +1,16 @@
+{
+  "name": "site-feed-discord",
+  "version": "1.0.0",
+  "description": "GitHub Actions bot for monitoring feeds and posting to Discord",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.5",
+    "@types/node": "^22.0"
+  }
+}

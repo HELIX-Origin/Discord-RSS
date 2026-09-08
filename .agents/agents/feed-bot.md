@@ -6,8 +6,20 @@ This agent defines conventions, architecture, and command references for the Sit
 
 ```
 Site-Feed-Discord/
-├── scripts/
-│   └── post_feed_to_discord.py    # Main feed logic
+├── src/
+│   ├── index.ts                        # Main TypeScript entry
+│   ├── handlers/
+│   │   ├── feed.ts                      # Feed handler
+│   │   └── status.ts                    # Status handler
+│   ├── modules/
+│   │   ├── feed-discovery.ts            # Feed URL discovery
+│   │   └── webhook.ts                   # Webhook module
+│   ├── functions/
+│   │   ├── atomic-write.ts              # Atomic state writes
+│   │   ├── webhook-loader.ts            # Webhook scanning (`{SERVICE_NAME}_WEBHOOK_URL_{###}`)
+│   │   └── feed-loader.ts               # Feed scanning (`{SOURCE}_RSS_URL_{###}`)
+│   └── types/
+│       └── index.ts                     # TypeScript types
 ├── .github/
 │   ├── workflows/
 │   │   └── post-feed-to-discord.yml
@@ -22,11 +34,11 @@ Site-Feed-Discord/
 ## Setup & Workflow Commands
 
 ```bash
-# Validate feed script
-python scripts/post_feed_to_discord.py
+# Build TypeScript
+npm run build
 
-# Run unit tests
-python -m unittest discover -s tests -p "test_*.py"
+# Run TypeScript entry
+npm start
 
 # Deploy workflow (manual trigger via GitHub UI or gh)
 gh workflow run post-feed-to-discord.yml
@@ -34,11 +46,11 @@ gh workflow run post-feed-to-discord.yml
 
 ## Key Patterns
 
-### 1. Feed Discovery (`post_feed_to_discord.py`)
+### 1. Feed Discovery (`src/handlers/feed.ts` / `src/modules/feed-discovery.ts`)
 - Read `SITE_URL` from environment.
 - Read `{SOURCE}_RSS_URL_{###}` from secrets; fallback to `/feed`, `/rss`, `/feed.xml`, `/atom.xml`.
-- Fetch with `urllib.request.urlopen(url, timeout=10)`.
-- Parse with `xml.etree.ElementTree`.
+- Fetch with standard HTTP client (timeout enabled).
+- Parse with standard RSS/Atom parser.
 
 ### 2. Filtering
 - Skip entries without a `<link>` or with URLs containing excluded paths (`/admin/`, `/mod/`, `/staff/`).
@@ -58,8 +70,8 @@ gh workflow run post-feed-to-discord.yml
   - `DISCORD_WEBHOOK_URL_001`
   - `DISCORD_WEBHOOK_URL_002`
   - `CUSTOM_SERVICE_WEBHOOK_URL_001`
-- Build JSON payload with `json.dumps()`.
-- Send via `urllib.request.Request(url, data=body.encode('utf-8'), headers={'Content-Type': 'application/json'}, method='POST')`.
+- Build JSON payload using TypeScript `JSON.stringify()`.
+- Send via standard HTTP POST (`Request` or `fetch`).
 - Scripts scan from `001` upward and load sequentially when multiple targets exist.
 
 ## Required Environment Variables / GitHub Secrets
