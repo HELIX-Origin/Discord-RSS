@@ -1,0 +1,35 @@
+authors:
+  - name: HELIX Origin
+  - name: Discord RSS Contributors
+cff-version: 1.2.0
+identifiers:
+  - type: doi
+    value: 10.1234/discord-rss
+    description: "Digital Object Identifier for the Discord RSS project"
+keywords:
+  - Discord
+  - RSS
+  - bot
+  - automation
+  - feeds
+  - open source
+  - GitHub
+  - software
+references:
+  - authors:
+      - name: HELIX Origin
+      - name: Discord RSS Contributors
+    title: Discord RSS
+    type: software
+    url: https://github.com/HELIX-Origin/Discord-RSS.git
+repository:
+  type: git
+  url: https://github.com/HELIX-Origin/Discord-RSS.git
+  branch: main
+title: Discord RSS
+description: "A Discord bot for managing RSS feeds"
+version: 0.1.0
+license: BSD-3-Clause
+contact:
+  type: discord
+  discord: "https://discord.com/invite/Ww3XBZC2HV"
