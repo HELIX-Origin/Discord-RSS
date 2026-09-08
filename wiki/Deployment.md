@@ -27,7 +27,7 @@ This guide provides instructions for deploying the Discord RSS service, includin
   ```bash
   npm install
   ```
-  
+
 - Copy the `.env.example` file to `.env` and provide the necessary environment variables.
 - Start the Discord RSS service:
 
@@ -44,11 +44,13 @@ This guide provides instructions for deploying the Discord RSS service, includin
   git clone https://github.com/HELIX-Origin/Discord-RSS.git
   cd Discord-RSS
   ```
+
 - Install the required dependencies using Node.js:
 
   ```bash
   npm install
   ```
+  
 - Copy the `.env.example` file to `.env` and provide the necessary environment variables.
 - Start the Discord RSS service:
 
