@@ -5,7 +5,7 @@ Index of permanent, non-negotiable rules for all AI coding assistants working on
 | Rule | Title | Scope | File |
 |------|-------|-------|------|
 | **Rule 00** | Agent Safety, Compliance & Damage Prevention | Core Safety & Behavior | [agent-safety-compliance.md](agent-safety-compliance.md) |
-| **Rule 01** | Zero Unsolicited Framework Injection | Dependencies & Architecture | [zero-unsolicited-injection.md](zero-unsolicited-injection.md) |
+| **Rule 01** | Dependency & Tool Approval | Dependencies & Architecture | [zero-unsolicited-injection.md](zero-unsolicited-injection.md) |
 | **Rule 02** | TypeScript Source Conventions | Codebase Structure | [typescript-architecture.md](typescript-architecture.md) |
 | **Rule 03** | Centralized Message & Webhook Formatting | UI & Discord Responses | [message-formatting.md](message-formatting.md) |
 | **Rule 04** | Remote Issue, PR & Comment Protocol | GitHub & CI/CD | [remote-issue-protocol.md](remote-issue-protocol.md) |

@@ -16,7 +16,7 @@ This file serves as the entry point for all AI agents, coding assistants, and au
 All agent work must comply with `.agents/rules/` (enforced everywhere):
 
 - `agent-safety-compliance.md` (Rule 00) — Safety invariants, zero irreversible damage, secrets protection, `CLOUDFLARE_API_KEY` stays in `.env`/secrets, never committed.
-- `zero-unsolicited-injection.md` (Rule 01) — Only native TypeScript / standard libraries unless explicitly approved (`redis` approved for cross-instance coordination; `playwright` permitted for Cloudflare).
+- `zero-unsolicited-injection.md` (Rule 01) — Runtime dependencies require explicit user approval; standard dev tooling (ESLint, Prettier, Vitest, MSW, etc.) is allowed. `redis` approved for cross-instance coordination; `playwright` permitted for Cloudflare.
 - `typescript-architecture.md` (Rule 02) — `src/` layout (`index.ts`, `server.ts`, `config.ts`, `app.ts`, `auth/`, `db/`, `feed/`, `http/`, `oauth/`, `scheduler/`, `state/`, `status/`, `webhook/`); `tsconfig.json`; `package.json`.
 - `message-formatting.md` (Rule 03) — Discord embeds built in `src/webhook/discord.ts`; webhooks are per-user rows in SQLite (dashboard-managed, not env vars); `.env` uses `DISCORD_RSS_*` prefix.
 - `remote-issue-protocol.md` (Rule 04) — Roadmap-first tracking: first post is the plan, edited as progress happens, sub-issue decomposition, Mermaid diagrams, `--body-file` submissions.

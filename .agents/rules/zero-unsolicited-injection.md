@@ -1,14 +1,28 @@
-# Rule 01: Zero Unsolicited Framework Injection
+# Rule 01: Dependency & Tool Approval
+
+## Effective Policy
+
+The previous native-only dependency restriction is **rescinded**. Discord RSS is a modern TypeScript service; standard development tooling (linters, formatters, test frameworks, type definitions) and reasonable runtime libraries are allowed when they solve a real problem.
 
 ## Mandatory Invariants
-1. **No Unauthorized Dependencies**: Discord RSS uses native TypeScript / Node.js standard libraries (`node:http`, `node:sqlite`, `node:crypto`, `fetch`) plus TypeScript dev tooling (`typescript`, `@types/node`, `vitest`). No external HTTP clients, feed parsers, or Discord libraries (`discord.js`, `rss-parser`, `axios`, etc.) are permitted **unless** explicitly approved by the user.
-2. **Approved External Dependencies**:
-   - `redis@^5` — approved for optional cross-instance coordination (dedupe + poll locks) behind `DISCORD_RSS_REDIS_URL`; degrades gracefully when unset.
-   - `playwright` — permitted **only** for Cloudflare challenge resolution on scrape/feed fetching.
-   - External challenge-solving endpoints via `CLOUDFLARE_API_KEY` / `CHALLENGE_SOLVER_URL` — only when a site is confirmed behind a Cloudflare browser challenge. Must fall back to native `fetch` when no challenge is detected.
-3. **No Heavy CI/CD Frameworks**: No unsolicited third-party CI/CD frameworks or schedulers. Scheduling is in-process via `src/scheduler/scheduler.ts`.
-4. **Static Intelligence Only**: All feed parsing, filtering, dedupe, and message formatting is local TypeScript logic in this repository. No remote AI parsing services.
-5. **Discohook Removed**: Discohook is no longer part of this project. Discord posting is direct via `src/webhook/discord.ts`.
 
-## Explicit Approval Requirement
-Any new runtime dependency requires explicit user approval before `npm install`. Adding one without approval is a violation.
+1. **Runtime dependencies require explicit approval.** Any package added to `dependencies` in `package.json` must be approved by the user before `npm install`. Rationale and a fallback plan must be documented in the relevant issue/PR body.
+2. **Dev dependencies are allowed without per-package approval.** Linters (ESLint), formatters (Prettier), test reporters, coverage tools, and similar dev-time tooling may be added as needed. Still prefer lightweight, widely-used tools.
+3. **No unnecessary bloat.** Do not add frameworks that duplicate Node.js built-ins (e.g. an HTTP client when `fetch` is sufficient, or a full ORM when `node:sqlite` is sufficient).
+4. **Discohook Removed.** Discohook is not part of this project. Discord posting is direct via `src/webhook/discord.ts`.
+5. **Static Intelligence Only.** Feed parsing, filtering, dedupe, and message formatting are local TypeScript logic in this repository. No remote AI parsing services.
+
+## Approved Runtime Dependencies
+
+- `redis@^5` — optional cross-instance coordination (dedupe + poll locks) behind `DISCORD_RSS_REDIS_URL`; degrades gracefully when unset.
+- `playwright` — permitted only for Cloudflare challenge resolution on scrape/feed fetching.
+
+## Approved Dev Dependencies
+
+- `typescript`, `@types/node`
+- `vitest`, `@vitest/coverage-v8`
+- `msw`
+- `eslint`, `@eslint/js`, `typescript-eslint`, `eslint-plugin-*` as needed
+- `prettier`
+
+Any other runtime dependency still requires explicit user approval.
