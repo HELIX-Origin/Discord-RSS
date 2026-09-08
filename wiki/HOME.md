@@ -2,10 +2,38 @@
 
 This wiki contains setup, integration, and troubleshooting guides for the **Discord RSS** self-hosted service.
 
-- [Forum integrations](./forum-integration.md)
-  - [vBulletin](./vbulletin.md)
-  - [phpBB](./phpbb.md)
-- [Troubleshooting](./troubleshooting.md)
+## Introduction
+
+Discord RSS is a self-hosted service that allows you to integrate RSS feeds from various forums and websites into your Discord server. This wiki provides comprehensive guides for setting up, integrating, and troubleshooting the service to ensure smooth operation and seamless updates from your favorite sources.
+
+This wiki aims to provide all the necessary information for users to effectively utilize the Discord RSS service, from initial setup to advanced integrations and troubleshooting.
+
+If you are new to Discord RSS, it is recommended to start with the setup guides to get the service up and running before exploring advanced integrations and troubleshooting tips.
+
+## Integrations
+
+For detailed instructions on integrating Discord RSS with various forums and platforms, refer to the integration guides.
+
+- [vBulletin integration guide](./Integrations/vbulletin.md)
+- [phpBB integration guide](./Integrations/phpbb.md)
+
+## Troubleshooting
+
+For guidance on resolving common issues and errors encountered while using Discord RSS, refer to the troubleshooting guides and community discussions.
+
+- [Troubleshooting guide](./Troubleshooting.md)
+
+## Development
+
+For information on setting up a development environment, contributing to the project, and understanding the codebase, refer to the development guides and contribution guidelines.
+
+- [Development guide](./Development.md)
+
+## Deployment
+
+For instructions on deploying the Discord RSS service, including setup on various hosting environments and configuration options, refer to the deployment guides.
+
+- [Deployment guide](./Deployment.md)
 
 ## Important Notes
 
