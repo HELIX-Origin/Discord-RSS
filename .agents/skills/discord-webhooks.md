@@ -22,6 +22,7 @@ Where:
 - Main feed post webhook (`DISCORD_WEBHOOK_URL_001`): rich embeds for new feed entries.
 - Status transition webhook (`SITE_STATUS_WEBHOOK_URL_001`): online/offline alerts.
 - Additional webhooks (`DISCORD_WEBHOOK_URL_002`+) for extra channels, backups, or custom integrations.
+- Optional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`): enhanced embed formatting and webhook management (see `.agents/skills/discohook.md`).
 
 ## Script Discovery Pattern
 Scripts must scan secrets for the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern and load the first matching URL. If multiple URLs are required, the script must load sequentially from `001` upward until no more secrets match.

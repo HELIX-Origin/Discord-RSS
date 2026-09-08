@@ -18,3 +18,4 @@ This directory contains technical skill definitions for frameworks, languages, p
 
 ### External APIs & Challenge Resolution
 - [cloudflare.md](cloudflare.md) — Cloudflare challenge detection, `playwright` browser automation, external challenge-solving APIs, safe credential handling.
+- [discohook.md](discohook.md) — Optional Discohook embed formatting and webhook management (`DISCOHOOK_WEBHOOK_URL_{###}`).

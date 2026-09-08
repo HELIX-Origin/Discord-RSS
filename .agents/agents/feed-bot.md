@@ -49,8 +49,10 @@ gh workflow run post-feed-to-discord.yml
 - Read `.github/feed-state.json` at script start.
 - After posting, write updated state atomically (`os.rename()` pattern preferred).
 
-### 4. Discord Webhook (GitHub Secrets Naming)
-- Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
+### 4. Discord Webhook (GitHub Secrets Naming) + Optional Discohook
+- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
+- Optional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`) may be used for enhanced embed formatting (`.agents/skills/discohook.md`).
+- Scripts scan from `001` upward and load sequentially.
 - Example secrets:
   - `DISCORD_WEBHOOK_URL_001`
   - `DISCORD_WEBHOOK_URL_002`

@@ -40,7 +40,9 @@ gh workflow run site-status-alert.yml
 - Read `.github/site-status-state.json` to get previous state (`{"status": "online", "last_checked": "..."}`).
 - Only send webhook if `current_state != previous_state` (transition only).
 
-### 3. Discord Webhook (GitHub Secrets Naming)
+### 3. Discord Webhook (GitHub Secrets Naming) + Optional Discohook
+- Load webhook URLs exclusively from **GitHub Secrets** using `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
+- Optional Discohook webhook (`DISCOHOOK_WEBHOOK_URL_001`) supported for enhanced status embed formatting.
 - Load webhook URLs exclusively from **GitHub Secrets** using the `{SERVICE_NAME}_WEBHOOK_URL_{###}` pattern.
 - Example secrets:
   - `SITE_STATUS_WEBHOOK_URL_001`
