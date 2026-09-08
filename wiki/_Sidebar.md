@@ -2,7 +2,7 @@
 
 - [Home](./HOME)
 - [Development Guide](./Development)
-- [Forum Integrations](./ForumIntegration)
-    - [phpbb](./ForumIntegration/phpbb)
-    - [vBulletin](./ForumIntegration/vBulletin)
+- [Forum Integrations](./Forum%20Integration)
+    - [phpbb](./Forum%20Integration/phpbb)
+    - [vBulletin](./Forum%20Integration/vBulletin)
 - [Troubleshooting](./Troubleshooting)
