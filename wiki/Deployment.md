@@ -75,6 +75,13 @@ This guide provides instructions for deploying the Discord RSS service, includin
 - `DISCORD_RSS_TEST_DATA`: Path to the test data directory for the Discord RSS service. (default: ./data/.tmp)
 - `DISCORD_RSS_LOG_LEVEL`: Logging level for the Discord RSS service. (default: info)
 
+### Logging Levels
+
+- `error`: Only log error messages.
+- `warn`: Log warnings and errors.
+- `info`: Log informational messages, warnings, and errors.
+- `debug`: Log detailed debugging information, informational messages, warnings, and errors.
+
 ## Additional Notes
 
 - Plans to add one-click deployment for popular cloud hosting services like Heroku, Render, Fyl.io, and Railway are underway. 
