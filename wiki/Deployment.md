@@ -4,7 +4,7 @@ This guide provides instructions for deploying the Discord RSS service, includin
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) (version 22 or higher)
+- [Node.js](https://nodejs.org/) (version 22.5)
 - [Git](https://git-scm.com/) (for cloning the repository)
 - [GitHub CLI](https://cli.github.com/) (optional: for improved GitHub interaction from the command line)
 
@@ -50,7 +50,7 @@ This guide provides instructions for deploying the Discord RSS service, includin
   ```bash
   npm install
   ```
-  
+
 - Copy the `.env.example` file to `.env` and provide the necessary environment variables.
 - Start the Discord RSS service:
 

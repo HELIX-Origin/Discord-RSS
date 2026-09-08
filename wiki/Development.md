@@ -4,11 +4,9 @@ This guide covers the development setup and contribution process for the Discord
 
 ## Prerequisites
 
-- Node.js >= 22.5 *Required for running the development server and managing dependencies.*
-- Git *Required for version control and managing the repository.*
-- GitHub CLI (optional, for managing GitHub repositories from the command line) *Provides better integration with GitHub workflows and simplifies repository management.*
-- A code editor (e.g., VS Code) *Recommended for a better development experience with features like syntax highlighting, code completion, and integrated terminal.*
-- Docker (optional, for containerized development) *Currently not supported. Docker support is planned for a future release.*
+- [Node.js](https://nodejs.org/) (version 22.5)
+- [Git](https://git-scm.com/) (for cloning the repository)
+- [GitHub CLI](https://cli.github.com/) (optional: for improved GitHub interaction from the command line)
 
 ## Setup
 
