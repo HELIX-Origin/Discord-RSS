@@ -1,58 +1,49 @@
-name: Publish Wiki
+name: Wiki Content Sync
 
 on:
   push:
     branches:
-      - main                      # Triggers when changes hit your main branch
+      - main
     paths:
-      - 'wiki/**'                 # Only triggers if files in the /wiki folder change
+      - 'wiki/**'
 
 concurrency:
   group: wiki-sync
-  cancel-in-progress: true        # Prevents race conditions on simultaneous pushes
+  cancel-in-progress: true
 
 jobs:
   sync-to-wiki:
     runs-on: ubuntu-latest
     permissions:
-      contents: write             # Grants the GITHUB_TOKEN write access to push to the wiki
+      contents: write
       
     steps:
       - name: Checkout Code Repository
         uses: actions/checkout@v4
-        with:
-          path: main-repo         # Checkout code repo into a subdirectory
 
-      - name: Checkout Wiki Repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ github.repository }}.wiki
-          path: wiki-repo         # Checkout wiki repo into a separate subdirectory
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Clear and Sync Files
+      - name: Sync Files to Wiki
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Clean up existing files in the wiki repo to handle file deletions
-          rm -rf wiki-repo/*
+          # 1. Configure git credentials globally for the runner
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
           
-          # Copy your new documentation into the wiki repo directory
-          # Assumes your source files live in a folder named 'wiki' in your main repo
-          cp -r main-repo/wiki/* wiki-repo/
+          # 2. Clone the wiki repository using the token into a temp directory
+          git clone "https://x-access-token:${GH_TOKEN}@://github.com{{ github.repository }}.wiki.git" temp-wiki
           
-      - name: Commit and Push Changes
-        run: |
-          cd wiki-repo
+          # 3. Clear existing wiki files to handle deletions, keeping the .git folder
+          find temp-wiki -maxdepth 1 -not -name '.git' -not -name 'temp-wiki' -delete
           
-          # Configure Git credentials
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          # 4. Copy current markdown files from your repository's wiki folder
+          cp -r wiki/* temp-wiki/
           
-          # Stage changes and check if there are differences
+          # 5. Commit and push changes if differences exist
+          cd temp-wiki
           git add .
-          
           if git diff-index --quiet HEAD; then
-            echo "No documentation changes detected. Skipping deployment."
+            echo "No changes to sync."
           else
-            git commit -m "docs: automated wiki sync [skip ci]"
+            git commit -m "docs: automated wiki sync"
             git push origin HEAD
           fi
