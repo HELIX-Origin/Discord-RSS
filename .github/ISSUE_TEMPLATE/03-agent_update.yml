@@ -1,0 +1,81 @@
+name: Agent Update
+description: Propose agent rule, skill, plan, or bug updates.
+title: "[AGENT] "
+labels: [agent]
+assignees: 
+  - "PhantomNimbi"
+projects: 
+  - "Discord-RSS"
+body:
+  - type: markdown
+    attributes:
+      value: "## Agent Update"
+  - type: dropdown
+    id: agent_area
+    attributes:
+      label: Agent Area
+      options: [Rules, Skills, Agents, Plans, Bugs, Templates, Opencode]
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      value: "## Description"
+      placeholder: "Please describe the agent update you are proposing. Include any relevant context or examples of how this update would be used."
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      value: "## Motivation"
+      placeholder: "Please explain why this agent update is important and how it would benefit users or improve the project."
+    validations:
+      required: true
+  - type: input
+    id: contact_info
+    attributes:
+      label: Contact Information (Optional)
+      description: "If you would like to be contacted regarding this agent update, please provide your preferred contact information (e.g., email, Discord username)."
+      placeholder: "Email or Discord username"
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      value: "## Additional Context"
+      placeholder: "Please provide any additional context or information that may be relevant to this agent update."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: "Please ensure you have completed the following before submitting your agent update."
+      options:
+        - label: I have searched the existing issues and agent updates to ensure this is not a duplicate.
+          required: true
+        - label: I have provided a clear and concise description of the agent update.
+          required: true
+        - label: I have provided a clear and concise motivation for the agent update.
+          required: true
+        - label: I have provided any relevant context or examples to support my agent update.
+          required: false
+  - type: input
+    id: related_issues
+    attributes:
+      label: Related Issues (Optional)
+      description: If this agent update is related to any existing issues or pull requests, please provide their issue numbers or links.
+      placeholder: "Issue numbers or links"
+    validations:
+      required: false
+  - type: input
+    id: related_pull_requests
+    attributes:
+      label: Related Pull Requests (Optional)
+      description: If this agent update is related to any existing pull requests, please provide their numbers or links.
+      placeholder: "Pull request numbers or links"
+    validations:
+      required: false

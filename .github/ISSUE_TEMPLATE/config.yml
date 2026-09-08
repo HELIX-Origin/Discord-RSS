@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "HELIX Origin Support Discord"
+    url: "https://discord.com/invite/Ww3XBZC2HV"
+    about: "If you have any questions or need assistance, feel free to reach out to us on the official HELIX Origin Support Discord server."
+  - name: "HELIX Origin GitHub"
+    url: "https://github.com/HELIX-Origin"
+    about: "HELIX Origin is an open-source GitHub organization that provides a platform for developers to collaborate, share code, and contribute to various projects. Visit our GitHub page to explore our repositories and get involved in the development process."
+  - name: "Wiki"
+    url: "https://github.com/HELIX-Origin/Discord-rSS/wiki"
+    about: "The wiki contains detailed documentation, guides, and resources related to the HELIX Origin project. It serves as a valuable reference for developers and contributors looking to understand the project's architecture, features, and best practices."

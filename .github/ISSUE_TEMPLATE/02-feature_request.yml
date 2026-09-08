@@ -1,0 +1,82 @@
+name: Feature Request
+description: Propose a feature or optional service integration.
+title: "[FEAT] "
+labels: [enhancement]
+assignees: 
+  - "PhantomNimbi"
+projects: 
+  - "Discord-RSS"
+body:
+  - type: markdown
+    attributes:
+      value: "## Feature Request"
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      value: "## Description"
+      placeholder: "Please describe the feature you are requesting. Include any relevant context or examples of how this feature would be used."
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      value: "## Motivation"
+      placeholder: "Please explain why this feature is important and how it would benefit users or improve the project."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      value: "## Alternatives Considered"
+      placeholder: "Please describe any alternative solutions or features you have considered. Include any relevant context or examples."
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      value: "## Additional Context"
+      placeholder: "Please provide any additional context or information that may be relevant to this feature request."
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: "Please ensure you have completed the following before submitting your feature request."
+      options:
+        - label: I have searched the existing issues and feature requests to ensure this is not a duplicate.
+          required: true
+        - label: I have provided a clear and concise description of the feature request.
+          required: true
+        - label: I have provided a clear and concise motivation for the feature request.
+          required: true
+        - label: I have provided any relevant context or examples to support my feature request.
+          required: false
+  - type: input
+    id: contact_info
+    attributes:
+      label: Contact Information (Optional)
+      description: "If you would like to be contacted regarding this feature request, please provide your preferred contact information (e.g., email, Discord username)."
+      placeholder: "Email or Discord username"
+    validations:
+      required: false
+  - type: input
+    id: related_issues
+    attributes:
+      label: Related Issues (Optional)
+      description: "If this feature request is related to any existing issues or feature requests, please provide their issue numbers or links."
+      placeholder: "e.g., #123, #456"
+    validations:
+      required: false
+  - type: input
+    id: estimated_effort
+    attributes:
+      label: Estimated Effort (Optional)
+      description: "If you have an estimate of the effort required to implement this feature, please provide it here (e.g., hours, days, complexity)."
+      placeholder: "e.g., 5 hours, 2 days, high complexity"
+    validations:
+      required: false

@@ -1,0 +1,230 @@
+name: Bug Report
+description: Report a bug in feed polling, status monitoring, dashboard/API, webhook delivery, state, agent rules, or documentation.
+title: "[BUG] "
+labels: [bug]
+assignees: 
+  - "PhantomNimbi"
+projects: 
+  - "Discord-RSS"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Description
+        A clear and concise description of what the bug is.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is broken?
+      placeholder: |
+        Example: Dedupe misses entries when AppState is not hydrated from the database on startup.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How to trigger the bug.
+      placeholder: |
+        1. Start the service (`npm start`).
+        2. Add a webhook + feed from the dashboard.
+        3. Poll and observe duplicate delivery.
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the repository is affected?
+      options:
+        - Feed Watcher (`src/feed/watcher.ts`)
+        - Feed Parser / XML (`src/feed/parser.ts`, `src/feed/xml.ts`)
+        - Status Monitor (`src/status/watcher.ts`)
+        - Webhook Delivery (`src/webhook/discord.ts`)
+        - State / AppState / Redis (`src/state/*`)
+        - Persistence / Schema (`src/db/*`)
+        - Auth / OAuth (`src/auth/*`, `src/oauth/*`)
+        - Dashboard / API / Router (`src/http/*`, `src/server.ts`)
+        - Config / Scheduler (`src/config.ts`, `src/scheduler/*`)
+        - TypeScript Build (`tsconfig.json`, `package.json`)
+        - Agent Rules (`.agents/rules/*.md`)
+        - Agent Bugs (`.agents/bugs/*.md`)
+        - Agent Plans (`.agents/plans/*.md`)
+        - Agent Skills (`.agents/skills/*.md`)
+        - Tests (`tests/*.test.ts`, `vitest.config.ts`)
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: OS, Node version, npm version, Discord RSS version.
+      placeholder: |
+        - OS: Ubuntu / macOS / Windows
+        - Node.js: v22.9+
+        - npm: v10.x
+        - discord-rss: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages, stack traces, or unexpected output.
+    validations:
+      required: true
+  - type: textarea
+    id: root_cause
+    attributes:
+      label: Root Cause Analysis (if known)
+      description: What is the likely cause?
+    validations:
+      required: true
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Verification Checklist
+      description: Confirm the required checks before submitting.
+      options:
+        - label: I have verified `git status` shows only intended changes
+          required: true
+        - label: I have not force-pushed (`git push --force`)
+          required: true
+        - label: I have followed `.agents/rules/agent-safety-compliance.md`
+          required: true
+        - label: I have included Mermaid diagrams for complex bugs (if applicable)
+          required: false
+        - label: I have referenced the correct `.agents/bugs/BUG-XXX-*.md` file
+          required: false
+        - label: I have verified the build passes (`npm run build`)
+          required: true
+  - type: checkboxes
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is the bug? (Affects prioritization)
+      options:
+        - label: Critical (blocks major functionality or causes crashes)
+          required: false
+        - label: High (affects important functionality or causes errors)
+          required: false
+        - label: Medium (affects minor functionality or causes warnings)
+          required: false
+        - label: Low (affects cosmetic issues or has minimal impact)
+          required: false
+  - type: checkboxes
+    id: reproducibility
+    attributes:
+      label: Reproducibility
+      description: How often can the bug be reproduced?
+      options:
+        - label: Always (100%)
+          required: false
+        - label: Often (50-99%)
+          required: false
+        - label: Sometimes (10-49%)
+          required: false
+        - label: Rarely (<10%)
+          required: false
+        - label: Unable to Reproduce
+          required: false
+  - type: checkboxes
+    id: regression
+    attributes:
+      label: Regression
+      description: Is this a regression from a previous version?
+      options:
+        - label: Yes
+          required: false
+        - label: No
+          required: false
+        - label: Unknown
+          required: false
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Impact
+      description: What is the impact of this bug on users or the system?
+      options:
+        - label: High (affects many users or critical functionality)
+          required: false
+        - label: Medium (affects some users or non-critical functionality)
+          required: false
+        - label: Low (affects few users or minor functionality)
+          required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Context
+      description: Any other information that may be relevant to this bug report.
+      placeholder: |
+        - Screenshots or logs (if applicable)
+        - Related issues or pull requests
+        - Any other context that may help in diagnosing the issue
+    validations:
+      required: false
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      description: "Please ensure you have completed the following before submitting your feature request."
+      options:
+        - label: I have searched the existing issues and feature requests to ensure this is not a duplicate.
+          required: true
+        - label: I have provided a clear and concise description of the feature request.
+          required: true
+        - label: I have provided a clear and concise motivation for the feature request.
+          required: true
+        - label: I have provided any relevant context or examples to support my feature request.
+          required: false
+  - type: input
+    id: contact_info
+    attributes:
+      label: Contact Information (Optional)
+      description: If you would like to be contacted regarding this bug report, please provide your preferred contact information (e.g., email, Discord username).
+      placeholder: "Email or Discord username"
+    validations:
+      required: false
+  - type: input
+    id: related_issues
+    attributes:
+      label: Related Issues (Optional)
+      description: If this bug report is related to any existing issues or pull requests, please provide their issue numbers or links.
+      placeholder: "Issue numbers or links"
+    validations:
+      required: false
+  - type: input
+    id: related_pull_requests
+    attributes:
+      label: Related Pull Requests (Optional)
+      description: If this bug report is related to any existing pull requests, please provide their numbers or links.
+      placeholder: "Pull request numbers or links"
+    validations:
+      required: false
+  - type: input
+    id: affected_versions
+    attributes:
+      label: Affected Versions (Optional)
+      description: If this bug affects specific versions of the software, please list them here.
+      placeholder: "Version numbers"
+    validations:
+      required: false
