@@ -1,3 +1,10 @@
 .cache/
 __pycache__/
 .pytest_cache/
+.env 
+package-lock.json  
+npm-shrinkwrap.json  
+.pnpm-lock.yaml  
+yarn.lock  
+.env.local  
+.env.*.local 
