@@ -62,46 +62,34 @@ This guide provides instructions and best practices for setting up the developme
 
 ### Setting Up the Development Environment
 
-1. **Clone the repository**: 
+
+1. **Fork the repository using GitHub CLI**:
 
    ```bash
-   git clone https://github.com/your-username/your-repository.git
-   cd your-repository
+   gh repo fork https://github.com/your-username/Discord-RSS.git
    ```
-2. **Install dependencies**:
+
+2. **Clone your forked repository**: 
 
    ```bash
+   gh repo clone https://github.com/your-username/Discord-RSS.git
+   cd Discord-RSS
    npm install
    ```
-3. **Start the development server**:
 
-   ```bash
-   npm start
-   ```
+### Testing and Debugging
 
-4. **Run tests**:
+- **Linting**: Run `npm run lint` to check for code style and potential errors.
+- **Formatting**: Run `npm run format` to automatically format your code according to the project's style guidelines.
+- **Running tests**: Run `npm test` to execute the project's test suite and verify that your changes do not break existing functionality.
+- **Building the project**: Run `npm run build` to compile the project and prepare it for deployment.
+- **Debugging the project**: Use `npm run debug` to start the project in debug mode and troubleshoot issues effectively.
 
-   ```bash
-   npm test
-   ```
+### Code Review and Collaboration
 
-5. **Build the project**:
-
-   ```bash
-   npm run build
-   ```
-
-6. **Lint the code**:
-
-   ```bash
-   npm run lint
-   ```
-
-7. **Format the code**:
-
-   ```bash
-   npm run format
-   ```
+- **Submit pull requests**: When your changes are ready, submit a pull request to the main repository for review.
+- **Respond to feedback**: Address any feedback or requested changes from reviewers promptly and professionally.
+- **Participate in discussions**: Engage in discussions on issues and pull requests to contribute to the project's development and decision-making process.
 
 ## Important Notes
 
