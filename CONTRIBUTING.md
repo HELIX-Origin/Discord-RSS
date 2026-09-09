@@ -43,7 +43,6 @@ When contributing to this project, please follow these issue standards to mainta
 - **Issue titles**: Use concise and descriptive titles for issues.
 - **Issue labels**: Apply appropriate labels to categorize issues (e.g., bug, enhancement, question).
 - **Issue comments**: Be respectful and constructive when commenting on issues.
-- **Closing issues**: Only close issues when they have been resolved or are no longer relevant, and provide a clear explanation when doing so.
 
 ## Pull Requests
 
@@ -52,9 +51,6 @@ When contributing to this project, please follow these pull request standards to
 - **Pull request titles**: Use concise and descriptive titles for pull requests.
 - **Pull request descriptions**: Provide a detailed description of the changes made and their purpose.
 - **Pull request labels**: Apply appropriate labels to categorize pull requests (e.g., bugfix, feature, documentation).
-- **Reviewing pull requests**: Be respectful and constructive when reviewing pull requests.
-- **Merging pull requests**: Only merge pull requests when they have been reviewed and approved, and provide a clear explanation when doing so.
-- **Closing pull requests**: Only close pull requests when they have been merged or are no longer relevant, and provide a clear explanation when doing so.
 
 ## Development Guide
 
