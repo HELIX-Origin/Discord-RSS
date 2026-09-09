@@ -15,6 +15,7 @@
    - Sub-Issue 3: Test Suite & Regression Checks
    - Sub-Issue 4: Verification & Docs Sync
 5. **PRs Mirror Issues**: Pull requests reference their parent and sub-issues (`Part of #N`, `Closes #N`). PR body is a change summary tied back to the issue roadmap.
+6. **One Roadmap Per Plan**: Every new plan gets its **own `[PLAN]` issue** whose first post is that plan's roadmap. A plan issue is the roadmap for **that plan's sub-issues only** — it is **not** a global repository roadmap. Starting a new plan means opening a new `[PLAN]` issue; never fold a separate plan into an existing roadmap issue (other than as its sub-issues), and never treat a single issue as a repo-wide tracker.
 
 ## Naming Standards
 

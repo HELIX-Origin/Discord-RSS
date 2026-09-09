@@ -2,7 +2,8 @@
 
 ## GitHub Integration (`gh`)
 - Issue creation: `gh issue create --title "[PLAN] ..." --body-file "<roadmap.md>"` for plans, `[BUG-XXX] ...` for bugs.
-- **Roadmap-first tracking (Rule 04)**: the first post of an issue is the roadmap; progress edits that post (`gh issue edit <parent> --body-file`). No new posts for roadmap progress; new comments only for newly discovered additions.
+- **One roadmap per plan (Rule 04)**: each new plan gets its **own** `[PLAN]` issue as that plan's roadmap. A plan issue scopes only its own sub-issues — it is not a global repo roadmap. Starting a new plan = a new `[PLAN]` issue.
+- **Roadmap-first tracking**: the first post of an issue is the roadmap; progress edits that post (`gh issue edit <parent> --body-file`). No new posts for roadmap progress; new comments only for newly discovered additions.
 - All tracking mirror: `HELIX-Origin/Discord-RSS/issues` (remote `origin` updated to `https://github.com/HELIX-Origin/Discord-RSS.git` after repo rename).
 
 ## Deployment
