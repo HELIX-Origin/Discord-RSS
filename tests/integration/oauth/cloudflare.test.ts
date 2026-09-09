@@ -1,0 +1,91 @@
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { http, HttpResponse } from 'msw';
+import { buildAppDeps, type BuiltAppDeps } from '../../helpers/app-deps.js';
+import { startAppServer, type TestAppServer } from '../../helpers/server.js';
+import { TestClient } from '../../helpers/http-client.js';
+import { mswServer } from '../../mocks/msw-server.js';
+
+const CLOUDFLARE_TOKEN_URL = 'https://dash.cloudflare.com/oauth2/token';
+
+function mockTokenExchange() {
+  mswServer.use(
+    http.post(CLOUDFLARE_TOKEN_URL, () =>
+      HttpResponse.json(
+        {
+          access_token: 'mock-access-token',
+          refresh_token: 'mock-refresh-token',
+          expires_in: 3600,
+          scope: 'zone:read',
+        },
+        { status: 200 },
+      ),
+    ),
+  );
+}
+
+describe('Cloudflare OAuth flow', () => {
+  let ctx: BuiltAppDeps;
+  let server: TestAppServer;
+  let client: TestClient;
+
+  beforeEach(async () => {
+    mockTokenExchange();
+    ctx = await buildAppDeps();
+    server = await startAppServer(ctx.deps);
+    client = new TestClient(server.url);
+    await client.post('/api/auth/register', { email: 'oauth@example.com', password: 'password123' });
+    const res = await client.post('/api/settings/oauth/cloudflare', {
+      clientId: 'test-client',
+      clientSecret: 'test-secret',
+      enabled: true,
+    });
+    expect(res.status).toBe(200);
+  });
+
+  afterEach(async () => {
+    await ctx.cleanup();
+  });
+
+  it('builds an authorize URL pointing at Cloudflare', async () => {
+    const res = await client.get('/api/oauth/cloudflare/connect');
+    expect(res.status).toBe(200);
+    const url = (res.body as { url: string }).url;
+    expect(url.startsWith('https://dash.cloudflare.com/oauth2/auth?')).toBe(true);
+
+    const parsed = new URL(url);
+    expect(parsed.searchParams.get('client_id')).toBe('test-client');
+    expect(parsed.searchParams.get('response_type')).toBe('code');
+    expect(parsed.searchParams.get('scope')).toBe('zone:read');
+    expect(parsed.searchParams.get('redirect_uri')).toContain('/api/oauth/cloudflare/callback');
+    expect(parsed.searchParams.get('state')).toBeTruthy();
+  });
+
+  it('exchanges the code on callback and stores the connection', async () => {
+    const connect = await client.get('/api/oauth/cloudflare/connect');
+    const url = (connect.body as { url: string }).url;
+    const state = new URL(url).searchParams.get('state')!;
+
+    const callback = await client.get(`/api/oauth/cloudflare/callback?state=${state}&code=mock-code`);
+    expect(callback.status).toBe(200);
+    expect(callback.raw).toContain('success');
+
+    const me = await client.get('/api/auth/me');
+    const connections = (me.body as { connections: Array<{ provider: string }> }).connections;
+    expect(connections.some((c) => c.provider === 'cloudflare')).toBe(true);
+  });
+
+  it('shows the connected Cloudflare account in dashboard data', async () => {
+    const connect = await client.get('/api/oauth/cloudflare/connect');
+    const state = new URL((connect.body as { url: string }).url).searchParams.get('state')!;
+
+    await client.get(`/api/oauth/cloudflare/callback?state=${state}&code=mock-code`);
+
+    const settings = await client.get('/api/settings');
+    const providers = (
+      settings.body as { oauthProviders: Array<{ provider: string; enabled: boolean; configured: boolean }> }
+    ).oauthProviders;
+    const cf = providers.find((p) => p.provider === 'cloudflare');
+    expect(cf?.enabled).toBe(true);
+    expect(cf?.configured).toBe(true);
+  });
+});

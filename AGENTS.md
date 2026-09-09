@@ -30,6 +30,8 @@ All agent work must comply with `.agents/rules/` (enforced everywhere):
 
 All agent updates, bug reports, feature requests, and documentation changes must reference `.agents/` rules. No file operations outside this repository root are permitted (Rule 00).
 
+For the full service walkthrough (install, setup, testing, reset), see [`docs/runbook.md`](docs/runbook.md).
+
 ## Testing & Linting
 
 - Run `npm run check` to execute type-check, Prettier format-check, ESLint, and the full Vitest suite in one command.

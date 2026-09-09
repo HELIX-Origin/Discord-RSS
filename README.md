@@ -30,6 +30,8 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
    npm start
    ```
 
+> 📖 For a reproduction-safe, step-by-step walkthrough (install, configure, add feeds, verify delivery, reset state), see the [Runbook](docs/runbook.md).
+
 ## Important Notes
 
 - 💡 This repository is open-source and maintained by the community. Contributions, bug reports, and feature requests are welcome.
