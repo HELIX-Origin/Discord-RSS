@@ -29,7 +29,7 @@ export interface HttpFetcherOptions {
   maxBytes?: number;
 }
 
-export const DEFAULT_USER_AGENT = 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Site-Feed-Discord)';
+export const DEFAULT_USER_AGENT = 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Discord-RSS)';
 
 export async function fetchRaw(url: string, options: HttpFetcherOptions = {}): Promise<FetchResult> {
   const { timeoutMs = 15_000, maxRedirects = 5, userAgent = DEFAULT_USER_AGENT, maxBytes = 10 * 1024 * 1024 } = options;

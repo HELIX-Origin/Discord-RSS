@@ -90,7 +90,7 @@ export async function sendWebhook(url: string, message: WebhookMessage, timeoutM
         signal: controller.signal,
         headers: {
           'content-type': 'application/json',
-          'user-agent': 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Site-Feed-Discord)',
+          'user-agent': 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Discord-RSS)',
         },
         body: JSON.stringify(message),
       });
