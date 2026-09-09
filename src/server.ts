@@ -5,15 +5,15 @@ import { Router } from './http/router.js';
 import { renderDashboardHtml } from './http/dashboard.js';
 import { registerDevToolsRoutes } from './http/dev-tools.js';
 import { renderLoginHtml } from './http/login.js';
-import { registerAuthRoutes } from './http/routes/auth.js';
-import { registerOAuthRoutes } from './http/routes/oauth.js';
-import { registerFeedsRoutes } from './http/routes/feeds.js';
-import { registerBuilderRoutes } from './http/routes/builder.js';
-import { registerWebhooksRoutes } from './http/routes/webhooks.js';
-import { registerMonitorsRoutes } from './http/routes/monitors.js';
-import { registerSettingsRoutes } from './http/routes/settings.js';
-import { registerStatsRoutes } from './http/routes/stats.js';
-import { authedUserId } from './http/routes/shared.js';
+import { registerAuthRoutes } from './lib/routes/auth.js';
+import { registerOAuthRoutes } from './lib/routes/oauth.js';
+import { registerFeedsRoutes } from './lib/routes/feeds.js';
+import { registerBuilderRoutes } from './lib/routes/builder.js';
+import { registerWebhooksRoutes } from './lib/routes/webhooks.js';
+import { registerMonitorsRoutes } from './lib/routes/monitors.js';
+import { registerSettingsRoutes } from './lib/routes/settings.js';
+import { registerStatsRoutes } from './lib/routes/stats.js';
+import { authedUserId } from './lib/routes/shared.js';
 import { createLogger } from './util/logger.js';
 
 export function createDiscordRssServer(deps: AppDeps) {

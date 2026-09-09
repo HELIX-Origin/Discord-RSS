@@ -1,7 +1,7 @@
 import type { AppDeps } from '../../app.js';
-import { renderOAuthCallbackHtml } from '../oauth-callback.js';
-import { sendError, sendHtml, sendJson } from '../helpers.js';
-import type { Router } from '../router.js';
+import { renderOAuthCallbackHtml } from '../../http/oauth-callback.js';
+import { sendError, sendHtml, sendJson } from '../../http/helpers.js';
+import type { Router } from '../../http/router.js';
 import { redirectUriForProvider, requireUser } from './shared.js';
 
 export function registerOAuthRoutes(router: Router<AppDeps>): void {

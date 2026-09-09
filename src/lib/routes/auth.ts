@@ -1,7 +1,7 @@
 import type { AppDeps } from '../../app.js';
 import { AuthService } from '../../auth/service.js';
-import { clearSessionCookie, readBodyJson, sendError, sendJson, setSessionCookie } from '../helpers.js';
-import type { Router } from '../router.js';
+import { clearSessionCookie, readBodyJson, sendError, sendJson, setSessionCookie } from '../../http/helpers.js';
+import type { Router } from '../../http/router.js';
 import { authedUserId, getSessionToken, SESSION_MAX_AGE_SECONDS } from './shared.js';
 
 export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void {

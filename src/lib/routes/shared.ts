@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AppDeps } from '../../app.js';
-import { COOKIE_NAME, parseCookies, sendError } from '../helpers.js';
+import { COOKIE_NAME, parseCookies, sendError } from '../../http/helpers.js';
 
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 3600;
 

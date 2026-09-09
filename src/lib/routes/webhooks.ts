@@ -1,6 +1,6 @@
 import type { AppDeps } from '../../app.js';
-import { readBodyJson, sendError, sendJson } from '../helpers.js';
-import type { Router } from '../router.js';
+import { readBodyJson, sendError, sendJson } from '../../http/helpers.js';
+import type { Router } from '../../http/router.js';
 import { isValidHttpUrl, requireUser } from './shared.js';
 
 export function registerWebhooksRoutes(router: Router<AppDeps>): void {

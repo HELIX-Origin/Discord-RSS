@@ -1,6 +1,6 @@
 import type { AppDeps } from '../../app.js';
-import { sendJson } from '../helpers.js';
-import type { Router } from '../router.js';
+import { sendJson } from '../../http/helpers.js';
+import type { Router } from '../../http/router.js';
 import { requireUser } from './shared.js';
 
 export function registerStatsRoutes(router: Router<AppDeps>): void {

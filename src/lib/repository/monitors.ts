@@ -1,4 +1,4 @@
-import type { Database } from '../database.js';
+import type { Database } from '../../db/database.js';
 import { AppState } from '../../state/app-state.js';
 import { nowIso, type SiteMonitor } from '../../state/types.js';
 
