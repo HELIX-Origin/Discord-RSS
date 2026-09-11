@@ -10,7 +10,7 @@ import { clearPorts } from './util/ports.js';
 import { KeepAlivePing } from './util/keep-alive.js';
 import { HttpsProxyServer } from './dashboard/https-proxy.js';
 import { loadTlsCredentials } from './dashboard/server.js';
-import { generateSelfSignedCertificate } from './util/self-signed.js';
+import { getOrCreateSelfSignedCertificate } from './util/self-signed.js';
 
 import { DiscordBot } from './bot/bot.js';
 
@@ -67,9 +67,10 @@ export async function main(): Promise<void> {
           ?.split(':')[0];
       }
     }
+    const certsDir = resolve(config.dbPath, '..', 'certs');
     const tlsCredentials =
       loadTlsCredentials(config.botSslKey, config.botSslCert) ??
-      generateSelfSignedCertificate(customHost ?? 'localhost', customHost ? [customHost] : []);
+      getOrCreateSelfSignedCertificate(certsDir, customHost ?? 'localhost', customHost ? [customHost] : []);
     httpsProxy = new HttpsProxyServer({
       proxyPort: config.httpsProxyPort,
       targetPort: config.botPort,

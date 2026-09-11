@@ -137,9 +137,18 @@ export function generateSelfSignedCertificate(
     }
   }
 
+  // 1. SAN extension (OID 2.5.29.17)
   const sanContent = derSequence(sanEntries);
   const sanExtension = derSequence([derOid('2.5.29.17'), derOctetString(sanContent)]);
-  const extensionsSeq = derTag(0xa3, derSequence([sanExtension]));
+
+  // 2. Basic Constraints (OID 2.5.29.19): cA: TRUE
+  const bcExtension = derSequence([derOid('2.5.29.19'), derOctetString(Buffer.from([0x30, 0x03, 0x01, 0x01, 0xff]))]);
+
+  // 3. Extended Key Usage (OID 2.5.29.37): serverAuth, clientAuth
+  const ekuContent = derSequence([derOid('1.3.6.1.5.5.7.3.1'), derOid('1.3.6.1.5.5.7.3.2')]);
+  const ekuExtension = derSequence([derOid('2.5.29.37'), derOctetString(ekuContent)]);
+
+  const extensionsSeq = derTag(0xa3, derSequence([sanExtension, bcExtension, ekuExtension]));
 
   // Version 3: [0] EXPLICIT INTEGER 2
   const version = derTag(0xa0, derInteger(2));
@@ -175,4 +184,46 @@ export function generateSelfSignedCertificate(
     key: String(privKeyPem),
     cert: certPem,
   };
+}
+
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+/**
+ * Loads an existing self-signed certificate from disk or generates and saves a new one.
+ * Ensures the certificate fingerprint remains stable across restarts so that browser
+ * security exceptions or trusted root installations persist.
+ */
+export function getOrCreateSelfSignedCertificate(
+  certsDir: string,
+  commonName = 'localhost',
+  altNames: string[] = [],
+): GeneratedTlsCertificate {
+  const certPath = resolve(certsDir, 'self-signed-cert.pem');
+  const keyPath = resolve(certsDir, 'self-signed-key.pem');
+
+  if (existsSync(certPath) && existsSync(keyPath)) {
+    try {
+      const cert = readFileSync(certPath, 'utf8');
+      const key = readFileSync(keyPath, 'utf8');
+      const x509 = new crypto.X509Certificate(cert);
+      const expiry = new Date(x509.validTo).getTime();
+      // Reuse if valid for at least 30 days
+      if (expiry - Date.now() > 30 * 24 * 3600 * 1000) {
+        return { cert, key };
+      }
+    } catch {
+      // Re-generate if reading or parsing fails
+    }
+  }
+
+  const generated = generateSelfSignedCertificate(commonName, altNames);
+  try {
+    mkdirSync(certsDir, { recursive: true });
+    writeFileSync(certPath, generated.cert, 'utf8');
+    writeFileSync(keyPath, generated.key, 'utf8');
+  } catch {
+    // Non-fatal if filesystem is read-only
+  }
+  return generated;
 }
