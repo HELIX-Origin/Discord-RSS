@@ -128,7 +128,7 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
       pollIntervalMs: cfg.pollIntervalMs,
       requestTimeoutMs: cfg.requestTimeoutMs,
       internalUrl: cfg.internalUrl,
-      cloudHostUrl: cfg.cloudHostUrl,
+      caddyEnabled: cfg.caddyEnabled,
       publicBaseUrl: cfg.publicBaseUrl,
       sslConfigured: Boolean(cfg.sslKey && cfg.sslCert),
       botSslConfigured: Boolean(cfg.botSslKey && cfg.botSslCert),

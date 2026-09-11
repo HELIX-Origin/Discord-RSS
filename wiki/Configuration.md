@@ -38,16 +38,17 @@ Feed posting intervals are managed directly per-user via the dashboard **Feeds**
 | `DISCORD_CLIENT_SECRET`  | _(required)_     | Discord Application Client Secret used for OAuth2 login.                                                                                                                         |
 | `DISCORD_REDIRECT_URL`  | _(auto-derived)_ | The Bot Invite & Authorization URL. Format: `https://discord.com/oauth2/authorize?client_id=<your_client_id>&permissions=8&integration_type=0&scope=bot+applications.commands` |
 
-### Native SSL (Optional)
+### Reverse Proxy & SSL (Optional)
 
 | Variable              | Default   | Description                                                                                             |
 | --------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| `SITE_SSL_KEY`        | _(empty)_ | File path to a PEM-formatted private key or raw PEM string for native HTTPS.                            |
-| `SITE_SSL_CERT`       | _(empty)_ | File path to a PEM-formatted certificate file or raw PEM string for native HTTPS.                       |
+| `CADDY_ENABLED`       | `true`    | Enable or disable the built-in Caddy reverse proxy supervisor with automatic HTTPS (`true` or `false`). |
+| `SITE_SSL_KEY`        | _(empty)_ | File path to a PEM-formatted private key or raw PEM string for direct native HTTPS without Caddy.       |
+| `SITE_SSL_CERT`       | _(empty)_ | File path to a PEM-formatted certificate file or raw PEM string for direct native HTTPS without Caddy.  |
 
 ### Keep-Alive Network Ping (Optional)
 
-The keep-alive ping endpoint is **automatically derived from the host system** (cloud host URLs like Render, Railway, Fly.io, or `http://${INTERNAL_URL}/health`). You do not need to specify a ping URL in the environment.
+The keep-alive ping endpoint defaults to `http://${INTERNAL_URL}/health`. You do not need to specify a ping URL in the environment.
 
 | Variable           | Default   | Description                                                                                                                   |
 | ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------- |

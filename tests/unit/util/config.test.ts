@@ -31,23 +31,6 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.pingIntervalMs).toBe(300_000);
   });
 
-  it('auto-derives pingUrl from cloud host system (Render, Railway, Fly) when PING_URL is omitted', () => {
-    delete process.env['PING_URL'];
-    process.env['RENDER_EXTERNAL_URL'] = 'https://my-render-app.onrender.com';
-    let config = defaultConfig();
-    expect(config.pingUrl).toBe('https://my-render-app.onrender.com/health');
-
-    delete process.env['RENDER_EXTERNAL_URL'];
-    process.env['RAILWAY_STATIC_URL'] = 'railway-app.up.railway.app';
-    config = defaultConfig();
-    expect(config.pingUrl).toBe('https://railway-app.up.railway.app/health');
-
-    delete process.env['RAILWAY_STATIC_URL'];
-    process.env['FLY_APP_NAME'] = 'my-fly-app';
-    config = defaultConfig();
-    expect(config.pingUrl).toBe('https://my-fly-app.fly.dev/health');
-  });
-
   it('disables pingUrl when PING_ENABLED=false or KEEP_ALIVE=false', () => {
     delete process.env['PING_URL'];
     process.env['PING_ENABLED'] = 'false';
@@ -110,31 +93,33 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.publicBaseUrl).toBe('https://rss.example.com');
   });
 
-  it('auto-detects cloud host URLs (Render, Railway, Fly.io)', () => {
-    process.env['RENDER_EXTERNAL_URL'] = 'https://render-service.onrender.com';
-    let config = defaultConfig();
-    expect(config.cloudHostUrl).toBe('https://render-service.onrender.com');
-    expect(config.publicBaseUrl).toBe('https://render-service.onrender.com');
+  it('enables Caddy by default and respects CADDY_ENABLED toggle', () => {
+    expect(defaultConfig().caddyEnabled).toBe(true);
 
-    delete process.env['RENDER_EXTERNAL_URL'];
-    process.env['RAILWAY_STATIC_URL'] = 'railway-app.up.railway.app';
-    config = defaultConfig();
-    expect(config.cloudHostUrl).toBe('https://railway-app.up.railway.app');
-    expect(config.publicBaseUrl).toBe('https://railway-app.up.railway.app');
+    process.env['CADDY_ENABLED'] = 'false';
+    expect(defaultConfig().caddyEnabled).toBe(false);
 
-    delete process.env['RAILWAY_STATIC_URL'];
-    process.env['FLY_APP_NAME'] = 'my-fly-rss';
-    config = defaultConfig();
-    expect(config.cloudHostUrl).toBe('https://my-fly-rss.fly.dev');
-    expect(config.publicBaseUrl).toBe('https://my-fly-rss.fly.dev');
+    process.env['CADDY_ENABLED'] = 'off';
+    expect(defaultConfig().caddyEnabled).toBe(false);
+
+    process.env['CADDY_ENABLED'] = 'disabled';
+    expect(defaultConfig().caddyEnabled).toBe(false);
+
+    process.env['CADDY_ENABLED'] = '0';
+    expect(defaultConfig().caddyEnabled).toBe(false);
+
+    process.env['CADDY_ENABLED'] = 'true';
+    expect(defaultConfig().caddyEnabled).toBe(true);
   });
 
-  it('PUBLIC_URL overrides cloudHostUrl', () => {
-    process.env['RENDER_EXTERNAL_URL'] = 'https://render-service.onrender.com';
-    process.env['PUBLIC_URL'] = 'https://rss.custom.com:3443';
-    const config = defaultConfig();
-    expect(config.cloudHostUrl).toBe('https://render-service.onrender.com');
-    expect(config.publicBaseUrl).toBe('https://rss.custom.com:3443');
+  it('disables Caddy when native SSL certificates are configured unless explicitly enabled', () => {
+    delete process.env['CADDY_ENABLED'];
+    process.env['SITE_SSL_KEY'] = '/path/to/key.pem';
+    process.env['SITE_SSL_CERT'] = '/path/to/cert.pem';
+    expect(defaultConfig().caddyEnabled).toBe(false);
+
+    process.env['CADDY_ENABLED'] = 'true';
+    expect(defaultConfig().caddyEnabled).toBe(true);
   });
 
   it('supports PUBLIC_URL with domains and custom ports', () => {

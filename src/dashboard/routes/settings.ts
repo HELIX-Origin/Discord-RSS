@@ -12,7 +12,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     sendJson(res, 200, {
       oauthProviders: d.oauth.listProviders(),
       publicBaseUrl: d.repo.getSetting('public_base_url') ?? d.config.publicBaseUrl,
-      cloudHostUrl: d.config.cloudHostUrl,
+      caddyEnabled: d.config.caddyEnabled,
       pollIntervalMs: Number.isInteger(pollIntervalMs) && pollIntervalMs > 0 ? pollIntervalMs : 3_600_000,
     });
   });

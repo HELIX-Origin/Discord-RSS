@@ -84,20 +84,28 @@ In the event that an OAuth authorization flow is canceled or misconfigured, the 
 
 ## 🔒 SSL, HTTPS & Reverse Proxies
  
-### Native SSL
+### 1. Built-in Caddy Reverse Proxy (Enabled by Default)
 
-To host HELIX RSS over native HTTPS directly, provide valid PEM certificates in `.env`:
+HELIX RSS includes a native Caddy supervisor (`CADDY_ENABLED=true` by default) that manages automatic HTTPS without manual certificate setup:
+- **Localhost**: Configures an internal Certificate Authority (CA) with trusted local TLS.
+- **Production VPS**: When `PUBLIC_URL=https://your-domain.com` is configured and ports `80` and `443` are open, Caddy automatically provisions and continuously renews production certificates via Let's Encrypt or ZeroSSL.
+- **Zero NPM Dependencies**: The official static binary is fetched directly from GitHub releases if not installed on the system.
+
+### 2. Native Node.js SSL (Direct)
+
+To host HELIX RSS over direct native HTTPS without Caddy, provide valid PEM certificates in `.env`:
  
 ```env
 SITE_SSL_KEY=/path/to/privkey.pem
 SITE_SSL_CERT=/path/to/fullchain.pem
 ```
 
-When configured, the unified server boots with native Node.js TLS encryption and marks session cookies with the `Secure` attribute.
+When configured, the unified server boots with native Node.js TLS encryption, automatically bypasses Caddy, and marks session cookies with the `Secure` attribute.
 
-### External Reverse Proxies (Cloudflare, Nginx, Caddy, Traefik)
+### 3. External Reverse Proxies (Cloudflare, Nginx, Traefik)
 
-When running behind an external reverse proxy or cloud host (such as Cloudflare Tunnels, Render, Railway, or Fly.io):
+When running behind an external reverse proxy (e.g. Cloudflare Tunnels, custom Nginx, or Traefik):
+- Set `CADDY_ENABLED=false` in `.env`.
 - Configure `PUBLIC_URL=https://your-domain.com` in `.env` to ensure Discord OAuth callback redirects resolve properly.
 - Reverse proxies terminate SSL and forward traffic to HELIX RSS via `INTERNAL_URL` (default `127.0.0.1:3131`).
 - HELIX RSS automatically inspects standard proxy headers such as `x-forwarded-proto: https` to enforce secure session cookie policies.

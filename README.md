@@ -22,30 +22,38 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
 * [Configuration Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Configuration)
 * [Troubleshooting](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Troubleshooting)
 
-## 🚀 One-Click Cloud Deployment
+## 💻 Local & VPS Hosting (Cross-Platform)
 
-Deploy HELIX RSS to your preferred cloud provider with one click:
+HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy reverse proxy:
+- **Local Testing**: Automatically provisions a trusted local certificate for `localhost`.
+- **VPS / Bare-Metal**: Automatically provisions and renews real Let's Encrypt / ZeroSSL certificates when a domain is configured via `PUBLIC_URL` (e.g. `https://rss.yourdomain.com`).
+- **Zero Configuration**: Caddy is managed directly by HELIX RSS across Linux, macOS, and Windows with zero npm bloat.
 
-| Platform | Quick Deploy | Configuration |
-|---|---|---|
-| **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HELIX-Origin/HELIX-RSS) | [Render Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#3-render) |
-| **Railway** | [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/helix-rss) | [Railway Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#2-railway) |
-| **Heroku** | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS) | [Heroku Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#4-heroku) |
-| **Fly.io** | [`fly launch`](https://fly.io/docs/hands-on/launch-app/) | [Fly.io Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#1-flyio) |
-
-## Installation & Setup
+### Installation & Quick Start
 
 1. **Clone the repository:**
 
    ```bash
    git clone https://github.com/HELIX-Origin/HELIX-RSS.git
    cd HELIX-RSS
+   ```
+
+2. **Configure environment:**
+
+   ```bash
+   cp .env.example .env
+   # Edit .env and enter your DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET
+   ```
+
+3. **Install dependencies and launch:**
+
+   ```bash
    npm install
    npm run build
    npm start
    ```
 
-> 📖 For a reproduction-safe, step-by-step walkthrough (install, configure, add feeds, verify delivery, reset state), see the [Wiki](https://github.com/HELIX-Origin/HELIX-RSS/wiki).
+> 📖 For a detailed setup guide covering Linux systemd services, Windows services, and Docker Compose, see the [Deployment & Hosting Wiki Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting).
 
 ## Contributing
 

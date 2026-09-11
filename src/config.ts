@@ -6,7 +6,7 @@ export interface AppConfig {
   host: string;
   port: number;
   internalUrl: string;
-  cloudHostUrl: string | null;
+  caddyEnabled: boolean;
   publicBaseUrl: string | null;
   dbPath: string;
   pollIntervalMs: number;
@@ -44,22 +44,10 @@ export function defaultConfig(): AppConfig {
   const host = (envHost === 'localhost' ? '0.0.0.0' : envHost) ?? process.env['HOST']?.trim() ?? '127.0.0.1';
   const dataDir = process.env['SQLITE_DATA'] ?? resolve(process.cwd(), 'data');
 
-  // Cloud host-provided dynamic URLs
-  const cloudHostUrl =
-    process.env['RENDER_EXTERNAL_URL']?.trim() ||
-    (process.env['RAILWAY_STATIC_URL']
-      ? `https://${process.env['RAILWAY_STATIC_URL'].trim().replace(/^https?:\/\//, '')}`
-      : null) ||
-    (process.env['RAILWAY_PUBLIC_DOMAIN']
-      ? `https://${process.env['RAILWAY_PUBLIC_DOMAIN'].trim().replace(/^https?:\/\//, '')}`
-      : null) ||
-    (process.env['FLY_APP_NAME'] ? `https://${process.env['FLY_APP_NAME'].trim()}.fly.dev` : null) ||
-    null;
-
   const botPort = parsePort(envPort ? String(envPort) : (process.env['DISCORD_PORT'] ?? process.env['PORT']), 3131);
   const port = parsePort(process.env['PORT'] ?? (envPort ? String(envPort) : process.env['DISCORD_PORT']), botPort);
 
-  // Public URL: optional public URL for the service (behind reverse proxy, cloud host, or native SSL)
+  // Public URL: optional public URL for the service (behind reverse proxy or native SSL)
   const rawPublic =
     process.env['PUBLIC_URL']?.trim() ||
     process.env['CUSTOM_URL']?.trim() ||
@@ -75,8 +63,6 @@ export function defaultConfig(): AppConfig {
     } else {
       publicBaseUrl = `https://${clean}`;
     }
-  } else if (cloudHostUrl) {
-    publicBaseUrl = cloudHostUrl.replace(/\/+$/, '');
   }
 
   const sslKey = process.env['SITE_SSL_KEY']?.trim() || null;
@@ -153,21 +139,21 @@ export function defaultConfig(): AppConfig {
       pingUrl = resolved;
     }
   } else {
-    // Auto-derived from host system (cloud host URLs, or internalUrl)
-    const hostDerivedUrl =
-      cloudHostUrl ||
-      (process.env['RENDER_EXTERNAL_URL']?.trim()
-        ? process.env['RENDER_EXTERNAL_URL']!.trim().replace(/\/+$/, '')
-        : null);
-    pingUrl = hostDerivedUrl ? `${hostDerivedUrl.replace(/\/+$/, '')}/health` : internalHealthUrl;
+    pingUrl = internalHealthUrl;
   }
   const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
+
+  const caddyEnv = process.env['CADDY_ENABLED']?.trim().toLowerCase();
+  const caddyEnabled =
+    caddyEnv !== undefined
+      ? caddyEnv !== 'false' && caddyEnv !== 'off' && caddyEnv !== 'disabled' && caddyEnv !== '0'
+      : !(sslKey && sslCert);
 
   return {
     host,
     port,
     internalUrl,
-    cloudHostUrl,
+    caddyEnabled,
     publicBaseUrl,
     dbPath: resolve(dataDir, 'helix-rss.db'),
     pollIntervalMs: 3_600_000,

@@ -1,0 +1,10 @@
+{
+    # Disable admin API endpoint for security and minimal overhead
+    admin off
+}
+
+# The public site block: defaults to localhost for local testing,
+# or reads PUBLIC_URL (e.g. https://rss.yourdomain.com) for production.
+{$PUBLIC_URL:localhost} {
+    reverse_proxy {$INTERNAL_TARGET:127.0.0.1:3131}
+}
