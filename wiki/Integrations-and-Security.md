@@ -39,7 +39,7 @@ Cloudflare OAuth is configured for **code-based authentication** (public client 
 1. In the Cloudflare Dashboard, navigate to **Manage Account** > **OAuth clients** > **Create client**.
 2. **Client Configuration**:
    - **Client Type**: Public / SPA / Native client (`token_endpoint_auth_method: "none"`).
-   - **Redirect URI**: `https://<YOUR_DOMAIN>/api/oauth/cloudflare/callback` (or `http://localhost:3434/api/oauth/cloudflare/callback` for local testing).
+   - **Redirect URI**: `https://<YOUR_DOMAIN>/api/oauth/cloudflare/callback` (or `http://localhost:3131/api/oauth/cloudflare/callback` for local testing).
    - **Client ID**: Copy the generated Client ID. Cloudflare does not generate or require a client secret for code-based public clients.
    - **Scopes**: Cloudflare requires **dot-delimited** scopes (e.g. `zone.read`, `zone.rulesets.write`, `offline_access`). Note that legacy colon-delimited formats (`zone:read`) are rejected by Cloudflare's OAuth server. If no scope is explicitly passed, Cloudflare applies the scopes configured on the client.
 3. In `.env`, provide:

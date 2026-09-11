@@ -10,9 +10,8 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 
 | Variable       | Default     | Description                                                                                                                                                                                                                           |
 | -------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `INTERNAL_URL` | `127.0.0.1` | The internal bind address used by both the web dashboard and the Discord bot HTTP server. Set to `0.0.0.0` to expose on your local network (LAN), or leave as `127.0.0.1` for local-only or reverse-proxy setups.                     |
-| `SITE_PORT`    | `3434`      | The HTTP/HTTPS port for the web dashboard, REST API, and dev tools.                                                                                                                                                                   |
-| `DISCORD_PORT` | `3131`      | The internal HTTP/HTTPS port used for Discord bot interaction webhooks and OAuth redirects.                                                                                                                                           |
+| `INTERNAL_URL` | `127.0.0.1` | The internal bind address used by the Discord bot and web dashboard. Set to `0.0.0.0` to expose on your local network (LAN), or leave as `127.0.0.1` for local-only or reverse-proxy setups.                                    |
+| `DISCORD_PORT` | `3131`      | The primary HTTP/HTTPS port for the Discord bot service, interaction endpoints, and OAuth flows. The web dashboard runs as a managed sub-process incremented from this port (e.g. `3132`).                                         |
 | `REDIS_PORT`   | `3535`      | The port for the Redis coordinator. Redis automatically binds to `INTERNAL_URL`.                                                                                                                                                      |
 | `PUBLIC_URL`   | _(empty)_   | **Optional**. The public domain where HELIX RSS is hosted (e.g., `https://rss.example.com`). When provided, public-facing links, Discord bot invite links, and OAuth redirect URIs will use this URL instead of the internal address. |
 
@@ -60,5 +59,5 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 
 To eliminate port-in-use errors (`EADDRINUSE`) when restarting or updating:
 
-1. **Preflight Port Sweep**: On boot, HELIX RSS scans `SITE_PORT` (3434), `DISCORD_PORT` (3131), and `REDIS_PORT` (3535). If an inactive or orphaned process is lingering on these ports from a prior session, it is cleanly terminated before binding.
+1. **Preflight Port Sweep**: On boot, HELIX RSS scans `DISCORD_PORT` (3131), the site port (e.g. 3132), and `REDIS_PORT` (3535). If an inactive or orphaned process is lingering on these ports from a prior session, it is cleanly terminated before binding.
 2. **Embedded Redis Lifecycle**: If `redis-server` is installed on your host, HELIX RSS will automatically launch it on `REDIS_PORT` (3535) and gracefully terminate it when the service stops. If Redis is not installed, the application seamlessly operates in standalone SQLite mode with zero delay.

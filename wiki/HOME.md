@@ -30,7 +30,7 @@ npm start
 
 ### 3. Open the Dashboard
 
-Navigate to <http://127.0.0.1:3434> in your web browser.
+Navigate to <http://127.0.0.1:3131> (or the site sub-process at <http://127.0.0.1:3132>) in your web browser.
 
 - Click **"Log In with Discord"** to authenticate.
 - If you are the owner or team member of the Discord Application, the system automatically detects your Discord User ID from the Discord API and grants you full **Owner** access!
@@ -55,7 +55,7 @@ Navigate to <http://127.0.0.1:3434> in your web browser.
 
 - **Zero Runtime Dependencies**: Built entirely with Node.js built-ins (`node:http`, `node:https`, `node:sqlite`, `node:crypto`).
 - **Discord-First Authentication**: Pure Discord OAuth authentication — no insecure passwords or complex user registration forms.
-- **Automated Port Preflight**: Scans and clears occupied ports (`3434`, `3131`, `3535`) automatically upon launch so the service boots without conflicts.
+- **Automated Port Preflight**: Scans and clears occupied ports (`3131`, `3132`, `3535`) automatically upon launch so the service boots without conflicts.
 - **Embedded Redis Supervisor**: Automatically launches `redis-server` alongside the service when installed, with instant, zero-delay graceful fallback to standalone SQLite mode if Redis is absent.
 - **Shared State**: Both the web dashboard and Discord Bot share the same SQLite database and in-memory caches for real-time synchronization.
 

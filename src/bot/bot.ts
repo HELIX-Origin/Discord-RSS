@@ -1,12 +1,14 @@
 import http from 'node:http';
 import https from 'node:https';
 import { existsSync, readFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
 import type { AppDeps } from '../app.js';
 import { createLogger, type Logger } from '../util/logger.js';
 import { allBotCommands, dispatchInteraction } from './commands/index.js';
 import { DiscordGatewayClient } from './gateway.js';
 import { DiscordRestClient } from './rest.js';
 import { InteractionResponseType, type DiscordInteraction } from './types.js';
+import { createHelixRssServer } from '../server.js';
 
 export interface DiscordBotOptions {
   token: string;
@@ -17,6 +19,7 @@ export interface DiscordBotOptions {
   host?: string;
   sslKey?: string | null;
   sslCert?: string | null;
+  startSite?: boolean;
 }
 
 export class DiscordBot {
@@ -24,6 +27,7 @@ export class DiscordBot {
   readonly rest: DiscordRestClient;
   private readonly gateway: DiscordGatewayClient;
   private server: http.Server | https.Server | null = null;
+  private siteServer: http.Server | https.Server | null = null;
   private isStarted = false;
   private ownerDiscordIds = new Set<string>();
   private teamAdminDiscordIds = new Set<string>();
@@ -45,33 +49,37 @@ export class DiscordBot {
     if (this.isStarted) return;
     this.isStarted = true;
 
-    this.logger.info('Starting Discord Bot service...');
+    this.logger.info('Starting Discord Bot primary service...');
 
-    // 0. Auto-detect owner and team permissions from Discord Application API
-    await this.detectApplicationOwners();
+    if (this.options.token) {
+      // 0. Auto-detect owner and team permissions from Discord Application API
+      await this.detectApplicationOwners();
 
-    // 1. Register application slash commands with Discord REST API if clientId is available
-    if (this.options.clientId) {
-      try {
-        this.logger.info('Registering global slash commands with Discord...', {
-          commandsCount: allBotCommands.length,
-          clientId: this.options.clientId,
-        });
-        await this.rest.registerGlobalCommands(this.options.clientId, allBotCommands);
-        this.logger.info('Global slash commands registered successfully');
-      } catch (err) {
-        this.logger.error('Failed to register global slash commands', {
-          err: (err as Error).message,
-        });
+      // 1. Register application slash commands with Discord REST API if clientId is available
+      if (this.options.clientId) {
+        try {
+          this.logger.info('Registering global slash commands with Discord...', {
+            commandsCount: allBotCommands.length,
+            clientId: this.options.clientId,
+          });
+          await this.rest.registerGlobalCommands(this.options.clientId, allBotCommands);
+          this.logger.info('Global slash commands registered successfully');
+        } catch (err) {
+          this.logger.error('Failed to register global slash commands', {
+            err: (err as Error).message,
+          });
+        }
+      } else {
+        this.logger.warn(
+          'DISCORD_CLIENT_ID not set; skipping automatic slash command registration. Set DISCORD_CLIENT_ID in .env to register commands.',
+        );
       }
-    } else {
-      this.logger.warn(
-        'DISCORD_CLIENT_ID not set; skipping automatic slash command registration. Set DISCORD_CLIENT_ID in .env to register commands.',
-      );
-    }
 
-    // 2. Connect to Discord Gateway
-    this.gateway.connect();
+      // 2. Connect to Discord Gateway
+      this.gateway.connect();
+    } else {
+      this.logger.warn('DISCORD_TOKEN not set; running bot in local web-only mode without Discord Gateway connection.');
+    }
 
     // 3. Start local HTTP/HTTPS endpoint on DISCORD_PORT (e.g. 3131)
     if (this.options.port !== undefined && this.options.port >= 0) {
@@ -90,33 +98,108 @@ export class DiscordBot {
         }
       }
 
-      const requestHandler = (req: http.IncomingMessage, res: http.ServerResponse) => {
+      const requestHandler = async (req: http.IncomingMessage, res: http.ServerResponse) => {
         const proto = tlsOptions ? 'https' : 'http';
         const url = new URL(req.url ?? '/', `${proto}://${req.headers.host ?? `${host}:${port}`}`);
-        if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/health')) {
+
+        // Health endpoint
+        if (req.method === 'GET' && url.pathname === '/health') {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ status: 'ok', service: 'helix-rss-bot', proto, uptime: process.uptime() }));
           return;
         }
 
+        // Root path: redirect browser requests to Site dashboard, return JSON for bots/APIs
+        if (req.method === 'GET' && url.pathname === '/') {
+          const acceptHeader = req.headers['accept'] ?? '';
+          if (acceptHeader.includes('text/html')) {
+            const sitePort = this.deps.config.port;
+            const siteProto =
+              (this.deps.config.sslKey && this.deps.config.sslCert) ||
+              this.deps.config.publicBaseUrl?.startsWith('https')
+                ? 'https'
+                : 'http';
+            const reqHost = req.headers.host?.split(':')[0];
+            const siteHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
+            const siteBase = this.deps.config.publicBaseUrl
+              ? this.deps.config.publicBaseUrl.replace(/\/+$/, '')
+              : `${siteProto}://${siteHost}:${sitePort}`;
+            res.writeHead(302, { Location: `${siteBase}/` });
+            res.end();
+            return;
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'ok', service: 'helix-rss-bot', proto, uptime: process.uptime() }));
+          return;
+        }
+
+        // Bot invite redirect
+        if (
+          req.method === 'GET' &&
+          (url.pathname === '/invite' || url.pathname === '/bot/invite' || url.pathname === '/api/bot/invite')
+        ) {
+          if (this.options.redirectUrl) {
+            res.writeHead(302, { Location: this.options.redirectUrl });
+            res.end();
+            return;
+          }
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Bot invite URL is not configured' }));
+          return;
+        }
+
+        // Discord Login Initiation on Bot Port
+        if (
+          req.method === 'GET' &&
+          (url.pathname === '/api/auth/discord' || url.pathname === '/api/auth/login/discord')
+        ) {
+          const p = this.deps.oauth.getProvider('discord');
+          const config = this.deps.oauth.getConfig('discord');
+          if (!p || !config || !config.enabled || !config.clientId || !config.clientSecret) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                error:
+                  'Discord OAuth is not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET environment variables.',
+              }),
+            );
+            return;
+          }
+
+          const reqHost = req.headers.host?.split(':')[0];
+          const botHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
+          const callbackUri =
+            process.env['DISCORD_CALLBACK_URL']?.trim() || `${proto}://${botHost}:${port}/api/auth/callback/discord`;
+
+          const state = randomBytes(16).toString('hex');
+          this.deps.repo.saveOAuthState(state, null, 'discord');
+          this.deps.repo.cleanupExpiredOAuthStates(10 * 60 * 1000);
+
+          const authUrl = p.buildAuthorizeUrl(callbackUri, state, config);
+          res.writeHead(302, { Location: authUrl });
+          res.end();
+          return;
+        }
+
+        // Discord OAuth Callback Handler on Bot Port: redirects code to site sub-process
         if (
           req.method === 'GET' &&
           (url.pathname === '/api/auth/callback/discord' || url.pathname === '/api/oauth/discord/callback')
         ) {
           if (url.searchParams.has('code') || url.searchParams.has('error')) {
-            const mainProto =
-              this.deps.config.publicBaseUrl?.startsWith('https') ||
-              (this.deps.config.sslKey && this.deps.config.sslCert)
+            const sitePort = this.deps.config.port;
+            const siteProto =
+              (this.deps.config.sslKey && this.deps.config.sslCert) ||
+              this.deps.config.publicBaseUrl?.startsWith('https')
                 ? 'https'
                 : 'http';
             const reqHost = (req.headers.host || '').split(':')[0];
-            const mainHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
-            const mainPort = this.deps.config.port;
-            const baseUrl = this.deps.config.publicBaseUrl
+            const siteHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
+            const siteBase = this.deps.config.publicBaseUrl
               ? this.deps.config.publicBaseUrl.replace(/\/+$/, '')
-              : `${mainProto}://${mainHost}:${mainPort}`;
+              : `${siteProto}://${siteHost}:${sitePort}`;
             res.writeHead(302, {
-              Location: `${baseUrl}/api/auth/callback/discord?${url.searchParams.toString()}`,
+              Location: `${siteBase}/api/auth/callback/discord?${url.searchParams.toString()}`,
             });
             res.end();
             return;
@@ -144,6 +227,7 @@ export class DiscordBot {
           return;
         }
 
+        // Discord Webhook Interactions
         if (req.method === 'POST' && (url.pathname === '/' || url.pathname === '/interactions')) {
           let body = '';
           req.on('data', (chunk) => {
@@ -185,13 +269,60 @@ export class DiscordBot {
 
       await new Promise<void>((resolve) => {
         this.server?.listen(port, host, () => {
-          this.logger.info('Discord Bot server listening', {
+          this.logger.info('Discord Bot primary server listening', {
             host,
             port,
             proto: tlsOptions ? 'https' : 'http',
           });
           resolve();
         });
+      });
+    }
+
+    // 4. Start Site Sub-process
+    if (this.deps && this.options.startSite !== false && !this.siteServer) {
+      this.siteServer = createHelixRssServer(this.deps);
+      await new Promise<void>((resolve, reject) => {
+        const basePort = this.options.port !== undefined && this.options.port > 0 ? this.options.port + 1 : 0;
+        let attemptPort = this.deps.config.port || basePort;
+        const maxAttempts = 10;
+        let attempts = 0;
+
+        const tryListen = () => {
+          attempts++;
+          const onError = (err: NodeJS.ErrnoException) => {
+            this.siteServer?.removeListener('listening', onListening);
+            if (err.code === 'EADDRINUSE' && attempts < maxAttempts) {
+              attemptPort++;
+              this.logger.warn(`Site port in use, incrementing to ${attemptPort}...`);
+              tryListen();
+            } else {
+              this.logger.error('Failed to start site sub-process', { err: err.message });
+              reject(err);
+            }
+          };
+
+          const onListening = () => {
+            this.siteServer?.removeListener('error', onError);
+            const address = this.siteServer?.address();
+            if (typeof address === 'object' && address) {
+              this.deps.config.port = address.port;
+            } else {
+              this.deps.config.port = attemptPort;
+            }
+            this.logger.info('HELIX RSS site sub-process started', {
+              host: this.deps.config.host,
+              port: this.deps.config.port,
+            });
+            resolve();
+          };
+
+          this.siteServer?.once('error', onError);
+          this.siteServer?.once('listening', onListening);
+          this.siteServer?.listen(attemptPort, this.deps.config.host);
+        };
+
+        tryListen();
       });
     }
   }
@@ -342,6 +473,10 @@ export class DiscordBot {
     if (this.server) {
       this.server.close();
       this.server = null;
+    }
+    if (this.siteServer) {
+      this.siteServer.close();
+      this.siteServer = null;
     }
     this.logger.info('Discord Bot stopped');
   }

@@ -8,7 +8,7 @@ This guide covers common issues and resolutions when deploying and maintaining H
 
 ### Root Cause
 
-An earlier instance of Node or Redis was not cleanly terminated and is still holding onto port `3434` (Site), `3131` (Bot), or `3535` (Redis).
+An earlier instance of Node or Redis was not cleanly terminated and is still holding onto port `3131` (Bot), `3132` (Site), or `3535` (Redis).
 
 ### Automatic Resolution
 
@@ -20,7 +20,7 @@ To manually free the ports on Windows:
 
 ```powershell
 # Check which process is using the port
-Get-NetTCPConnection -LocalPort 3434, 3131, 3535 -ErrorAction SilentlyContinue | Format-Table -Property LocalPort, OwningProcess
+Get-NetTCPConnection -LocalPort 3131, 3132, 3535 -ErrorAction SilentlyContinue | Format-Table -Property LocalPort, OwningProcess
 
 # Kill the process by PID
 Stop-Process -Id <OwningProcessId> -Force

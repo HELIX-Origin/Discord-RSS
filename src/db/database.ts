@@ -46,6 +46,33 @@ export class Database {
     } catch {
       // Column may already exist
     }
+    // Fix oauth_states user_id nullability if created under legacy schema
+    try {
+      const info = this.db.prepare('PRAGMA table_info(oauth_states)').all() as Array<{
+        name: string;
+        notnull: number;
+      }>;
+      const userIdCol = info.find((c) => c.name === 'user_id');
+      const providerCol = info.find((c) => c.name === 'provider');
+      if (userIdCol && userIdCol.notnull === 1) {
+        this.db.exec(`
+          CREATE TABLE IF NOT EXISTS oauth_states_migrated (
+            state TEXT PRIMARY KEY,
+            user_id INTEGER,
+            provider TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+          );
+          INSERT OR IGNORE INTO oauth_states_migrated (state, user_id, provider, created_at)
+            SELECT state, user_id, ${providerCol ? 'provider' : "''"}, created_at FROM oauth_states;
+          DROP TABLE oauth_states;
+          ALTER TABLE oauth_states_migrated RENAME TO oauth_states;
+        `);
+      } else if (!providerCol) {
+        this.db.exec("ALTER TABLE oauth_states ADD COLUMN provider TEXT NOT NULL DEFAULT '';");
+      }
+    } catch (err) {
+      this.logger.warn('Failed to verify/migrate oauth_states table', { err: (err as Error).message });
+    }
     this.db
       .prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)')
       .run('schema_version', String(SCHEMA_VERSION));

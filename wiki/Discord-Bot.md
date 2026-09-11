@@ -1,6 +1,6 @@
 # Discord Bot & Slash Commands
 
-HELIX RSS includes a built-in, native Discord Bot that connects directly to the Discord Gateway and registers interactive global slash commands.
+The Discord Bot is the primary application process for HELIX RSS. It manages the Discord Gateway connection, slash commands, Discord OAuth login & callbacks, and supervises the web dashboard as a managed sub-process.
 
 ---
 

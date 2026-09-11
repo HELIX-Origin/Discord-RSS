@@ -1,11 +1,9 @@
-import type { AppDeps } from './app.js';
 import { defaultConfig } from './config.js';
 import { Database } from './db/database.js';
 import { Repository } from './db/repository.js';
 import { FeedWatcher } from './feed/watcher.js';
 import { OAuthService } from './oauth/service.js';
 import { Scheduler } from './scheduler/scheduler.js';
-import { createDiscordRssServer } from './server.js';
 import { launchRedisServer } from './state/redis-process.js';
 import { createRedisCoordinator } from './state/redis.js';
 import { StatusWatcher } from './status/watcher.js';
@@ -19,7 +17,7 @@ export async function main(): Promise<void> {
   const logger = createLogger('app', config.logLevel);
 
   // 1. Clear ports if currently occupied by lingering processes
-  clearPorts([config.port, config.botPort, config.redisPort], logger);
+  clearPorts([config.botPort, config.port, config.redisPort], logger);
 
   // 2. Launch Redis server alongside the service (if not already running)
   const redisProcess = await launchRedisServer(config.redisPort, config.host, logger);
@@ -31,76 +29,51 @@ export async function main(): Promise<void> {
   const feeds = new FeedWatcher(repo, redis, config.logLevel);
   const status = new StatusWatcher(repo, redis, config.logLevel);
 
-  let bot: DiscordBot | null = null;
-  if (config.botToken) {
-    bot = new DiscordBot(
-      { config, db, repo, oauth, feeds, status, redis },
-      {
-        token: config.botToken,
-        clientId: config.clientId,
-        redirectUrl: config.redirectUrl,
-        callbackUrl: config.callbackUrl,
-        port: config.botPort,
-        host: config.host,
-        sslKey: config.botSslKey,
-        sslCert: config.botSslCert,
-      },
-    );
-    feeds.setBot(bot);
-    status.setBot(bot);
-  }
+  // 3. Create Discord Bot as primary application process
+  const bot = new DiscordBot(
+    { config, db, repo, oauth, feeds, status, redis },
+    {
+      token: config.botToken || '',
+      clientId: config.clientId,
+      redirectUrl: config.redirectUrl,
+      callbackUrl: config.callbackUrl,
+      port: config.botPort,
+      host: config.host,
+      sslKey: config.botSslKey,
+      sslCert: config.botSslCert,
+    },
+  );
+  feeds.setBot(bot);
+  status.setBot(bot);
 
-  const deps: AppDeps = { config, db, repo, oauth, feeds, status, redis, bot };
-
+  // 4. Start background polling schedules
   const scheduler = new Scheduler(config.logLevel);
   scheduler.schedule('feed-poll', config.pollIntervalMs, () => feeds.pollAllFeeds());
   scheduler.schedule('status-check', config.statusIntervalMs, () => status.checkAllMonitors());
   scheduler.start();
 
-  if (bot) {
-    await bot.start();
-  }
+  // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)
+  await bot.start();
 
-  const server = createDiscordRssServer(deps);
-
-  server.on('error', (err: NodeJS.ErrnoException) => {
-    if (err.code === 'EADDRINUSE') {
-      logger.error(
-        `Port ${config.port} on ${config.host} is already in use. Another instance of HELIX RSS may already be running.`,
-      );
-    } else {
-      logger.error('HTTP server error', { err: err.message });
-    }
-    scheduler.stop();
-    bot?.stop();
-    void redis?.close();
-    redisProcess?.stop();
-    db.close();
-    process.exit(1);
-  });
-
-  server.listen(config.port, config.host, () => {
-    const address = server.address();
-    const port = typeof address === 'object' && address ? address.port : config.port;
-    logger.info('HELIX RSS started', {
-      host: config.host,
-      port,
-      dbPath: config.dbPath,
-      botEnabled: Boolean(bot),
-    });
+  logger.info('HELIX RSS started with Discord Bot as primary process', {
+    host: config.host,
+    botPort: config.botPort,
+    sitePort: config.port,
+    dbPath: config.dbPath,
+    botTokenConfigured: Boolean(config.botToken),
   });
 
   const shutdown = (signal: string) => {
     logger.info(`Received ${signal}; shutting down`);
     scheduler.stop();
-    bot?.stop();
-    server.close(async () => {
+    bot.stop();
+    void (async () => {
       await redis?.close();
       redisProcess?.stop();
       db.close();
       logger.info('Shutdown complete');
       process.exit(0);
-    });
+    })();
     setTimeout(() => {
       logger.error('Forced shutdown after timeout');
       redisProcess?.stop();

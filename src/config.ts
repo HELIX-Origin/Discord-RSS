@@ -28,7 +28,6 @@ export interface AppConfig {
 }
 
 export function defaultConfig(): AppConfig {
-  const port = parsePort(process.env['SITE_PORT'], 3434);
   const host = process.env['INTERNAL_URL']?.trim() ?? '127.0.0.1';
   const dataDir = process.env['SQLITE_DATA'] ?? resolve(process.cwd(), 'data');
   const publicBaseUrl = process.env['PUBLIC_URL']?.trim() || null;
@@ -39,6 +38,7 @@ export function defaultConfig(): AppConfig {
   const logLevel = parseLogLevel(process.env['LOG_LEVEL']);
   const botToken = process.env['DISCORD_TOKEN']?.trim() || null;
   const botPort = parsePort(process.env['DISCORD_PORT'], 3131);
+  const port = botPort + 1;
   const redisPort = parsePort(process.env['REDIS_PORT'], 3535);
   const redisUrl = `redis://${host}:${redisPort}`;
   const clientId = process.env['DISCORD_CLIENT_ID']?.trim() || null;
@@ -106,7 +106,7 @@ function parseLogLevel(raw: string | undefined): LogLevel {
   return 'info';
 }
 
-function parsePort(raw: string | undefined, fallback = 3434): number {
+function parsePort(raw: string | undefined, fallback = 3131): number {
   if (raw === undefined) return fallback;
   const value = Number(raw);
   // Port 0 is allowed so smoke tests can bind to an ephemeral port.

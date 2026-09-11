@@ -259,7 +259,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
   });
 }
 
-function renderAuthErrorPage(message: string): string {
+export function renderAuthErrorPage(message: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>

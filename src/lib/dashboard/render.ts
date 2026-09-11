@@ -360,7 +360,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
               <span class="font-bold text-cyan-400">Public Base URL</span>
               <p class="text-xs text-gray-400">Where this dashboard is reachable (used for OAuth redirect URIs).</p>
-              <input type="text" id="setting-base-url" placeholder="http://localhost:3434" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+              <input type="text" id="setting-base-url" placeholder="http://localhost:3131" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
             </div>
           </div>
           <div class="flex justify-end">

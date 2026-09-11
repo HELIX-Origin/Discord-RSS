@@ -82,7 +82,7 @@ export function getRequestProtocol(req: IncomingMessage, defaultProto: 'http' | 
   return defaultProto;
 }
 
-export function getRequestHost(req: IncomingMessage, fallbackHost = '127.0.0.1:3434'): string {
+export function getRequestHost(req: IncomingMessage, fallbackHost = '127.0.0.1:3131'): string {
   const forwardedHost = req.headers['x-forwarded-host'];
   if (typeof forwardedHost === 'string') {
     return forwardedHost.split(',')[0]?.trim() || fallbackHost;
