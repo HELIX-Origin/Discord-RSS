@@ -4,13 +4,13 @@ This guide outlines engineering workflows for development, test automation, lint
 
 ```mermaid
 flowchart LR
-    Dev[Code Changes in src/] --> TypeCheck[tsc --noEmit]
-    TypeCheck --> FormatCheck[prettier --check]
-    FormatCheck --> Lint[eslint src tests]
-    Lint --> Vitest[vitest run]
-    Vitest --> VerifyOK{Check Passed?}
-    VerifyOK -->|Yes| Build[tsc -> dist/]
-    VerifyOK -->|No| Fix[Debug & Fix]
+    Dev["Code Changes in src/"] --> TypeCheck["tsc --noEmit"]
+    TypeCheck --> FormatCheck["prettier --check"]
+    FormatCheck --> Lint["eslint src tests"]
+    Lint --> Vitest["vitest run"]
+    Vitest --> VerifyOK{"Check Passed?"}
+    VerifyOK -->|Yes| Build["tsc -> dist/"]
+    VerifyOK -->|No| Fix["Debug & Fix"]
     Fix --> Dev
 ```
 

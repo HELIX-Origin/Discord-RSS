@@ -5,21 +5,21 @@ This guide covers production deployment and self-hosting for HELIX RSS on **Loca
 ```mermaid
 flowchart TD
     subgraph InternetTraffic [Incoming Traffic]
-        Client([Browser / Discord])
+        Client(["Browser / Discord"])
     end
 
     subgraph ReverseProxy [Built-in Automatic HTTPS]
-        Caddy[Integrated Caddy Supervisor]
+        Caddy["Integrated Caddy Supervisor"]
     end
 
     subgraph ServiceCore [HELIX RSS Core]
-        Bot[Discord Bot & HTTP Server\n(127.0.0.1:3131)]
-        DB[(SQLite Persistence\n./data/helix-rss.db)]
-        Scheduler[Feed Polling & Scraper]
+        Bot["Discord Bot & HTTP Server<br/>(127.0.0.1:3131)"]
+        DB[("SQLite Persistence<br/>./data/helix-rss.db")]
+        Scheduler["Feed Polling & Scraper"]
     end
 
-    Client -->|HTTPS: 443 / 80| Caddy
-    Caddy -->|HTTP: 127.0.0.1:3131| Bot
+    Client -->|"HTTPS: 443 / 80"| Caddy
+    Caddy -->|"HTTP: 127.0.0.1:3131"| Bot
     Bot --> DB
     Scheduler --> DB
 ```

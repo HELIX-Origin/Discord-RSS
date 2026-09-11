@@ -53,11 +53,11 @@ Cloudflare OAuth has been retired due to the requirement for paid external domai
 
 ```mermaid
 flowchart LR
-    Crawler[HELIX RSS Crawler] -->|GET /feed.xml\nUser-Agent: HelixRSS/0.1| CloudflareEdge[Cloudflare Edge / WAF]
-    CloudflareEdge --> RuleCheck{Custom WAF\nBypass Rule?}
-    RuleCheck -->|Matched| Origin[Origin Server Feed XML]
-    RuleCheck -->|Not Matched| Challenge[Anti-Bot Challenge / 403]
-    Challenge --> GracefulSkip[HELIX RSS: Log Warning & Skip]
+    Crawler["HELIX RSS Crawler"] -->|"GET /feed.xml<br/>User-Agent: HelixRSS/0.1"| CloudflareEdge["Cloudflare Edge / WAF"]
+    CloudflareEdge --> RuleCheck{"Custom WAF<br/>Bypass Rule?"}
+    RuleCheck -->|Matched| Origin["Origin Server Feed XML"]
+    RuleCheck -->|"Not Matched"| Challenge["Anti-Bot Challenge / 403"]
+    Challenge --> GracefulSkip["HELIX RSS: Log Warning & Skip"]
 ```
 
 ### Whitelisting the Crawler in Cloudflare WAF

@@ -57,12 +57,12 @@ Navigate to <http://127.0.0.1:3131> in your web browser.
 
 ```mermaid
 flowchart TD
-    Dashboard[Web Dashboard\nLight / Dark Themes] <--> Server[HELIX RSS Server Core]
-    DiscordBot[Discord Gateway & Bot] <--> Server
-    Server <--> AppState[In-Memory AppState]
-    AppState <--> SQLite[(node:sqlite Database)]
-    Server --> Watchers[Feed & Status Watchers]
-    Watchers -->|Dispatch Embeds| DiscordBot
+    Dashboard["Web Dashboard<br/>Light / Dark Themes"] <--> Server["HELIX RSS Server Core"]
+    DiscordBot["Discord Gateway & Bot"] <--> Server
+    Server <--> AppState["In-Memory AppState"]
+    AppState <--> SQLite[("node:sqlite Database")]
+    Server --> Watchers["Feed Watcher Engine"]
+    Watchers -->|"Dispatch Embeds"| DiscordBot
 ```
 
 - **Zero Runtime Dependencies**: Built entirely with Node.js built-ins (`node:http`, `node:https`, `node:sqlite`, `node:crypto`).

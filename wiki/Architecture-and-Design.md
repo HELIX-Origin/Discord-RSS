@@ -9,33 +9,33 @@ This document provides a technical overview of the HELIX RSS architecture, datab
 ```mermaid
 flowchart TD
     subgraph Clients [Clients & Consumers]
-        Browser[Dashboard Web UI\n(Light & Dark Themes)]
-        DiscordApp[Discord Gateway & Users]
+        Browser["Dashboard Web UI<br/>(Light & Dark Themes)"]
+        DiscordApp["Discord Gateway & Users"]
     end
 
     subgraph ServerCore [HELIX RSS Server Core]
-        HttpServer[Native HTTP Server\n(node:http)]
-        Router[Path & Parameter Router]
-        AuthModule[Auth & Discord OAuth\n(src/auth, src/oauth)]
-        DashboardRenderer[HTML Dashboard Renderer\n(src/dashboard/render)]
-        ApiRoutes[REST API Handlers\n(src/dashboard/routes)]
+        HttpServer["Native HTTP Server<br/>(node:http)"]
+        Router["Path & Parameter Router"]
+        AuthModule["Auth & Discord OAuth<br/>(src/auth, src/oauth)"]
+        DashboardRenderer["HTML Dashboard Renderer<br/>(src/dashboard/render)"]
+        ApiRoutes["REST API Handlers<br/>(src/dashboard/routes)"]
     end
 
     subgraph StateAndStorage [State & Storage Engine]
-        AppState[In-Memory AppState Layer\n(src/state)]
-        Repository[Write-Through Repository\n(src/db/repository.ts)]
-        SQLiteDB[(SQLite Database\nnode:sqlite)]
-        RedisCoord[(Optional Redis\nCoordinator)]
+        AppState["In-Memory AppState Layer<br/>(src/state)"]
+        Repository["Write-Through Repository<br/>(src/db/repository.ts)"]
+        SQLiteDB[("SQLite Database<br/>node:sqlite")]
+        RedisCoord[("Optional Redis<br/>Coordinator")]
     end
 
     subgraph BackgroundDaemons [Background Daemons]
-        Scheduler[Interval Scheduler]
-        FeedWatcher[Feed Watcher]
-        DiscordBotClient[Discord Gateway & REST Client]
+        Scheduler["Interval Scheduler"]
+        FeedWatcher["Feed Watcher"]
+        DiscordBotClient["Discord Gateway & REST Client"]
     end
 
-    Browser <-->|HTTP / HTML / JSON| HttpServer
-    DiscordApp <-->|WebSocket & REST| DiscordBotClient
+    Browser <-->|"HTTP / HTML / JSON"| HttpServer
+    DiscordApp <-->|"WebSocket & REST"| DiscordBotClient
     HttpServer --> Router
     Router --> AuthModule
     Router --> DashboardRenderer
@@ -43,14 +43,11 @@ flowchart TD
 
     ApiRoutes <--> AppState
     Scheduler --> FeedWatcher
-    Scheduler --> StatusWatcher
     FeedWatcher <--> AppState
-    StatusWatcher <--> AppState
     AppState <--> Repository
     Repository <--> SQLiteDB
     AppState <--> RedisCoord
-    FeedWatcher -->|Dispatch Embeds| DiscordBotClient
-    StatusWatcher -->|Dispatch Alerts| DiscordBotClient
+    FeedWatcher -->|"Dispatch Embeds"| DiscordBotClient
 ```
 
 ---
