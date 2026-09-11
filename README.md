@@ -22,6 +22,27 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
 * [Configuration Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Configuration)
 * [Troubleshooting](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Troubleshooting)
 
+## ☁️ One-Click Cloud Deployment
+
+Deploy your own 24/7 HELIX RSS instance instantly with preconfigured environment variables and persistent storage:
+
+| Platform | One-Click Deployment | Configuration & Guide |
+| :--- | :--- | :--- |
+| **Render** | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/HELIX-Origin/HELIX-RSS) | [Render Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#1-render-rendercom) |
+| **Railway** | [![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/new?template=https://github.com/HELIX-Origin/HELIX-RSS) | [Railway Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#3-railway-railwayapp) |
+| **Heroku** | [![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS) | [Heroku Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#4-heroku-herokucom) |
+| **Fly.io** | [![Deploy on Fly.io](https://fly.io/static/images/launch-badge.svg)](https://fly.io/apps/new?repo=https://github.com/HELIX-Origin/HELIX-RSS) | [Fly.io Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#2-flyio-flyio) |
+
+### Required Deployment Fields
+When launching via any of the one-click buttons above, the deployment wizard will prompt you to enter the following environment variables:
+
+- **`DISCORD_TOKEN`**: Bot Token from the [Discord Developer Portal](https://discord.com/developers/applications) (**Bot** tab > **Reset Token**).
+- **`DISCORD_CLIENT_ID`**: Application Client ID (**General Information** tab > **Application ID**).
+- **`DISCORD_CLIENT_SECRET`**: Application Client Secret (**OAuth2** tab > **Reset Secret**).
+- **`PUBLIC_URL`** *(Optional)*: Your public service URL (e.g. `https://your-service.onrender.com`). Used for Discord OAuth callback URLs and links.
+
+> 📖 **Cloud Hosting Note**: Cloud platforms automatically terminate SSL at their edge router (`CADDY_ENABLED=false` is preconfigured in all deployment templates). For detailed persistent volume setup and step-by-step instructions, see the [Deployment & Hosting Wiki Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#%EF%B8%8F-cloud-paas-hosting-render-flyio-heroku-railway).
+
 ## 💻 Local & VPS Hosting (Cross-Platform)
 
 HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy reverse proxy:

@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: helix-rss
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: CADDY_ENABLED
+        value: "false"
+      - key: SQLITE_DATA
+        value: /var/data
+      - key: PUBLIC_URL
+        sync: false
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_CLIENT_SECRET
+        sync: false
+    disk:
+      name: helix-data
+      mountPath: /var/data
+      sizeGB: 1
