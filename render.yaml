@@ -10,6 +10,8 @@ services:
         value: 22
       - key: CADDY_ENABLED
         value: "false"
+      - key: HOST
+        value: 0.0.0.0
       - key: SQLITE_DATA
         value: ./data
       - key: DISCORD_TOKEN

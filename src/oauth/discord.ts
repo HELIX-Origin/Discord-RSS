@@ -68,7 +68,7 @@ export class DiscordProvider implements OAuthProvider {
       headers: {
         'content-type': 'application/x-www-form-urlencoded',
         accept: 'application/json',
-        'user-agent': 'DiscordRSS/0.1',
+        'user-agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body,
     });
@@ -94,7 +94,7 @@ export class DiscordProvider implements OAuthProvider {
     const res = await fetch('https://discord.com/api/v10/users/@me', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'user-agent': 'DiscordRSS/0.1',
+        'user-agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
     });
 
@@ -118,7 +118,7 @@ export class DiscordProvider implements OAuthProvider {
     const res = await fetch('https://discord.com/api/v10/users/@me/guilds', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'user-agent': 'DiscordRSS/0.1',
+        'user-agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
     });
 

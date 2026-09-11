@@ -41,7 +41,8 @@ export function defaultConfig(): AppConfig {
     }
   }
 
-  const host = (envHost === 'localhost' ? '0.0.0.0' : envHost) ?? process.env['HOST']?.trim() ?? '127.0.0.1';
+  const defaultHost = process.env['PORT'] ? '0.0.0.0' : '127.0.0.1';
+  const host = (envHost === 'localhost' ? '0.0.0.0' : envHost) ?? process.env['HOST']?.trim() ?? defaultHost;
   const dataDir = process.env['SQLITE_DATA'] ?? resolve(process.cwd(), 'data');
 
   const botPort = parsePort(envPort ? String(envPort) : (process.env['DISCORD_PORT'] ?? process.env['PORT']), 3131);

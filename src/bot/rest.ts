@@ -17,6 +17,17 @@ export interface DiscordApplicationInfo {
   };
 }
 
+function formatErrorText(status: number, text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.startsWith('<') || trimmed.startsWith('<!doctype') || trimmed.startsWith('<!DOCTYPE')) {
+    if (status === 429) {
+      return `HTTP 429 - Discord API rate limit / Cloudflare 1015 (temporary IP restriction)`;
+    }
+    return `HTTP ${status} - upstream returned HTML error page`;
+  }
+  return `HTTP ${status} - ${trimmed}`;
+}
+
 export class DiscordRestClient {
   private readonly baseUrl = 'https://discord.com/api/v10';
 
@@ -26,7 +37,7 @@ export class DiscordRestClient {
     return {
       Authorization: `Bot ${this.token}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'HelixRSSBot/0.1 (+https://github.com/HELIX-Origin/HELIX-RSS)',
+      'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       ...extra,
     };
   }
@@ -39,7 +50,7 @@ export class DiscordRestClient {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to fetch current application info: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to fetch current application info: ${formatErrorText(res.status, text)}`);
     }
 
     return (await res.json()) as DiscordApplicationInfo;
@@ -54,7 +65,7 @@ export class DiscordRestClient {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to register global slash commands: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to register global slash commands: ${formatErrorText(res.status, text)}`);
     }
   }
 
@@ -66,7 +77,7 @@ export class DiscordRestClient {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to fetch bot guilds: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to fetch bot guilds: ${formatErrorText(res.status, text)}`);
     }
 
     return (await res.json()) as Array<{ id: string; name: string; icon: string | null }>;
@@ -82,7 +93,7 @@ export class DiscordRestClient {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to fetch channels for guild ${guildId}: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to fetch channels for guild ${guildId}: ${formatErrorText(res.status, text)}`);
     }
 
     const all = (await res.json()) as Array<{ id: string; name: string; type: number; position?: number }>;
@@ -99,7 +110,9 @@ export class DiscordRestClient {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to send Discord channel message in channel ${channelId}: HTTP ${res.status} - ${text}`);
+      throw new Error(
+        `Failed to send Discord channel message in channel ${channelId}: ${formatErrorText(res.status, text)}`,
+      );
     }
   }
 
@@ -112,13 +125,14 @@ export class DiscordRestClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body: JSON.stringify(response),
     });
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to send interaction callback: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to send interaction callback: ${formatErrorText(res.status, text)}`);
     }
   }
 
@@ -131,13 +145,14 @@ export class DiscordRestClient {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body: JSON.stringify(data),
     });
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to edit original interaction response: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to edit original interaction response: ${formatErrorText(res.status, text)}`);
     }
   }
 
@@ -150,13 +165,14 @@ export class DiscordRestClient {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body: JSON.stringify(data),
     });
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Failed to send interaction followup message: HTTP ${res.status} - ${text}`);
+      throw new Error(`Failed to send interaction followup message: ${formatErrorText(res.status, text)}`);
     }
   }
 }
