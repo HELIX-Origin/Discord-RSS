@@ -212,32 +212,94 @@ npm run build
 
 #### Step 3: Run as a 24/7 systemd Service
 
-You can either run the automated installer script included in the repository or manually copy the included `helix-rss.service` file.
+HELIX RSS includes a pre-configured, production-ready systemd unit file ([`helix-rss.service`](../helix-rss.service)) and an automated installer ([`scripts/install-service.sh`](../scripts/install-service.sh)) to keep the bot and dashboard running 24/7 across server restarts and crashes.
 
-##### Option A: Automated Installer (Recommended)
+##### Option A: Automated Single-Command Installer (Recommended)
+The installation script automatically detects your active user, working directory, Node/npm binaries, compiles the TypeScript build, creates the `./data` storage directory with appropriate permissions, installs the service unit, and starts it:
+
 ```bash
 sudo ./scripts/install-service.sh
 ```
 
-##### Option B: Manual Setup
-Copy the pre-configured service unit:
-```bash
-sudo cp helix-rss.service /etc/systemd/system/helix-rss.service
-sudo systemctl daemon-reload
-sudo systemctl enable --now helix-rss
-```
+##### Option B: Manual systemd Configuration
 
-##### Managing the Service:
-```bash
-# Check service status
-sudo systemctl status helix-rss
+If you prefer to configure systemd manually or installed the project to a custom path (e.g. `/var/www/helix-rss` or `/home/user/helix-rss`):
 
-# Stream live service logs
-sudo journalctl -u helix-rss -f
+1. **Verify or Adjust the Service File (`helix-rss.service`):**
+   ```ini
+   [Unit]
+   Description=HELIX RSS - 24/7 Self-Hosted Discord RSS/Atom Bot & Dashboard
+   Documentation=https://github.com/HELIX-Origin/HELIX-RSS/wiki
+   After=network.target network-online.target
+   Wants=network-online.target
 
-# Restart the service
-sudo systemctl restart helix-rss
-```
+   [Service]
+   Type=simple
+   User=ubuntu
+   Group=ubuntu
+   WorkingDirectory=/opt/helix-rss
+   ExecStart=/usr/bin/npm start
+   Restart=always
+   RestartSec=10
+   TimeoutStopSec=20
+
+   # Environment and capability bindings
+   Environment=NODE_ENV=production
+   EnvironmentFile=-/opt/helix-rss/.env
+   AmbientCapabilities=CAP_NET_BIND_SERVICE
+   CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+   # Security & Sandboxing hardening
+   NoNewPrivileges=true
+   ProtectSystem=full
+   ProtectHome=read-only
+   ReadWritePaths=/opt/helix-rss/data
+
+   # Logging configuration
+   StandardOutput=journal
+   StandardError=journal
+   SyslogIdentifier=helix-rss
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+2. **Customizing Key Directives for Your Setup:**
+   - `User` & `Group`: Set to your Linux system username (e.g. `ubuntu`, `debian`, or a dedicated `helix` user). **Do not run as root.**
+   - `WorkingDirectory`: The absolute path where the repo was cloned (e.g. `/opt/helix-rss`).
+   - `ExecStart`: Full path to `npm` (find via `which npm`, e.g. `/usr/bin/npm` or `/usr/local/bin/npm`).
+   - `EnvironmentFile`: Points to your `.env` configuration file containing bot secrets and domain settings.
+   - `AmbientCapabilities=CAP_NET_BIND_SERVICE`: Allows the integrated Caddy reverse proxy to bind to privileged low ports (`80` and `443`) for automatic HTTPS certificates without requiring root privileges.
+   - `ReadWritePaths`: Grants write access to `./data` where SQLite (`data/helix-rss.db`) and Caddy binaries (`data/bin/`) reside while keeping the rest of the OS filesystem protected.
+
+3. **Install and Enable the Unit:**
+   ```bash
+   # 1. Copy the unit file into the systemd directory
+   sudo cp helix-rss.service /etc/systemd/system/helix-rss.service
+
+   # 2. Set strict file permissions
+   sudo chmod 644 /etc/systemd/system/helix-rss.service
+
+   # 3. Reload systemd to recognize the new service
+   sudo systemctl daemon-reload
+
+   # 4. Enable the service to start automatically on system boot
+   sudo systemctl enable helix-rss
+
+   # 5. Start the service immediately
+   sudo systemctl start helix-rss
+   ```
+
+##### 🛠️ Managing and Monitoring the Service
+
+| Action | Command |
+| :--- | :--- |
+| **Check service health & status** | `sudo systemctl status helix-rss` |
+| **Stream live application logs** | `sudo journalctl -u helix-rss -f` |
+| **View recent 100 log lines** | `sudo journalctl -u helix-rss -n 100 --no-pager` |
+| **Restart the bot and dashboard** | `sudo systemctl restart helix-rss` |
+| **Stop the service** | `sudo systemctl stop helix-rss` |
+| **Disable automatic boot launch** | `sudo systemctl disable helix-rss` |
 
 ---
 

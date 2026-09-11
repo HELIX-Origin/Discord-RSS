@@ -120,3 +120,33 @@ When accessing HELIX RSS locally over HTTPS via Caddy with `tls internal` (e.g. 
   Firefox uses its own certificate store by default. In `about:config`, set `security.enterprise_roots.enabled` to `true` and restart Firefox.
 
 For complete documentation on custom local domains and Caddy TLS configuration, see the [Deployment & Hosting Guide](Deployment-and-Hosting.md#-trusting-caddys-local-certificate-authority-custom-domains--local-tls).
+
+---
+
+## ⚙️ systemd Service Diagnostics (`helix-rss.service`)
+
+### Service Fails to Start (`status=203/EXEC` or `status=217/USER`)
+
+- **`status=203/EXEC` (Executable Not Found):**
+  The path to `npm` in `ExecStart` is incorrect. Run `which npm` on your server (e.g. `/usr/bin/npm` or `/usr/local/bin/npm`) and update `ExecStart` in `/etc/systemd/system/helix-rss.service`.
+- **`status=217/USER` (User Not Found):**
+  The user configured in `User=` or `Group=` does not exist on your system. Update to your current username (e.g. `User=ubuntu` or `User=debian`).
+- **Reload after editing:**
+  ```bash
+  sudo systemctl daemon-reload
+  sudo systemctl restart helix-rss
+  ```
+
+### Permission Denied Writing to `./data`
+
+Ensure the user running the service owns the `./data` directory:
+```bash
+sudo chown -R $USER:$USER /opt/helix-rss/data
+```
+
+### Inspecting Detailed Failure Logs
+
+View the full systemd journal stream with stack traces:
+```bash
+sudo journalctl -u helix-rss -e --no-pager
+```
