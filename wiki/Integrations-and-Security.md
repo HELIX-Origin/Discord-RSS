@@ -82,22 +82,22 @@ In the event that an OAuth authorization flow is canceled or misconfigured, the 
 
 ---
 
-## 🔒 SSL, HTTPS & Built-in HTTPS Proxy
+## 🔒 SSL, HTTPS & Reverse Proxies
  
-To host HELIX RSS over native HTTPS without an external reverse proxy, configure SSL certificates in `.env`:
+### Native SSL
+
+To host HELIX RSS over native HTTPS directly, provide valid PEM certificates in `.env`:
  
 ```env
 SITE_SSL_KEY=/path/to/privkey.pem
 SITE_SSL_CERT=/path/to/fullchain.pem
 ```
 
-When configured, the server automatically boots with native TLS encryption and marks session cookies with the `Secure` attribute.
+When configured, the unified server boots with native Node.js TLS encryption and marks session cookies with the `Secure` attribute.
 
-### Built-in HTTPS Proxy & Auto Self-Signed TLS
+### External Reverse Proxies (Cloudflare, Nginx, Caddy, Traefik)
 
-For environments without an external domain or SSL host, HELIX RSS includes a built-in HTTPS proxy server on port `3443` (configurable via `HTTPS_PORT`). When explicit certificates are not provided, an in-memory self-signed X.509 certificate is generated automatically on boot using native Node.js cryptography.
-
-This ensures:
-- The bot and web dashboard can always be reached via `https://` without third-party reverse proxies.
-- Discord OAuth and authenticated sessions function securely.
-- Requests forwarded through the proxy automatically receive `x-forwarded-proto: https` headers.
+When running behind an external reverse proxy or cloud host (such as Cloudflare Tunnels, Render, Railway, or Fly.io):
+- Configure `PUBLIC_URL=https://your-domain.com` in `.env` to ensure Discord OAuth callback redirects resolve properly.
+- Reverse proxies terminate SSL and forward traffic to HELIX RSS via `INTERNAL_URL` (default `127.0.0.1:3131`).
+- HELIX RSS automatically inspects standard proxy headers such as `x-forwarded-proto: https` to enforce secure session cookie policies.

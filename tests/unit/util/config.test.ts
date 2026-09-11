@@ -23,40 +23,6 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     process.env = { ...originalEnv };
   });
 
-  it('defaults httpsProxyPort to null when unset and no PUBLIC_URL is provided', () => {
-    const config = defaultConfig();
-    expect(config.httpsProxyPort).toBeNull();
-  });
-
-  it('reads httpsProxyPort from HTTPS_PORT', () => {
-    process.env['HTTPS_PORT'] = '8443';
-    const config = defaultConfig();
-    expect(config.httpsProxyPort).toBe(8443);
-  });
-
-  it('reads httpsProxyPort from HTTPS_PROXY_PORT if HTTPS_PORT is unset', () => {
-    process.env['HTTPS_PROXY_PORT'] = '9443';
-    const config = defaultConfig();
-    expect(config.httpsProxyPort).toBe(9443);
-  });
-
-  it('disables httpsProxyPort when set to 0, none, off, or disabled', () => {
-    process.env['HTTPS_PORT'] = '0';
-    expect(defaultConfig().httpsProxyPort).toBeNull();
-
-    process.env['HTTPS_PORT'] = 'none';
-    expect(defaultConfig().httpsProxyPort).toBeNull();
-
-    process.env['HTTPS_PORT'] = 'disabled';
-    expect(defaultConfig().httpsProxyPort).toBeNull();
-
-    process.env['HTTPS_PORT'] = 'off';
-    expect(defaultConfig().httpsProxyPort).toBeNull();
-
-    process.env['HTTPS_PORT'] = 'false';
-    expect(defaultConfig().httpsProxyPort).toBeNull();
-  });
-
   it('parses PING_URL and PING_INTERVAL_MS', () => {
     process.env['PING_URL'] = 'https://helix-rss.onrender.com/health';
     process.env['PING_INTERVAL_MS'] = '300000';
@@ -138,11 +104,10 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.pingUrl).toBe('http://10.0.0.2:3131/health');
   });
 
-  it('binds PUBLIC_URL as publicBaseUrl and normalizes protocol/trailing slashes without exposing port in raw url', () => {
+  it('binds PUBLIC_URL as publicBaseUrl and normalizes protocol/trailing slashes', () => {
     process.env['PUBLIC_URL'] = 'rss.example.com/';
     const config = defaultConfig();
     expect(config.publicBaseUrl).toBe('https://rss.example.com');
-    expect(config.httpsProxyPort).toBe(3132);
   });
 
   it('auto-detects cloud host URLs (Render, Railway, Fly.io)', () => {
@@ -170,29 +135,24 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     const config = defaultConfig();
     expect(config.cloudHostUrl).toBe('https://render-service.onrender.com');
     expect(config.publicBaseUrl).toBe('https://rss.custom.com:3443');
-    expect(config.httpsProxyPort).toBe(3443);
   });
 
-  it('supports PUBLIC_URL with hosts-file-style domain names without exposing auto-incremented port in raw url', () => {
+  it('supports PUBLIC_URL with domains and custom ports', () => {
     process.env['PUBLIC_URL'] = 'helix.local';
     let config = defaultConfig();
     expect(config.publicBaseUrl).toBe('https://helix.local');
-    expect(config.httpsProxyPort).toBe(3132);
 
     process.env['PUBLIC_URL'] = 'mybot.test:3443';
     config = defaultConfig();
     expect(config.publicBaseUrl).toBe('https://mybot.test:3443');
-    expect(config.httpsProxyPort).toBe(3443);
 
     process.env['PUBLIC_URL'] = 'singlewordhost';
     config = defaultConfig();
     expect(config.publicBaseUrl).toBe('https://singlewordhost');
-    expect(config.httpsProxyPort).toBe(3132);
 
     process.env['PUBLIC_URL'] = 'http://intranet.lan:8080/';
     config = defaultConfig();
     expect(config.publicBaseUrl).toBe('http://intranet.lan:8080');
-    expect(config.httpsProxyPort).toBe(8080);
   });
 
   it('supports CUSTOM_URL as fallback for PUBLIC_URL', () => {
@@ -209,21 +169,19 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.internalUrl).toBe('http://127.0.0.1:8080');
   });
 
-  it('supports formats like https:your-domain.com and auto-increments proxy port without exposing port in raw url', () => {
+  it('supports formats like https:your-domain.com and configures callbackUrl', () => {
     process.env['INTERNAL_URL'] = '127.0.0.1:3131';
     process.env['PUBLIC_URL'] = 'https:your-domain.com';
     const config = defaultConfig();
     expect(config.publicBaseUrl).toBe('https://your-domain.com');
-    expect(config.httpsProxyPort).toBe(3132);
     expect(config.callbackUrl).toBe('https://your-domain.com/api/auth/callback/discord');
   });
 
-  it('auto-increments port from custom INTERNAL_URL port', () => {
+  it('supports custom INTERNAL_URL with PUBLIC_URL', () => {
     process.env['INTERNAL_URL'] = '0.0.0.0:8000';
     process.env['PUBLIC_URL'] = 'https:my-domain.com';
     const config = defaultConfig();
     expect(config.botPort).toBe(8000);
     expect(config.publicBaseUrl).toBe('https://my-domain.com');
-    expect(config.httpsProxyPort).toBe(8001);
   });
 });

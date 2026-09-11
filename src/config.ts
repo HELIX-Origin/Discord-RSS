@@ -24,7 +24,6 @@ export interface AppConfig {
   callbackUrl: string | null;
   pingUrl: string | null;
   pingIntervalMs: number;
-  httpsProxyPort: number | null;
 }
 
 export function defaultConfig(): AppConfig {
@@ -60,55 +59,22 @@ export function defaultConfig(): AppConfig {
   const botPort = parsePort(envPort ? String(envPort) : (process.env['DISCORD_PORT'] ?? process.env['PORT']), 3131);
   const port = parsePort(process.env['PORT'] ?? (envPort ? String(envPort) : process.env['DISCORD_PORT']), botPort);
 
-  // Public URL: handles public URLs, custom hostnames/domains, and proxy port.
-  // Supports formats like https:your-domain.com, https://your-domain.com, helix.local, etc.
-  // If no port is specified, it auto-increments its port from the INTERNAL_URL port (botPort + 1).
+  // Public URL: optional public URL for the service (behind reverse proxy, cloud host, or native SSL)
   const rawPublic =
     process.env['PUBLIC_URL']?.trim() ||
     process.env['CUSTOM_URL']?.trim() ||
     process.env['CUSTOM_DOMAIN']?.trim() ||
     null;
   let publicBaseUrl: string | null = null;
-  let publicPort: number | null = null;
-
   if (rawPublic) {
-    let normalized = rawPublic.trim();
-    if (/^https?:/i.test(normalized)) {
-      normalized = normalized.replace(/^https?:?\/*/i, (match) => {
-        return match.toLowerCase().startsWith('http:') ? 'http://' : 'https://';
-      });
+    const clean = rawPublic.replace(/\/+$/, '');
+    if (/^https?:\/\//i.test(clean)) {
+      publicBaseUrl = clean;
+    } else if (/^https?:/i.test(clean)) {
+      publicBaseUrl = clean.replace(/^https?:/i, (match) => `${match.toLowerCase()}//`);
     } else {
-      normalized = `https://${normalized}`;
+      publicBaseUrl = `https://${clean}`;
     }
-
-    let hostPart: string;
-    let scheme: string;
-    let explicitPort: number | null = null;
-
-    try {
-      const u = new URL(normalized);
-      scheme = u.protocol.replace(':', '');
-      hostPart = u.hostname;
-      if (u.port) {
-        explicitPort = Number(u.port);
-      }
-    } catch {
-      const parts = normalized.split('://');
-      scheme = parts[0]!;
-      const afterScheme = parts[1]!.replace(/\/+$/, '');
-      const portMatch = afterScheme.match(/:(\d+)$/);
-      if (portMatch?.[1]) {
-        explicitPort = Number(portMatch[1]);
-        hostPart = afterScheme.slice(0, -portMatch[0].length);
-      } else {
-        hostPart = afterScheme;
-      }
-    }
-
-    hostPart = hostPart.replace(/\/+$/, '');
-    publicPort = explicitPort ?? botPort + 1;
-    // If no explicit port is specified in the URL, auto-increment the internal proxy port without exposing it in the raw URL
-    publicBaseUrl = explicitPort ? `${scheme}://${hostPart}:${explicitPort}` : `${scheme}://${hostPart}`;
   } else if (cloudHostUrl) {
     publicBaseUrl = cloudHostUrl.replace(/\/+$/, '');
   }
@@ -197,23 +163,6 @@ export function defaultConfig(): AppConfig {
   }
   const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
 
-  const rawHttpsPort = process.env['HTTPS_PORT'] ?? process.env['HTTPS_PROXY_PORT'];
-  let httpsProxyPort: number | null = null;
-  if (rawHttpsPort !== undefined && rawHttpsPort.trim() !== '') {
-    const trimmed = rawHttpsPort.trim().toLowerCase();
-    if (trimmed === 'none' || trimmed === 'disabled' || trimmed === 'off' || trimmed === 'false' || trimmed === '0') {
-      httpsProxyPort = null;
-    } else {
-      httpsProxyPort = parsePort(rawHttpsPort.trim(), 3443);
-    }
-  } else if (publicPort !== null) {
-    if (publicPort === botPort) {
-      httpsProxyPort = null;
-    } else {
-      httpsProxyPort = publicPort;
-    }
-  }
-
   return {
     host,
     port,
@@ -236,7 +185,6 @@ export function defaultConfig(): AppConfig {
     callbackUrl,
     pingUrl,
     pingIntervalMs,
-    httpsProxyPort,
   };
 }
 

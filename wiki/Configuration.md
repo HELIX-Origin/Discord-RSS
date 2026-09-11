@@ -11,7 +11,7 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | Variable       | Default          | Description                                                                                                                                                                                                                           |
 | -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `INTERNAL_URL` | `127.0.0.1:3131` | The internal bind address and port used by the Discord bot and web dashboard. Specify host and optional port (e.g. `127.0.0.1:3131`, `0.0.0.0:3131`, or `127.0.0.1`). Defaults to host `127.0.0.1` and port `3131`.                                    |
-| `PUBLIC_URL`   | _(empty)_        | **Public URL & Hosts-File Alias**. Custom public URL or hostname alias (e.g. `https:your-domain.com`, `https://rss.example.com`, or `helix.local`). Does not require a registered public TLD. No port needs to be specified here — the HTTPS proxy automatically increments its port from `INTERNAL_URL` (e.g. `3132`) without exposing the port in the raw public URL. Automatically included in self-signed TLS SANs and binds to dynamic cloud host domains. |
+| `PUBLIC_URL`   | _(empty)_        | **Public URL**. Custom public URL for the service when accessed behind a reverse proxy (Cloudflare, Nginx, Caddy), cloud host domain, or native SSL (e.g. `https://your-domain.com` or `https://rss.example.com`). Used for generating OAuth redirect callbacks and public resource links. |
 
 ### Feed Polling & Timeouts
 
@@ -38,7 +38,7 @@ Feed posting intervals are managed directly per-user via the dashboard **Feeds**
 | `DISCORD_CLIENT_SECRET`  | _(required)_     | Discord Application Client Secret used for OAuth2 login.                                                                                                                         |
 | `DISCORD_REDIRECT_URL`  | _(auto-derived)_ | The Bot Invite & Authorization URL. Format: `https://discord.com/oauth2/authorize?client_id=<your_client_id>&permissions=8&integration_type=0&scope=bot+applications.commands` |
 
-### Native SSL & HTTPS Proxy (Optional)
+### Native SSL (Optional)
 
 | Variable              | Default   | Description                                                                                             |
 | --------------------- | --------- | ------------------------------------------------------------------------------------------------------- |

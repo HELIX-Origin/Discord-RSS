@@ -8,9 +8,6 @@ import { createRedisCoordinator } from './state/redis.js';
 import { createLogger } from './util/logger.js';
 import { clearPorts } from './util/ports.js';
 import { KeepAlivePing } from './util/keep-alive.js';
-import { HttpsProxyServer } from './dashboard/https-proxy.js';
-import { loadTlsCredentials } from './dashboard/server.js';
-import { getOrCreateSelfSignedCertificate } from './util/self-signed.js';
 
 import { DiscordBot } from './bot/bot.js';
 
@@ -19,7 +16,7 @@ export async function main(): Promise<void> {
   const logger = createLogger('app', config.logLevel);
 
   // 1. Clear ports if currently occupied by lingering processes
-  clearPorts([config.botPort, config.port, ...(config.httpsProxyPort ? [config.httpsProxyPort] : [])], logger);
+  clearPorts([config.botPort, config.port], logger);
 
   const db = Database.open(config.dbPath);
   const repo = new Repository(db);
@@ -53,34 +50,7 @@ export async function main(): Promise<void> {
   // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)
   await bot.start();
 
-  // 6. Start HTTPS proxy if enabled or configured
-  let httpsProxy: HttpsProxyServer | null = null;
-  if (config.httpsProxyPort) {
-    let customHost: string | undefined;
-    if (config.publicBaseUrl) {
-      try {
-        customHost = new URL(config.publicBaseUrl).hostname;
-      } catch {
-        customHost = config.publicBaseUrl
-          .replace(/^https?:\/\//, '')
-          .split('/')[0]
-          ?.split(':')[0];
-      }
-    }
-    const certsDir = resolve(config.dbPath, '..', 'certs');
-    const tlsCredentials =
-      loadTlsCredentials(config.botSslKey, config.botSslCert) ??
-      getOrCreateSelfSignedCertificate(certsDir, customHost ?? 'localhost', customHost ? [customHost] : []);
-    httpsProxy = new HttpsProxyServer({
-      proxyPort: config.httpsProxyPort,
-      targetPort: config.botPort,
-      host: config.host,
-      logger,
-    });
-    await httpsProxy.start(tlsCredentials);
-  }
-
-  // 7. Start network keep-alive ping if configured
+  // 6. Start network keep-alive ping if configured
   let keepAlive: KeepAlivePing | null = null;
   if (config.pingUrl) {
     keepAlive = new KeepAlivePing({
@@ -94,7 +64,6 @@ export async function main(): Promise<void> {
   logger.info('HELIX RSS started with unified server', {
     host: config.host,
     port: config.botPort,
-    httpsProxyPort: httpsProxy?.port ?? null,
     pingUrl: config.pingUrl,
     dbPath: config.dbPath,
     botTokenConfigured: Boolean(config.botToken),
@@ -104,7 +73,6 @@ export async function main(): Promise<void> {
     logger.info(`Received ${signal}; shutting down`);
     scheduler.stop();
     keepAlive?.stop();
-    httpsProxy?.stop();
     bot.stop();
     void (async () => {
       await redis?.close();
