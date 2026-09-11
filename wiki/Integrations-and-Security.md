@@ -87,7 +87,7 @@ In the event that an OAuth authorization flow is canceled or misconfigured, the 
 ### 1. Built-in Caddy Reverse Proxy (Enabled by Default)
 
 HELIX RSS includes a native Caddy supervisor (`CADDY_ENABLED=true` by default) that manages automatic HTTPS without manual certificate setup:
-- **Localhost**: Configures an internal Certificate Authority (CA) with trusted local TLS.
+- **Localhost & Custom Local Domains**: Configures an internal Certificate Authority (CA) with trusted local TLS via `tls internal`. See the [Local CA Trust Guide](Deployment-and-Hosting.md#-trusting-caddys-local-certificate-authority-custom-domains--local-tls) for one-time installation commands across Windows, Linux, and macOS.
 - **Production VPS**: When `PUBLIC_URL=https://your-domain.com` is configured and ports `80` and `443` are open, Caddy automatically provisions and continuously renews production certificates via Let's Encrypt or ZeroSSL.
 - **Zero NPM Dependencies**: The official static binary is fetched directly from GitHub releases if not installed on the system.
 

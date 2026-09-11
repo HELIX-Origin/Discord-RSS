@@ -82,3 +82,41 @@ Owners and Admins can access built-in database maintenance:
 1. Navigate to the **Dev Tools** tab on the dashboard.
 2. Click **Optimize SQLite Database** (`POST /api/admin/optimize`).
 3. This runs `PRAGMA wal_checkpoint(TRUNCATE)` and `VACUUM` to reclaim disk space and maintain peak query performance.
+
+---
+
+## 🔏 "Your connection is not private" (`net::ERR_CERT_AUTHORITY_INVALID`)
+
+### Root Cause
+When accessing HELIX RSS locally over HTTPS via Caddy with `tls internal` (e.g. `https://localhost` or `https://your-domain.local`), Caddy generates an internal Certificate Authority (CA) on your machine. Browsers will display an untrusted certificate warning until Caddy's root certificate is installed into the operating system's trusted root store.
+
+### Quick Fix by Platform
+
+- **Windows (Chrome / Edge / System)**:
+  Open **PowerShell as Administrator** and run:
+  ```powershell
+  certutil -addstore Root "$env:APPDATA\caddy\pki\authorities\local\root.crt"
+  ```
+  *(Restart Chrome/Edge afterwards)*.
+- **Linux (Ubuntu / Debian / Raspberry Pi)**:
+  ```bash
+  sudo cp ~/.local/share/caddy/pki/authorities/local/root.crt /usr/local/share/ca-certificates/caddy-local.crt
+  sudo update-ca-certificates
+  ```
+- **Linux (Fedora / RHEL)**:
+  ```bash
+  sudo cp ~/.local/share/caddy/pki/authorities/local/root.crt /etc/pki/ca-trust/source/anchors/caddy-local.crt
+  sudo update-ca-trust
+  ```
+- **Linux (Arch Linux)**:
+  ```bash
+  sudo trust anchor ~/.local/share/caddy/pki/authorities/local/root.crt
+  ```
+- **macOS**:
+  ```bash
+  sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ~/Library/Application\ Support/Caddy/pki/authorities/local/root.crt
+  ```
+- **Mozilla Firefox**:
+  Firefox uses its own certificate store by default. In `about:config`, set `security.enterprise_roots.enabled` to `true` and restart Firefox.
+
+For complete documentation on custom local domains and Caddy TLS configuration, see the [Deployment & Hosting Guide](Deployment-and-Hosting.md#-trusting-caddys-local-certificate-authority-custom-domains--local-tls).

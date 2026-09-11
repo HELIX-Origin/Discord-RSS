@@ -1,8 +1,3 @@
-{
-	# Disable admin API endpoint for security and minimal overhead
-	admin off
-}
-
 # Example 1: Local testing or hosts-file custom domain (replace with your local domain or localhost)
 # Use "tls internal" so Caddy issues trusted local certificates without needing public DNS
 your-domain.local, localhost {
