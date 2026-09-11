@@ -32,7 +32,7 @@ export class Router<T> {
   find(method: string, pathname: string): { handler: Handler<T>; params: Record<string, string> } | null {
     const segments = pathname.split('/').filter(Boolean);
     for (const route of this.routes) {
-      if (route.method !== method) continue;
+      if (route.method !== method && !(method === 'HEAD' && route.method === 'GET')) continue;
       if (route.segments.length !== segments.length) continue;
       const params: Record<string, string> = {};
       let match = true;
