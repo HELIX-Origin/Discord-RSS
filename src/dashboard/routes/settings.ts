@@ -12,7 +12,6 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     sendJson(res, 200, {
       oauthProviders: d.oauth.listProviders(),
       publicBaseUrl: d.repo.getSetting('public_base_url') ?? d.config.publicBaseUrl,
-      customUrl: d.config.customUrl,
       cloudHostUrl: d.config.cloudHostUrl,
       pollIntervalMs: Number.isInteger(pollIntervalMs) && pollIntervalMs > 0 ? pollIntervalMs : 3_600_000,
     });

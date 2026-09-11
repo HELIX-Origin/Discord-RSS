@@ -10,6 +10,7 @@ import { clearPorts } from './util/ports.js';
 import { KeepAlivePing } from './util/keep-alive.js';
 import { HttpsProxyServer } from './dashboard/https-proxy.js';
 import { loadTlsCredentials } from './dashboard/server.js';
+import { generateSelfSignedCertificate } from './util/self-signed.js';
 
 import { DiscordBot } from './bot/bot.js';
 
@@ -23,7 +24,7 @@ export async function main(): Promise<void> {
   const db = Database.open(config.dbPath);
   const repo = new Repository(db);
   const oauth = new OAuthService(repo, config);
-  const redis = await createRedisCoordinator(config.redisUrl);
+  const redis = await createRedisCoordinator(undefined, config.logLevel);
   const feeds = new FeedWatcher(repo, redis, config.logLevel);
 
   // 3. Start background polling scheduler
@@ -55,7 +56,20 @@ export async function main(): Promise<void> {
   // 6. Start HTTPS proxy if enabled or configured
   let httpsProxy: HttpsProxyServer | null = null;
   if (config.httpsProxyPort) {
-    const tlsCredentials = loadTlsCredentials(config.botSslKey, config.botSslCert);
+    let customHost: string | undefined;
+    if (config.publicBaseUrl) {
+      try {
+        customHost = new URL(config.publicBaseUrl).hostname;
+      } catch {
+        customHost = config.publicBaseUrl
+          .replace(/^https?:\/\//, '')
+          .split('/')[0]
+          ?.split(':')[0];
+      }
+    }
+    const tlsCredentials =
+      loadTlsCredentials(config.botSslKey, config.botSslCert) ??
+      generateSelfSignedCertificate(customHost ?? 'localhost', customHost ? [customHost] : []);
     httpsProxy = new HttpsProxyServer({
       proxyPort: config.httpsProxyPort,
       targetPort: config.botPort,

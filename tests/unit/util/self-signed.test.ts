@@ -52,4 +52,10 @@ describe('generateSelfSignedCertificate', () => {
       await new Promise<void>((resolve) => server.close(() => resolve()));
     }
   });
+
+  it('generates certificate with custom altNames', () => {
+    const creds = generateSelfSignedCertificate('helix.local', ['mybot.test', '192.168.1.50']);
+    expect(creds.cert).toContain('-----BEGIN CERTIFICATE-----');
+    expect(creds.key).toContain('-----BEGIN PRIVATE KEY-----');
+  });
 });

@@ -88,7 +88,10 @@ export interface GeneratedTlsCertificate {
  * using native Node.js crypto and ASN.1 DER encoding.
  * Enables zero-configuration HTTPS without external binaries or openSSL CLI.
  */
-export function generateSelfSignedCertificate(commonName = 'localhost'): GeneratedTlsCertificate {
+export function generateSelfSignedCertificate(
+  commonName = 'localhost',
+  altNames: string[] = [],
+): GeneratedTlsCertificate {
   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
   });
@@ -112,10 +115,29 @@ export function generateSelfSignedCertificate(commonName = 'localhost'): Generat
   const validity = derSequence([derUtcTime(notBefore), derUtcTime(notAfter)]);
 
   // SAN extension (OID 2.5.29.17)
-  // [2] dNSName "localhost", [7] iPAddress 127.0.0.1
-  const dnsLocalhost = derTag(0x82, Buffer.from('localhost', 'ascii'));
-  const ipLocalhost = derTag(0x87, Buffer.from([127, 0, 0, 1]));
-  const sanContent = derSequence([dnsLocalhost, ipLocalhost]);
+  // [2] dNSName, [7] iPAddress
+  const sanEntries: Buffer[] = [
+    derTag(0x82, Buffer.from('localhost', 'ascii')),
+    derTag(0x87, Buffer.from([127, 0, 0, 1])),
+  ];
+
+  const unique = new Set([commonName, ...altNames]);
+  for (const raw of unique) {
+    const hostOnly = raw
+      .replace(/^https?:\/\//, '')
+      .split(':')[0]
+      ?.trim();
+    if (!hostOnly || hostOnly === 'localhost' || hostOnly === '127.0.0.1') continue;
+
+    const ipParts = hostOnly.split('.').map(Number);
+    if (ipParts.length === 4 && ipParts.every((p) => Number.isInteger(p) && p >= 0 && p <= 255)) {
+      sanEntries.push(derTag(0x87, Buffer.from(ipParts)));
+    } else {
+      sanEntries.push(derTag(0x82, Buffer.from(hostOnly, 'ascii')));
+    }
+  }
+
+  const sanContent = derSequence(sanEntries);
   const sanExtension = derSequence([derOid('2.5.29.17'), derOctetString(sanContent)]);
   const extensionsSeq = derTag(0xa3, derSequence([sanExtension]));
 

@@ -154,7 +154,7 @@ export function getDiscordCallbackUri(deps: AppDeps, req?: IncomingMessage): str
   if (process.env['DISCORD_CALLBACK_URL']?.trim()) {
     return process.env['DISCORD_CALLBACK_URL']!.trim();
   }
-  if (deps.config.callbackUrl && deps.config.callbackUrl.includes(`:${deps.config.botPort}/`)) {
+  if (deps.config.callbackUrl) {
     return deps.config.callbackUrl;
   }
 

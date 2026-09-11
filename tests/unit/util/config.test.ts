@@ -10,6 +10,7 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     delete process.env['HTTPS_PROXY_PORT'];
     delete process.env['PING_URL'];
     delete process.env['PING_INTERVAL_MS'];
+    delete process.env['CUSTOM_DOMAIN'];
     delete process.env['CUSTOM_URL'];
     delete process.env['PUBLIC_URL'];
     delete process.env['RENDER_EXTERNAL_URL'];
@@ -22,9 +23,9 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     process.env = { ...originalEnv };
   });
 
-  it('defaults httpsProxyPort to 3443 when unset', () => {
+  it('defaults httpsProxyPort to null when unset and no PUBLIC_URL is provided', () => {
     const config = defaultConfig();
-    expect(config.httpsProxyPort).toBe(3443);
+    expect(config.httpsProxyPort).toBeNull();
   });
 
   it('reads httpsProxyPort from HTTPS_PORT', () => {
@@ -110,11 +111,11 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.pingUrl).toBe('http://10.0.0.2:3131/health');
   });
 
-  it('binds CUSTOM_URL as publicBaseUrl and normalizes protocol/trailing slashes', () => {
-    process.env['CUSTOM_URL'] = 'rss.example.com/';
+  it('binds PUBLIC_URL as publicBaseUrl and normalizes protocol/trailing slashes without exposing port in raw url', () => {
+    process.env['PUBLIC_URL'] = 'rss.example.com/';
     const config = defaultConfig();
-    expect(config.customUrl).toBe('https://rss.example.com');
     expect(config.publicBaseUrl).toBe('https://rss.example.com');
+    expect(config.httpsProxyPort).toBe(3132);
   });
 
   it('auto-detects cloud host URLs (Render, Railway, Fly.io)', () => {
@@ -136,13 +137,66 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.publicBaseUrl).toBe('https://my-fly-rss.fly.dev');
   });
 
-  it('CUSTOM_URL overrides cloudHostUrl and PUBLIC_URL', () => {
+  it('PUBLIC_URL overrides cloudHostUrl', () => {
     process.env['RENDER_EXTERNAL_URL'] = 'https://render-service.onrender.com';
-    process.env['PUBLIC_URL'] = 'https://fallback.example.com';
-    process.env['CUSTOM_URL'] = 'https://rss.custom.com';
+    process.env['PUBLIC_URL'] = 'https://rss.custom.com:3443';
     const config = defaultConfig();
-    expect(config.customUrl).toBe('https://rss.custom.com');
     expect(config.cloudHostUrl).toBe('https://render-service.onrender.com');
-    expect(config.publicBaseUrl).toBe('https://rss.custom.com');
+    expect(config.publicBaseUrl).toBe('https://rss.custom.com:3443');
+    expect(config.httpsProxyPort).toBe(3443);
+  });
+
+  it('supports PUBLIC_URL with hosts-file-style domain names without exposing auto-incremented port in raw url', () => {
+    process.env['PUBLIC_URL'] = 'helix.local';
+    let config = defaultConfig();
+    expect(config.publicBaseUrl).toBe('https://helix.local');
+    expect(config.httpsProxyPort).toBe(3132);
+
+    process.env['PUBLIC_URL'] = 'mybot.test:3443';
+    config = defaultConfig();
+    expect(config.publicBaseUrl).toBe('https://mybot.test:3443');
+    expect(config.httpsProxyPort).toBe(3443);
+
+    process.env['PUBLIC_URL'] = 'singlewordhost';
+    config = defaultConfig();
+    expect(config.publicBaseUrl).toBe('https://singlewordhost');
+    expect(config.httpsProxyPort).toBe(3132);
+
+    process.env['PUBLIC_URL'] = 'http://intranet.lan:8080/';
+    config = defaultConfig();
+    expect(config.publicBaseUrl).toBe('http://intranet.lan:8080');
+    expect(config.httpsProxyPort).toBe(8080);
+  });
+
+  it('supports CUSTOM_URL as fallback for PUBLIC_URL', () => {
+    process.env['CUSTOM_URL'] = 'https://legacy-custom.org:3443';
+    const config = defaultConfig();
+    expect(config.publicBaseUrl).toBe('https://legacy-custom.org:3443');
+  });
+
+  it('derives botPort from INTERNAL_URL host:port', () => {
+    process.env['INTERNAL_URL'] = '127.0.0.1:8080';
+    const config = defaultConfig();
+    expect(config.host).toBe('127.0.0.1');
+    expect(config.botPort).toBe(8080);
+    expect(config.internalUrl).toBe('http://127.0.0.1:8080');
+  });
+
+  it('supports formats like https:your-domain.com and auto-increments proxy port without exposing port in raw url', () => {
+    process.env['INTERNAL_URL'] = '127.0.0.1:3131';
+    process.env['PUBLIC_URL'] = 'https:your-domain.com';
+    const config = defaultConfig();
+    expect(config.publicBaseUrl).toBe('https://your-domain.com');
+    expect(config.httpsProxyPort).toBe(3132);
+    expect(config.callbackUrl).toBe('https://your-domain.com/api/auth/callback/discord');
+  });
+
+  it('auto-increments port from custom INTERNAL_URL port', () => {
+    process.env['INTERNAL_URL'] = '0.0.0.0:8000';
+    process.env['PUBLIC_URL'] = 'https:my-domain.com';
+    const config = defaultConfig();
+    expect(config.botPort).toBe(8000);
+    expect(config.publicBaseUrl).toBe('https://my-domain.com');
+    expect(config.httpsProxyPort).toBe(8001);
   });
 });

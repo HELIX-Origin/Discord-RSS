@@ -6,7 +6,6 @@ export interface AppConfig {
   host: string;
   port: number;
   internalUrl: string;
-  customUrl: string | null;
   cloudHostUrl: string | null;
   publicBaseUrl: string | null;
   dbPath: string;
@@ -16,8 +15,6 @@ export interface AppConfig {
   sslCert: string | null;
   botSslKey: string | null;
   botSslCert: string | null;
-  redisPort: number;
-  redisUrl: string | null;
   logLevel: LogLevel;
   botToken: string | null;
   botPort: number;
@@ -35,15 +32,12 @@ export function defaultConfig(): AppConfig {
   let envHost: string | undefined;
   let envPort: number | undefined;
   if (rawInternal) {
-    if (rawInternal.startsWith('http://') || rawInternal.startsWith('https://')) {
-      try {
-        const u = new URL(rawInternal);
-        envHost = u.hostname;
-        if (u.port) envPort = Number(u.port);
-      } catch {
-        envHost = rawInternal;
-      }
-    } else {
+    const internalCandidate = rawInternal.includes('://') ? rawInternal : `http://${rawInternal}`;
+    try {
+      const u = new URL(internalCandidate);
+      envHost = u.hostname;
+      if (u.port) envPort = Number(u.port);
+    } catch {
       envHost = rawInternal;
     }
   }
@@ -63,26 +57,68 @@ export function defaultConfig(): AppConfig {
     (process.env['FLY_APP_NAME'] ? `https://${process.env['FLY_APP_NAME'].trim()}.fly.dev` : null) ||
     null;
 
-  // Custom URL takes priority over cloud-provided dynamic host URLs and PUBLIC_URL
-  const rawCustom = process.env['CUSTOM_URL']?.trim();
-  const customUrl = rawCustom
-    ? rawCustom.startsWith('http://') || rawCustom.startsWith('https://')
-      ? rawCustom.replace(/\/+$/, '')
-      : `https://${rawCustom.replace(/\/+$/, '')}`
-    : null;
+  const botPort = parsePort(envPort ? String(envPort) : (process.env['DISCORD_PORT'] ?? process.env['PORT']), 3131);
+  const port = parsePort(process.env['PORT'] ?? (envPort ? String(envPort) : process.env['DISCORD_PORT']), botPort);
 
-  const publicBaseUrl =
-    customUrl || process.env['PUBLIC_URL']?.trim()?.replace(/\/+$/, '') || cloudHostUrl?.replace(/\/+$/, '') || null;
+  // Public URL: handles public URLs, custom hostnames/domains, and proxy port.
+  // Supports formats like https:your-domain.com, https://your-domain.com, helix.local, etc.
+  // If no port is specified, it auto-increments its port from the INTERNAL_URL port (botPort + 1).
+  const rawPublic =
+    process.env['PUBLIC_URL']?.trim() ||
+    process.env['CUSTOM_URL']?.trim() ||
+    process.env['CUSTOM_DOMAIN']?.trim() ||
+    null;
+  let publicBaseUrl: string | null = null;
+  let publicPort: number | null = null;
+
+  if (rawPublic) {
+    let normalized = rawPublic.trim();
+    if (/^https?:/i.test(normalized)) {
+      normalized = normalized.replace(/^https?:?\/*/i, (match) => {
+        return match.toLowerCase().startsWith('http:') ? 'http://' : 'https://';
+      });
+    } else {
+      normalized = `https://${normalized}`;
+    }
+
+    let hostPart: string;
+    let scheme: string;
+    let explicitPort: number | null = null;
+
+    try {
+      const u = new URL(normalized);
+      scheme = u.protocol.replace(':', '');
+      hostPart = u.hostname;
+      if (u.port) {
+        explicitPort = Number(u.port);
+      }
+    } catch {
+      const parts = normalized.split('://');
+      scheme = parts[0]!;
+      const afterScheme = parts[1]!.replace(/\/+$/, '');
+      const portMatch = afterScheme.match(/:(\d+)$/);
+      if (portMatch?.[1]) {
+        explicitPort = Number(portMatch[1]);
+        hostPart = afterScheme.slice(0, -portMatch[0].length);
+      } else {
+        hostPart = afterScheme;
+      }
+    }
+
+    hostPart = hostPart.replace(/\/+$/, '');
+    publicPort = explicitPort ?? botPort + 1;
+    // If no explicit port is specified in the URL, auto-increment the internal proxy port without exposing it in the raw URL
+    publicBaseUrl = explicitPort ? `${scheme}://${hostPart}:${explicitPort}` : `${scheme}://${hostPart}`;
+  } else if (cloudHostUrl) {
+    publicBaseUrl = cloudHostUrl.replace(/\/+$/, '');
+  }
+
   const sslKey = process.env['SITE_SSL_KEY']?.trim() || null;
   const sslCert = process.env['SITE_SSL_CERT']?.trim() || null;
   const botSslKey = process.env['DISCORD_SSL_KEY']?.trim() || sslKey;
   const botSslCert = process.env['DISCORD_SSL_CERT']?.trim() || sslCert;
   const logLevel = parseLogLevel(process.env['LOG_LEVEL']);
   const botToken = process.env['DISCORD_TOKEN']?.trim() || null;
-  const botPort = parsePort(process.env['DISCORD_PORT'] ?? (envPort ? String(envPort) : undefined), 3131);
-  const port = parsePort(process.env['PORT'] ?? process.env['DISCORD_PORT'], botPort);
-  const redisPort = parsePort(process.env['REDIS_PORT'], 3535);
-  const redisUrl = `redis://${host}:${redisPort}`;
   const clientId = process.env['DISCORD_CLIENT_ID']?.trim() || null;
   const clientSecret = process.env['DISCORD_CLIENT_SECRET']?.trim() || null;
   const callbackHost = host === '127.0.0.1' || host === '0.0.0.0' ? 'localhost' : host;
@@ -106,7 +142,9 @@ export function defaultConfig(): AppConfig {
   } else if (publicBaseUrl) {
     try {
       const u = new URL(publicBaseUrl);
-      u.port = String(botPort);
+      if (u.protocol === 'http:' && !u.port) {
+        u.port = String(botPort);
+      }
       u.pathname = '/api/auth/callback/discord';
       u.search = '';
       u.hash = '';
@@ -148,7 +186,7 @@ export function defaultConfig(): AppConfig {
   const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
 
   const rawHttpsPort = process.env['HTTPS_PORT'] ?? process.env['HTTPS_PROXY_PORT'];
-  let httpsProxyPort: number | null = 3443;
+  let httpsProxyPort: number | null = null;
   if (rawHttpsPort !== undefined && rawHttpsPort.trim() !== '') {
     const trimmed = rawHttpsPort.trim().toLowerCase();
     if (trimmed === 'none' || trimmed === 'disabled' || trimmed === 'off' || trimmed === 'false' || trimmed === '0') {
@@ -156,13 +194,18 @@ export function defaultConfig(): AppConfig {
     } else {
       httpsProxyPort = parsePort(rawHttpsPort.trim(), 3443);
     }
+  } else if (publicPort !== null) {
+    if (publicPort === botPort) {
+      httpsProxyPort = null;
+    } else {
+      httpsProxyPort = publicPort;
+    }
   }
 
   return {
     host,
     port,
     internalUrl,
-    customUrl,
     cloudHostUrl,
     publicBaseUrl,
     dbPath: resolve(dataDir, 'helix-rss.db'),
@@ -172,8 +215,6 @@ export function defaultConfig(): AppConfig {
     sslCert,
     botSslKey,
     botSslCert,
-    redisPort,
-    redisUrl,
     logLevel,
     botToken,
     botPort,

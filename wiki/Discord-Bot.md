@@ -11,7 +11,7 @@ The Discord Bot is the primary application process for HELIX RSS. It manages the
 3. Under **General Information**, copy your **Application ID** and set `DISCORD_CLIENT_ID=<id>` in `.env`.
 4. Under **OAuth2** -> **General**:
    - Reset and copy your **Client Secret**, then set `DISCORD_CLIENT_SECRET=<secret>` in `.env`.
-   - Under **Redirects**, click **Add Redirect** and add `http://localhost:3131/api/auth/callback/discord` (and optionally `http://127.0.0.1:3131/api/auth/callback/discord`). Discord OAuth callbacks route to the actual Discord bot port (`DISCORD_PORT`, default `3131`), which seamlessly authenticates users for the web dashboard.
+   - Under **Redirects**, click **Add Redirect** and add `http://localhost:3131/api/auth/callback/discord` (or your `PUBLIC_URL` equivalent, e.g. `https://your-domain.com/api/auth/callback/discord`). Discord OAuth callbacks route to the address configured in `PUBLIC_URL` or `INTERNAL_URL`, which seamlessly authenticates users for the web dashboard.
 5. Under the **Bot** tab:
    - Click **Reset Token** and copy the bot token. Set `DISCORD_TOKEN=<token>` in `.env`.
    - Enable **Server Members Intent** and **Message Content Intent** if using extended member lookup.
