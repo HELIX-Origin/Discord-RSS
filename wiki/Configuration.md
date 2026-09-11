@@ -11,7 +11,7 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | Variable       | Default          | Description                                                                                                                                                                                                                           |
 | -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `INTERNAL_URL` | `127.0.0.1:3131` | The internal bind address and port used by the Discord bot and web dashboard. Specify host and optional port (e.g. `127.0.0.1:3131`, `0.0.0.0:3131`, or `127.0.0.1`). Defaults to host `127.0.0.1` and port `3131`.                                    |
-| `PUBLIC_URL`   | _(empty)_        | **Public URL**. Custom public URL for the service when accessed behind a reverse proxy (Cloudflare, Nginx, Caddy), cloud host domain, or native SSL (e.g. `https://your-domain.com` or `https://rss.example.com`). Used for generating OAuth redirect callbacks and public resource links. |
+| `PUBLIC_URL`   | _(empty)_        | **Public URL**. Custom public URL for the service when accessed behind a reverse proxy (Cloudflare, Nginx, Caddy) or native SSL (e.g. `https://your-domain.com` or `https://rss.example.com`). Used for generating OAuth redirect callbacks and public resource links. |
 
 ### Feed Polling & Timeouts
 

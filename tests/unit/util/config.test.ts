@@ -13,10 +13,6 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     delete process.env['CUSTOM_DOMAIN'];
     delete process.env['CUSTOM_URL'];
     delete process.env['PUBLIC_URL'];
-    delete process.env['RENDER_EXTERNAL_URL'];
-    delete process.env['RAILWAY_STATIC_URL'];
-    delete process.env['RAILWAY_PUBLIC_DOMAIN'];
-    delete process.env['FLY_APP_NAME'];
   });
 
   afterEach(() => {
@@ -24,10 +20,10 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
   });
 
   it('parses PING_URL and PING_INTERVAL_MS', () => {
-    process.env['PING_URL'] = 'https://helix-rss.onrender.com/health';
+    process.env['PING_URL'] = 'https://helix-rss.example.com/health';
     process.env['PING_INTERVAL_MS'] = '300000';
     const config = defaultConfig();
-    expect(config.pingUrl).toBe('https://helix-rss.onrender.com/health');
+    expect(config.pingUrl).toBe('https://helix-rss.example.com/health');
     expect(config.pingIntervalMs).toBe(300_000);
   });
 

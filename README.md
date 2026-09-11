@@ -22,24 +22,6 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
 * [Configuration Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Configuration)
 * [Troubleshooting](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Troubleshooting)
 
-## ☁️ One-Click Cloud Deployment
-
-Deploy your own 24/7 HELIX RSS instance instantly with preconfigured environment variables and persistent storage:
-
-| Platform | One-Click Deployment | Configuration & Guide |
-| :--- | :--- | :--- |
-| **Heroku** | [![Deploy to Heroku](https://img.shields.io/badge/Deploy%20to-Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS) | [Heroku Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#4-heroku-herokucom) |
-
-### Required Deployment Fields
-When launching via any of the one-click buttons above, the deployment wizard will prompt you to enter the following environment variables:
-
-- **`DISCORD_TOKEN`**: Bot Token from the [Discord Developer Portal](https://discord.com/developers/applications) (**Bot** tab > **Reset Token**).
-- **`DISCORD_CLIENT_ID`**: Application Client ID (**General Information** tab > **Application ID**).
-- **`DISCORD_CLIENT_SECRET`**: Application Client Secret (**OAuth2** tab > **Reset Secret**).
-- **`PUBLIC_URL`** *(Optional)*: Your public service URL (e.g. `https://your-service.onrender.com`). Used for Discord OAuth callback URLs and links.
-
-> 📖 **Cloud Hosting Note**: Cloud platforms automatically terminate SSL at their edge router (`CADDY_ENABLED=false` is preconfigured in all deployment templates). For detailed persistent volume setup and step-by-step instructions, see the [Deployment & Hosting Wiki Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#%EF%B8%8F-cloud-paas-hosting-render-flyio-heroku-railway).
-
 ## 💻 Local & VPS Hosting (Cross-Platform)
 
 HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy reverse proxy:
@@ -72,6 +54,18 @@ HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy r
    ```
 
 > 📖 For a detailed setup guide covering Linux systemd services, Windows services, and Docker Compose, see the [Deployment & Hosting Wiki Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting).
+
+### 🌐 Recommended Low-Cost Compatible VPS Providers
+
+| Provider | Starting Price | Key Benefits | Recommended Plan |
+| :--- | :--- | :--- | :--- |
+| [**Hetzner Cloud**](https://www.hetzner.com/cloud) | ~€3.79 / mo | High performance, fast NVMe, EU/US locations | CX22 (2 vCPU, 4 GB RAM) / CAX11 |
+| [**OVHcloud**](https://www.ovhcloud.com/en/vps/) | ~$4.20 / mo | Unmetered bandwidth, anti-DDoS, global datacenters | Starter / Value VPS |
+| [**DigitalOcean**](https://www.digitalocean.com/) | ~$4.00 - $6.00 / mo | 1-Click Docker droplets, global regions | Basic Droplet (1-2 GB RAM) |
+| [**Linode (Akamai)**](https://www.linode.com/) | ~$5.00 / mo | Excellent networking, reliable 24/7 uptime | Nanode 1GB / Shared 2GB |
+| [**Vultr**](https://www.vultr.com/) | ~$3.50 - $5.00 / mo | 30+ worldwide datacenters, high frequency compute | Cloud Compute (1-2 GB RAM) |
+
+> 💡 **Tip:** A lightweight **1 vCPU / 1 GB RAM** VPS is plenty for running HELIX RSS, its built-in Caddy HTTPS reverse proxy, SQLite database, and Discord bot.
 
 ## Contributing
 

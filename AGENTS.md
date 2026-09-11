@@ -35,6 +35,14 @@ This section documents active and recently resolved critical issues as required 
 - **Problem**: Site status monitors added unnecessary complexity and maintenance overhead without Cloudflare support.
 - **Resolution**: Decommissioned and removed status monitoring across backend services, SQLite persistence, dashboard UI, and bot commands (`/monitor`). Service is streamlined to focus exclusively on RSS/Atom/Scrape feeds to Discord.
 
+### 5. Cloud Hosting Retirement (Resolved / Retired)
+- **Problem**: Cloud PaaS targets (Heroku, Render, Fly.io, Railway, Vercel) and one-click deploy buttons added maintenance overhead, inconsistent environment handling, out-of-sync credentials, and continuous platform-blocking/payment barriers.
+- **Resolution**:
+  - **All cloud hosting was retired**; the service is self-hosted exclusively on **Local**, **VPS**, and **Docker**.
+  - `app.json`, the Deploy to Heroku button, and the Heroku `Procfile` were removed.
+  - PaaS-only `$PORT` binding handling was removed from `src/config.ts`; port binding is configured via `INTERNAL_URL` / `DISCORD_PORT`.
+  - Deployment documentation in `README.md` and `wiki/Deployment-and-Hosting.md` now covers only Local, VPS, and Docker.
+
 ---
 
 ## Agent Ecosystem Architecture & Orchestration

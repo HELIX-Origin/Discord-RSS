@@ -57,10 +57,11 @@ flowchart TD
 | **Cloudflare Retirement & Error Recovery** | Remove Cloudflare OAuth, add `/oauth/error` and `/api/oauth/error` | Complete | [#14](https://github.com/HELIX-Origin/HELIX-RSS/issues/14) (Plan #13) |
 | **Dashboard Cleanup & Theme Engine** | Remove Integrations tab, UI OAuth settings, Light/Dark themes | Complete | [#15](https://github.com/HELIX-Origin/HELIX-RSS/issues/15) (Plan #13) |
 | **Containerization** | Production Node 22 Alpine `Dockerfile`, `docker-compose.yml`, healthcheck | Complete | [#16](https://github.com/HELIX-Origin/HELIX-RSS/issues/16) (Plan #13) |
-| **Wiki Overhaul** | Cloud hosting (Heroku, Render, Fly, Railway, Vercel), local OS guides, ER diagrams | Complete | [#17](https://github.com/HELIX-Origin/HELIX-RSS/issues/17) (Plan #13) |
+| **Wiki Overhaul** | Local and VPS OS guides, Docker, ER diagrams | Complete | [#17](https://github.com/HELIX-Origin/HELIX-RSS/issues/17) (Plan #13) |
 | **Agent Catalog Modernization** | Multi-agent catalog, current issues tracking in `AGENTS.md` | Complete | [#18](https://github.com/HELIX-Origin/HELIX-RSS/issues/18) (Plan #13) |
 | **Bot Commands & Rich Presentation** | `/about` and `/help` commands (dynamic import, human-readable embeds), RSS primary images and clean links | Complete | `src/bot/commands/` & `src/webhook/` |
 | **Site Status Monitors Retirement** | Complete removal of site monitors from backend, DB, UI, and bot commands | Complete | Plan #13 / Roadmap |
+| **Cloud Hosting Retirement** | All cloud PaaS hosting (Heroku, Render, Fly.io, Railway, Vercel) removed; `app.json`, Deploy button, `Procfile`, and `$PORT` binding retired. Self-hosting only via Local, VPS, and Docker. | Complete | Roadmap |
 
 ---
 
@@ -80,7 +81,7 @@ flowchart TD
   - [x] Multi-stage `Dockerfile` using Node 22 Alpine, non-root user `helixuser`, and `/health` probe.
   - [x] `docker-compose.yml` mounting `./data:/app/data` with environment mapping.
 - [x] **Sub-Issue 12: Comprehensive Wiki & Architecture Documentation** ([#17](https://github.com/HELIX-Origin/HELIX-RSS/issues/17))
-  - [x] `wiki/Deployment-and-Hosting.md` (Cloud: Heroku, Render, Fly.io, Railway, Vercel with pricing notices; Local: Ubuntu, Arch, Fedora, macOS, Windows, Raspberry Pi).
+  - [x] `wiki/Deployment-and-Hosting.md` (Local: Ubuntu, Arch, Fedora, macOS, Windows, Raspberry Pi; Docker and VPS with automatic HTTPS).
   - [x] `wiki/Architecture-and-Design.md` (Mermaid system architecture, SQLite ER diagram, REST API reference).
   - [x] `wiki/Development-and-Testing.md` (Vitest, MSW, standards, troubleshooting).
   - [x] Synchronized navigation (`HOME.md`, `Configuration.md`, `Integrations-and-Security.md`, `_Sidebar.md`).

@@ -1,6 +1,6 @@
-# Deployment & Hosting Guide (Local, VPS, Docker & Cloud)
+# Deployment & Hosting Guide (Local, VPS & Docker)
 
-This guide covers production deployment and self-hosting for HELIX RSS on **Local Machines**, **Virtual Private Servers (VPS)**, **Docker Containers**, and **Cloud PaaS Providers** (Render, Fly.io, Heroku, Railway).
+This guide covers production deployment and self-hosting for HELIX RSS on **Local Machines**, **Virtual Private Servers (VPS)**, and **Docker Containers**.
 
 ```mermaid
 flowchart TD
@@ -174,6 +174,20 @@ If you want to access your local dashboard via a custom domain name (such as `ht
 
 ## 🖥️ VPS & Bare-Metal Hosting
 
+### 🌐 Recommended Low-Cost Compatible VPS Providers
+
+For high uptime, low network latency, and unshared IP routing (preventing Discord API or target site WAF rate limits), the following cost-effective VPS services are recommended:
+
+| Provider | Starting Price | Key Benefits | Recommended Plan |
+| :--- | :--- | :--- | :--- |
+| [**Hetzner Cloud**](https://www.hetzner.com/cloud) | ~€3.79 / mo | Industry-leading price/performance, fast NVMe, EU/US locations | CX22 (2 vCPU, 4 GB RAM) / CAX11 |
+| [**OVHcloud**](https://www.ovhcloud.com/en/vps/) | ~$4.20 / mo | Unmetered bandwidth, anti-DDoS, global datacenters | Starter / Value VPS |
+| [**DigitalOcean**](https://www.digitalocean.com/) | ~$4.00 - $6.00 / mo | 1-Click Docker droplets, intuitive management, global regions | Basic Droplet (1-2 GB RAM) |
+| [**Linode (Akamai)**](https://www.linode.com/) | ~$5.00 / mo | High network reliability, 24/7 support | Nanode 1GB / Shared 2GB |
+| [**Vultr**](https://www.vultr.com/) | ~$3.50 - $5.00 / mo | 30+ worldwide datacenters, fast provisioning | Cloud Compute (1-2 GB RAM) |
+
+---
+
 ### 1. Linux VPS (Ubuntu / Debian / Raspberry Pi OS)
 
 #### Step 1: Install Node.js 22 LTS
@@ -325,70 +339,3 @@ When deploying to a public VPS:
 2. **DNS Configuration**:
    - Add an `A` record pointing `rss.yourdomain.com` to your VPS public IPv4 address.
    - (Optional) Add an `AAAA` record if using IPv6.
-
----
-
-## ☁️ Cloud PaaS Hosting (Render, Fly.io, Heroku, Railway)
-
-When hosting on cloud Application Platforms (PaaS), the platform's edge load balancer automatically provides HTTPS and forwards traffic to your application container over a dynamic port (`$PORT`).
-
-```mermaid
-flowchart TD
-    Client(["Browser / Discord"]) -->|"HTTPS: 443"| CloudEdge["Cloud Platform Edge Router<br/>(Render / Fly.io / Heroku / Railway)<br/>Automatic TLS Termination"]
-    CloudEdge -->|"HTTP: $PORT"| App["HELIX RSS Server<br/>(CADDY_ENABLED=false)"]
-    App --> Storage[("Persistent Volume / Disk<br/>SQLite: /data/helix-rss.db")]
-```
-
-### Core Configuration Rules for All PaaS Providers
-
-1. **Disable Caddy**: Set `CADDY_ENABLED=false` in the service environment. The cloud platform terminates SSL at its edge, so Caddy is not needed inside the container.
-2. **Port Binding**: HELIX RSS automatically detects the platform-provided `PORT` environment variable and binds `0.0.0.0:$PORT`.
-3. **Public URL**: Set `PUBLIC_URL=https://your-service.onrender.com` (or your platform domain / custom domain) so that Discord OAuth redirects and dashboard links resolve properly.
-4. **Discord OAuth Redirect URI**: In the [Discord Developer Portal](https://discord.com/developers/applications), navigate to your app's **OAuth2** > **Redirects** tab and add:
-   ```text
-   https://your-service.onrender.com/api/auth/callback/discord
-   ```
-5. **Persistent Storage**: Cloud containers are ephemeral by default. To retain your feeds, users, and posting history across deploys and container restarts, attach a **Persistent Volume/Disk** and set `SQLITE_DATA` to the mount point (e.g. `SQLITE_DATA=/data`).
-
----
-
-#### Configure Environment Variables
-In the **Environment** section, add the following variables:
-
-| Key | Value | Description |
-| :--- | :--- | :--- |
-| `DISCORD_TOKEN` | `your_bot_token` | Discord Bot Token |
-| `DISCORD_CLIENT_ID` | `your_client_id` | Discord Application Client ID |
-| `DISCORD_CLIENT_SECRET` | `your_client_secret` | Discord Application Client Secret |
-| `PUBLIC_URL` | `https://helix-rss.onrender.com` | Your Render `.onrender.com` URL (or custom domain) |
-| `CADDY_ENABLED` | `false` | Bypasses local Caddy (Render terminates SSL) |
-| `SQLITE_DATA` | `./data` | Local directory for SQLite on free tier |
-
-#### Step 3: Launch Web Service
-
-Heroku supports standard Node.js applications via the official Heroku Node.js buildpack.
-
-#### Step 1: Create the Heroku Application
-```bash
-heroku create your-helix-app
-heroku buildpacks:set heroku/nodejs
-```
-
-#### Step 2: Configure Environment Variables
-```bash
-heroku config:set \
-  DISCORD_TOKEN="your_bot_token" \
-  DISCORD_CLIENT_ID="your_client_id" \
-  DISCORD_CLIENT_SECRET="your_client_secret" \
-  PUBLIC_URL="https://your-helix-app.herokuapp.com" \
-  CADDY_ENABLED="false" \
-  NODE_ENV="production"
-```
-
-#### Step 3: Deploy
-```bash
-git push heroku main
-```
-
-> [!WARNING]
-> **Ephemeral Filesystem on Heroku**: Heroku dynos operate with an ephemeral filesystem and restart at least once every 24 hours. Because SQLite saves to disk, any database changes on Heroku will reset upon dyno cycling unless an off-dyno backup strategy is used. For persistent self-hosting with zero maintenance, **Render**, **Fly.io**, **Railway**, or a standard **VPS** (which all support persistent volumes) are strongly recommended over Heroku.
