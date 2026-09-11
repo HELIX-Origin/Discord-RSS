@@ -11,16 +11,12 @@ services:
       - key: CADDY_ENABLED
         value: "false"
       - key: SQLITE_DATA
-        value: /var/data
-      - key: PUBLIC_URL
-        sync: false
+        value: ./data
       - key: DISCORD_TOKEN
         sync: false
       - key: DISCORD_CLIENT_ID
         sync: false
       - key: DISCORD_CLIENT_SECRET
         sync: false
-    disk:
-      name: helix-data
-      mountPath: /var/data
-      sizeGB: 1
+      - key: PUBLIC_URL
+        sync: false

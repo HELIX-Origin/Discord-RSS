@@ -376,15 +376,10 @@ In the **Environment** section, add the following variables:
 | `DISCORD_CLIENT_SECRET` | `your_client_secret` | Discord Application Client Secret |
 | `PUBLIC_URL` | `https://helix-rss.onrender.com` | Your Render `.onrender.com` URL (or custom domain) |
 | `CADDY_ENABLED` | `false` | Bypasses local Caddy (Render terminates SSL) |
-| `SQLITE_DATA` | `/var/data` | Directory where SQLite database is stored |
+| `SQLITE_DATA` | `./data` | Local directory for SQLite on free tier |
 
-#### Step 3: Attach a Persistent Disk (Recommended)
-1. Scroll down to the **Disks** section and click **Add Disk**.
-2. Set:
-   - **Name**: `helix-data`
-   - **Mount Path**: `/var/data`
-   - **Size**: `1 GB` (sufficient for years of feed history)
-3. Click **Create Web Service**.
+#### Step 3: Launch Web Service
+Click **Create Web Service**. On Render's Free tier, HELIX RSS runs 100% free of charge using container local storage. *(Note: Render Persistent Disks are optional paid add-ons available if you choose to upgrade to a paid Starter instance in the future).*
 
 ---
 

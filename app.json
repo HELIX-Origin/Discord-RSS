@@ -29,11 +29,5 @@
       "description": "Discord Application Client Secret",
       "required": true
     }
-  },
-  "formation": {
-    "web": {
-      "quantity": 1,
-      "size": "eco"
-    }
   }
 }
