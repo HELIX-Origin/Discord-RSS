@@ -31,7 +31,7 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
    npm start
    ```
 
-> 📖 For a reproduction-safe, step-by-step walkthrough (install, configure, add feeds, verify delivery, reset state), see the [Wiki](/wiki).
+> 📖 For a reproduction-safe, step-by-step walkthrough (install, configure, add feeds, verify delivery, reset state), see the [Wiki](https://github.com/HELIX-Origin/HELIX-RSS/wiki).
 
 ## Important Notes
 
