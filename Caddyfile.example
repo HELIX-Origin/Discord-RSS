@@ -1,0 +1,17 @@
+{
+	# Disable admin API endpoint for security and minimal overhead
+	admin off
+}
+
+# Example 1: Local testing or hosts-file custom domain (replace with your local domain or localhost)
+# Use "tls internal" so Caddy issues trusted local certificates without needing public DNS
+your-domain.local, localhost {
+	tls internal
+	reverse_proxy {$INTERNAL_TARGET:127.0.0.1:3131}
+}
+
+# Example 2: Public domain on a VPS (uncomment and replace with your real domain)
+# Caddy automatically provisions and renews Let's Encrypt / ZeroSSL certificates:
+# rss.yourdomain.com {
+#     reverse_proxy {$INTERNAL_TARGET:127.0.0.1:3131}
+# }

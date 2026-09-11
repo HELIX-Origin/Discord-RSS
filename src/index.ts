@@ -8,6 +8,7 @@ import { createRedisCoordinator } from './state/redis.js';
 import { createLogger } from './util/logger.js';
 import { clearPorts } from './util/ports.js';
 import { KeepAlivePing } from './util/keep-alive.js';
+import { existsSync } from 'node:fs';
 import { ensureCaddyBinary, CaddySupervisor } from './proxy/caddy.js';
 
 import { DiscordBot } from './bot/bot.js';
@@ -57,7 +58,9 @@ export async function main(): Promise<void> {
     const dataDir = resolve(config.dbPath, '..');
     const caddyPath = await ensureCaddyBinary(dataDir, logger);
     if (caddyPath) {
-      const caddyfilePath = resolve(process.cwd(), 'Caddyfile');
+      const caddyfileCustom = resolve(process.cwd(), 'Caddyfile');
+      const caddyfileExample = resolve(process.cwd(), 'Caddyfile.example');
+      const caddyfilePath = existsSync(caddyfileCustom) ? caddyfileCustom : caddyfileExample;
       const targetHost = config.host === '0.0.0.0' ? '127.0.0.1' : config.host;
       caddySupervisor = new CaddySupervisor({
         caddyPath,
