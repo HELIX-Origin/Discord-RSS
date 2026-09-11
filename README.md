@@ -28,10 +28,7 @@ Deploy your own 24/7 HELIX RSS instance instantly with preconfigured environment
 
 | Platform | One-Click Deployment | Configuration & Guide |
 | :--- | :--- | :--- |
-| **Render** | [![Deploy to Render](https://img.shields.io/badge/Deploy%20to-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com/deploy?repo=https://github.com/HELIX-Origin/HELIX-RSS) | [Render Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#1-render-rendercom) |
-| **Railway** | [![Deploy on Railway](https://img.shields.io/badge/Deploy%20to-Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app/template/new?template=https://github.com/HELIX-Origin/HELIX-RSS) | [Railway Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#3-railway-railwayapp) |
 | **Heroku** | [![Deploy to Heroku](https://img.shields.io/badge/Deploy%20to-Heroku-430098?style=for-the-badge&logo=heroku&logoColor=white)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS) | [Heroku Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#4-heroku-herokucom) |
-| **Fly.io** | [![Deploy on Fly.io](https://img.shields.io/badge/Deploy%20to-Fly.io-24185B?style=for-the-badge&logo=flydotio&logoColor=white)](https://fly.io/apps/new?repo=https://github.com/HELIX-Origin/HELIX-RSS) | [Fly.io Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting#2-flyio-flyio) |
 
 ### Required Deployment Fields
 When launching via any of the one-click buttons above, the deployment wizard will prompt you to enter the following environment variables:

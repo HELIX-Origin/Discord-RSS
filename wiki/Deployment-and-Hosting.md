@@ -352,21 +352,7 @@ flowchart TD
 
 ---
 
-### 1. Render (`render.com`)
-
-Render offers managed Node.js web services with optional persistent SSD disks.
-
-#### Step 1: Create the Web Service
-1. In your [Render Dashboard](https://dashboard.render.com), click **New** > **Web Service**.
-2. Connect your GitHub repository (`HELIX-Origin/HELIX-RSS` or your fork).
-3. Configure the service:
-   - **Name**: `helix-rss`
-   - **Region**: Choose the region closest to you or your Discord audience.
-   - **Runtime**: `Node`
-   - **Build Command**: `npm ci && npm run build`
-   - **Start Command**: `npm start`
-
-#### Step 2: Configure Environment Variables
+#### Configure Environment Variables
 In the **Environment** section, add the following variables:
 
 | Key | Value | Description |
@@ -379,112 +365,6 @@ In the **Environment** section, add the following variables:
 | `SQLITE_DATA` | `./data` | Local directory for SQLite on free tier |
 
 #### Step 3: Launch Web Service
-Click **Create Web Service**. On Render's Free tier, HELIX RSS runs 100% free of charge using container local storage. *(Note: Render Persistent Disks are optional paid add-ons available if you choose to upgrade to a paid Starter instance in the future).*
-
-#### ⚠️ Render Free Tier & Discord Notices
-
-1. **Discord Phishing Warnings on `*.onrender.com`**:
-   - Discord's Trust & Safety filters automatically flag free hosting subdomains (like `*.onrender.com`) as suspected phishing/untrusted links because scammers abuse free subdomains for token-logging campaigns.
-   - **Fix via Free Custom Domain**: Render supports **custom domains with free automatic SSL certificates** on all plans (including Free tier). Point a domain or subdomain (e.g., `rss.yourdomain.com`) to your Render service under **Settings** > **Custom Domains**, and set `PUBLIC_URL=https://rss.yourdomain.com`. Update your Discord Developer Portal OAuth2 Redirect URI accordingly.
-   - **Local Admin Fallback**: The dashboard login page (`/login`) includes a local email and password form. You can register an initial local administrator account (`/register`) to manage feeds without needing Discord OAuth.
-
-2. **Cloudflare Error 1015 (HTTP 429) on Shared Render IPs**:
-   - Render's free tier shares a common egress IP pool in its data centers. If other free-tier users on Render trigger Discord rate limits, Cloudflare temporarily blocks the shared IP (Error 1015).
-   - If you encounter 429 Error 1015 on Render, you can either:
-     - Deploy on **Fly.io** (`fly launch`), which uses dedicated clean egress IPs.
-     - Or configure a reverse proxy by setting `DISCORD_API_BASE_URL=https://your-proxy.workers.dev/api/v10`.
-
----
-
-### 2. Fly.io (`fly.io`)
-
-Fly.io runs applications in lightweight microVMs with global edge routing and fast persistent NVMe volumes.
-
-#### Step 1: Initialize App Configuration
-Install the `flyctl` CLI tool and run:
-```bash
-fly launch --no-deploy
-```
-
-#### Step 2: Create a Persistent Volume
-Create an encrypted volume for SQLite persistence:
-```bash
-fly volumes create helix_data --size 1 --region ord
-```
-
-#### Step 3: Configure `fly.toml`
-Ensure your `fly.toml` mounts the volume and routes traffic to internal port `3131`:
-```toml
-app = "helix-rss"
-primary_region = "ord"
-
-[build]
-
-[mounts]
-  source = "helix_data"
-  destination = "/data"
-
-[http_service]
-  internal_port = 3131
-  force_https = true
-  auto_stop_machines = false
-  auto_start_machines = true
-  min_machines_running = 1
-
-[[vm]]
-  memory = "512mb"
-  cpu_kind = "shared"
-  cpus = 1
-```
-
-#### Step 4: Set Secrets & Deploy
-```bash
-# Set credentials securely
-fly secrets set DISCORD_TOKEN="your_bot_token" \
-  DISCORD_CLIENT_ID="your_client_id" \
-  DISCORD_CLIENT_SECRET="your_client_secret"
-
-# Set public URL and config
-fly config env set PUBLIC_URL="https://helix-rss.fly.dev" \
-  CADDY_ENABLED="false" \
-  SQLITE_DATA="/data"
-
-# Deploy to Fly.io
-fly deploy
-```
-
----
-
-### 3. Railway (`railway.app`)
-
-Railway provides instant git-connected deployments with simple persistent volume attachments.
-
-#### Step 1: Deploy from GitHub
-1. In the [Railway Dashboard](https://railway.app), click **New Project** > **Deploy from GitHub repo**.
-2. Select your repository.
-3. In **Service Settings**:
-   - **Build Command**: `npm run build`
-   - **Start Command**: `npm start`
-
-#### Step 2: Attach Persistent Storage
-1. Right-click your service on the canvas or go to the **Volumes** tab.
-2. Click **Add Volume**.
-3. Set the Mount Path to `/data`.
-
-#### Step 3: Set Variables & Networking
-1. In the **Variables** tab, add:
-   - `DISCORD_TOKEN`: `your_bot_token`
-   - `DISCORD_CLIENT_ID`: `your_client_id`
-   - `DISCORD_CLIENT_SECRET`: `your_client_secret`
-   - `CADDY_ENABLED`: `false`
-   - `SQLITE_DATA`: `/data`
-2. Under **Settings** > **Networking**, click **Generate Domain** (e.g. `helix-rss-production.up.railway.app`).
-3. Set `PUBLIC_URL` to `https://helix-rss-production.up.railway.app`.
-4. Deploy the service.
-
----
-
-### 4. Heroku (`heroku.com`)
 
 Heroku supports standard Node.js applications via the official Heroku Node.js buildpack.
 
