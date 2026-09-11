@@ -169,4 +169,12 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.botPort).toBe(8000);
     expect(config.publicBaseUrl).toBe('https://my-domain.com');
   });
+
+  it('supports custom DISCORD_API_BASE_URL and defaults to official v10 endpoint', () => {
+    delete process.env['DISCORD_API_BASE_URL'];
+    expect(defaultConfig().discordApiBaseUrl).toBe('https://discord.com/api/v10');
+
+    process.env['DISCORD_API_BASE_URL'] = 'https://discord-proxy.example.workers.dev/api/v10';
+    expect(defaultConfig().discordApiBaseUrl).toBe('https://discord-proxy.example.workers.dev/api/v10');
+  });
 });

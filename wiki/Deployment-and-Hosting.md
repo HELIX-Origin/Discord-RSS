@@ -381,6 +381,19 @@ In the **Environment** section, add the following variables:
 #### Step 3: Launch Web Service
 Click **Create Web Service**. On Render's Free tier, HELIX RSS runs 100% free of charge using container local storage. *(Note: Render Persistent Disks are optional paid add-ons available if you choose to upgrade to a paid Starter instance in the future).*
 
+#### ⚠️ Render Free Tier & Discord Notices
+
+1. **Discord Phishing Warnings on `*.onrender.com`**:
+   - Discord's Trust & Safety filters automatically flag free hosting subdomains (like `*.onrender.com`) as suspected phishing/untrusted links because scammers abuse free subdomains for token-logging campaigns.
+   - **Fix via Free Custom Domain**: Render supports **custom domains with free automatic SSL certificates** on all plans (including Free tier). Point a domain or subdomain (e.g., `rss.yourdomain.com`) to your Render service under **Settings** > **Custom Domains**, and set `PUBLIC_URL=https://rss.yourdomain.com`. Update your Discord Developer Portal OAuth2 Redirect URI accordingly.
+   - **Local Admin Fallback**: The dashboard login page (`/login`) includes a local email and password form. You can register an initial local administrator account (`/register`) to manage feeds without needing Discord OAuth.
+
+2. **Cloudflare Error 1015 (HTTP 429) on Shared Render IPs**:
+   - Render's free tier shares a common egress IP pool in its data centers. If other free-tier users on Render trigger Discord rate limits, Cloudflare temporarily blocks the shared IP (Error 1015).
+   - If you encounter 429 Error 1015 on Render, you can either:
+     - Deploy on **Fly.io** (`fly launch`), which uses dedicated clean egress IPs.
+     - Or configure a reverse proxy by setting `DISCORD_API_BASE_URL=https://your-proxy.workers.dev/api/v10`.
+
 ---
 
 ### 2. Fly.io (`fly.io`)

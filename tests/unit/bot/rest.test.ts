@@ -49,4 +49,18 @@ describe('DiscordRestClient', () => {
 
     await expect(rest.sendChannelMessage('chan-456', { content: 'Test' })).rejects.toThrow('HTTP 403');
   });
+
+  it('supports custom baseUrl for proxies or staging environments', async () => {
+    const proxyClient = new DiscordRestClient('mock-bot-token', 'https://proxy.example.com/api/v10/');
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 'app-123', name: 'Test App' }), { status: 200 }));
+
+    await proxyClient.getCurrentApplication();
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'https://proxy.example.com/api/v10/oauth2/applications/@me',
+      expect.anything(),
+    );
+  });
 });

@@ -24,6 +24,7 @@ export interface AppConfig {
   callbackUrl: string | null;
   pingUrl: string | null;
   pingIntervalMs: number;
+  discordApiBaseUrl: string;
 }
 
 export function defaultConfig(): AppConfig {
@@ -172,6 +173,7 @@ export function defaultConfig(): AppConfig {
     callbackUrl,
     pingUrl,
     pingIntervalMs,
+    discordApiBaseUrl: process.env['DISCORD_API_BASE_URL']?.trim() || 'https://discord.com/api/v10',
   };
 }
 

@@ -29,9 +29,14 @@ function formatErrorText(status: number, text: string): string {
 }
 
 export class DiscordRestClient {
-  private readonly baseUrl = 'https://discord.com/api/v10';
+  private readonly baseUrl: string;
 
-  constructor(private readonly token: string) {}
+  constructor(
+    private readonly token: string,
+    baseUrl = 'https://discord.com/api/v10',
+  ) {
+    this.baseUrl = baseUrl.replace(/\/+$/, '');
+  }
 
   private headers(extra: Record<string, string> = {}): Record<string, string> {
     return {

@@ -115,8 +115,41 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
         </a>
       </div>
 
-      <div class="pt-2 text-xs text-gray-500 space-y-2">
-        <p>Your account is created automatically upon your first Discord sign-in.</p>
+      <div class="relative flex py-1 items-center">
+        <div class="flex-grow border-t border-gray-700/50"></div>
+        <span class="flex-shrink mx-3 text-gray-500 text-[11px] uppercase tracking-wider font-semibold">or with credentials</span>
+        <div class="flex-grow border-t border-gray-700/50"></div>
+      </div>
+
+      <!-- Local Account Form (Fallback if Discord OAuth is blocked or unconfigured) -->
+      <form id="credentials-form" class="space-y-3 text-left" onsubmit="handleCredentialsAuth(event)">
+        ${
+          isRegister
+            ? `<div>
+          <label class="block text-xs font-medium text-gray-300 mb-1" for="cred-name">Display Name</label>
+          <input type="text" id="cred-name" placeholder="Admin" class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition">
+        </div>`
+            : ''
+        }
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1" for="cred-email">Email Address</label>
+          <input type="email" id="cred-email" required placeholder="admin@example.com" class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-300 mb-1" for="cred-password">Password</label>
+          <input type="password" id="cred-password" required minlength="8" placeholder="••••••••" class="w-full px-3 py-2 bg-gray-900 border border-gray-700 rounded-xl text-xs text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition">
+        </div>
+        <button type="submit" id="cred-submit-btn" class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white font-semibold text-xs transition shadow-md shadow-cyan-500/20">
+          ${isRegister ? 'Create Local Account' : 'Sign In with Password'}
+        </button>
+      </form>
+
+      <div class="pt-1 text-xs text-gray-500 space-y-2">
+        ${
+          isRegister
+            ? `<p>Already have an account? <a href="/login" class="text-cyan-400 hover:underline font-medium">Log in</a></p>`
+            : `<p>First time self-hosting? <a href="/register" class="text-cyan-400 hover:underline font-medium">Create local admin account</a></p>`
+        }
         <div>
           <a href="/" class="text-cyan-400 hover:underline inline-flex items-center gap-1.5 text-xs">
             <i class="fa-solid fa-arrow-left text-[10px]"></i> Return to Dashboard
@@ -144,6 +177,43 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
       const box = document.getElementById('error-box');
       box.textContent = '✖ ' + urlError;
       box.classList.remove('hidden');
+    }
+
+    async function handleCredentialsAuth(event) {
+      event.preventDefault();
+      const box = document.getElementById('error-box');
+      const submitBtn = document.getElementById('cred-submit-btn');
+      box.classList.add('hidden');
+      
+      const email = document.getElementById('cred-email').value;
+      const password = document.getElementById('cred-password').value;
+      const nameInput = document.getElementById('cred-name');
+      const displayName = nameInput ? nameInput.value : undefined;
+
+      const endpoint = ${isRegister ? "'/api/auth/register'" : "'/api/auth/login'"};
+      const originalText = submitBtn.textContent;
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Authenticating...';
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, displayName }),
+        });
+
+        if (!res.ok) {
+          const json = await res.json().catch(() => ({}));
+          throw new Error(json.error || 'Authentication failed (HTTP ' + res.status + ')');
+        }
+
+        window.location.href = '/';
+      } catch (err) {
+        box.textContent = '✖ ' + err.message;
+        box.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
     }
 
     function initTheme() {

@@ -34,7 +34,7 @@ export class DiscordBot {
     private readonly options: DiscordBotOptions,
   ) {
     this.logger = createLogger('bot', deps.config.logLevel);
-    this.rest = new DiscordRestClient(options.token);
+    this.rest = new DiscordRestClient(options.token, deps.config.discordApiBaseUrl);
     this.gateway = new DiscordGatewayClient({
       token: options.token,
       logger: this.logger,

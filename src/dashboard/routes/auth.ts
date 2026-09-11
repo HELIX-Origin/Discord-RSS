@@ -187,7 +187,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       } else if (d.config.botToken) {
         try {
           const { DiscordRestClient } = await import('../../bot/rest.js');
-          const restClient = new DiscordRestClient(d.config.botToken);
+          const restClient = new DiscordRestClient(d.config.botToken, d.config.discordApiBaseUrl);
           const appInfo = await restClient.getCurrentApplication();
           if (appInfo.owner?.id === profile.id || appInfo.team?.owner_user_id === profile.id) {
             isAppTeam = true;

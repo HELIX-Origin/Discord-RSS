@@ -147,7 +147,7 @@ export function createHelixRssServer(deps: AppDeps): Server {
           sendJson(res, 200, { type: 1 });
           return;
         }
-        const rest = d.bot?.rest ?? new DiscordRestClient(d.config.botToken ?? '');
+        const rest = d.bot?.rest ?? new DiscordRestClient(d.config.botToken ?? '', d.config.discordApiBaseUrl);
         const response = await dispatchInteraction(interaction, d, rest);
         sendJson(res, 200, response);
       } catch (err) {
