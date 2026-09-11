@@ -1,6 +1,6 @@
-# Local & VPS Hosting Guide
+# Deployment & Hosting Guide (Local, VPS, Docker & Cloud)
 
-This guide covers production deployment and self-hosting for HELIX RSS on **Local Machines** and **Virtual Private Servers (VPS)** across Linux, macOS, and Windows.
+This guide covers production deployment and self-hosting for HELIX RSS on **Local Machines**, **Virtual Private Servers (VPS)**, **Docker Containers**, and **Cloud PaaS Providers** (Render, Fly.io, Heroku, Railway).
 
 ```mermaid
 flowchart TD
@@ -325,3 +325,182 @@ When deploying to a public VPS:
 2. **DNS Configuration**:
    - Add an `A` record pointing `rss.yourdomain.com` to your VPS public IPv4 address.
    - (Optional) Add an `AAAA` record if using IPv6.
+
+---
+
+## ☁️ Cloud PaaS Hosting (Render, Fly.io, Heroku, Railway)
+
+When hosting on cloud Application Platforms (PaaS), the platform's edge load balancer automatically provides HTTPS and forwards traffic to your application container over a dynamic port (`$PORT`).
+
+```mermaid
+flowchart TD
+    Client(["Browser / Discord"]) -->|"HTTPS: 443"| CloudEdge["Cloud Platform Edge Router<br/>(Render / Fly.io / Heroku / Railway)<br/>Automatic TLS Termination"]
+    CloudEdge -->|"HTTP: $PORT"| App["HELIX RSS Server<br/>(CADDY_ENABLED=false)"]
+    App --> Storage[("Persistent Volume / Disk<br/>SQLite: /data/helix-rss.db")]
+```
+
+### Core Configuration Rules for All PaaS Providers
+
+1. **Disable Caddy**: Set `CADDY_ENABLED=false` in the service environment. The cloud platform terminates SSL at its edge, so Caddy is not needed inside the container.
+2. **Port Binding**: HELIX RSS automatically detects the platform-provided `PORT` environment variable and binds `0.0.0.0:$PORT`.
+3. **Public URL**: Set `PUBLIC_URL=https://your-service.onrender.com` (or your platform domain / custom domain) so that Discord OAuth redirects and dashboard links resolve properly.
+4. **Discord OAuth Redirect URI**: In the [Discord Developer Portal](https://discord.com/developers/applications), navigate to your app's **OAuth2** > **Redirects** tab and add:
+   ```text
+   https://your-service.onrender.com/api/auth/callback/discord
+   ```
+5. **Persistent Storage**: Cloud containers are ephemeral by default. To retain your feeds, users, and posting history across deploys and container restarts, attach a **Persistent Volume/Disk** and set `SQLITE_DATA` to the mount point (e.g. `SQLITE_DATA=/data`).
+
+---
+
+### 1. Render (`render.com`)
+
+Render offers managed Node.js web services with optional persistent SSD disks.
+
+#### Step 1: Create the Web Service
+1. In your [Render Dashboard](https://dashboard.render.com), click **New** > **Web Service**.
+2. Connect your GitHub repository (`HELIX-Origin/HELIX-RSS` or your fork).
+3. Configure the service:
+   - **Name**: `helix-rss`
+   - **Region**: Choose the region closest to you or your Discord audience.
+   - **Runtime**: `Node`
+   - **Build Command**: `npm ci && npm run build`
+   - **Start Command**: `npm start`
+
+#### Step 2: Configure Environment Variables
+In the **Environment** section, add the following variables:
+
+| Key | Value | Description |
+| :--- | :--- | :--- |
+| `DISCORD_TOKEN` | `your_bot_token` | Discord Bot Token |
+| `DISCORD_CLIENT_ID` | `your_client_id` | Discord Application Client ID |
+| `DISCORD_CLIENT_SECRET` | `your_client_secret` | Discord Application Client Secret |
+| `PUBLIC_URL` | `https://helix-rss.onrender.com` | Your Render `.onrender.com` URL (or custom domain) |
+| `CADDY_ENABLED` | `false` | Bypasses local Caddy (Render terminates SSL) |
+| `SQLITE_DATA` | `/var/data` | Directory where SQLite database is stored |
+
+#### Step 3: Attach a Persistent Disk (Recommended)
+1. Scroll down to the **Disks** section and click **Add Disk**.
+2. Set:
+   - **Name**: `helix-data`
+   - **Mount Path**: `/var/data`
+   - **Size**: `1 GB` (sufficient for years of feed history)
+3. Click **Create Web Service**.
+
+---
+
+### 2. Fly.io (`fly.io`)
+
+Fly.io runs applications in lightweight microVMs with global edge routing and fast persistent NVMe volumes.
+
+#### Step 1: Initialize App Configuration
+Install the `flyctl` CLI tool and run:
+```bash
+fly launch --no-deploy
+```
+
+#### Step 2: Create a Persistent Volume
+Create an encrypted volume for SQLite persistence:
+```bash
+fly volumes create helix_data --size 1 --region ord
+```
+
+#### Step 3: Configure `fly.toml`
+Ensure your `fly.toml` mounts the volume and routes traffic to internal port `3131`:
+```toml
+app = "helix-rss"
+primary_region = "ord"
+
+[build]
+
+[mounts]
+  source = "helix_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3131
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+```
+
+#### Step 4: Set Secrets & Deploy
+```bash
+# Set credentials securely
+fly secrets set DISCORD_TOKEN="your_bot_token" \
+  DISCORD_CLIENT_ID="your_client_id" \
+  DISCORD_CLIENT_SECRET="your_client_secret"
+
+# Set public URL and config
+fly config env set PUBLIC_URL="https://helix-rss.fly.dev" \
+  CADDY_ENABLED="false" \
+  SQLITE_DATA="/data"
+
+# Deploy to Fly.io
+fly deploy
+```
+
+---
+
+### 3. Railway (`railway.app`)
+
+Railway provides instant git-connected deployments with simple persistent volume attachments.
+
+#### Step 1: Deploy from GitHub
+1. In the [Railway Dashboard](https://railway.app), click **New Project** > **Deploy from GitHub repo**.
+2. Select your repository.
+3. In **Service Settings**:
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start`
+
+#### Step 2: Attach Persistent Storage
+1. Right-click your service on the canvas or go to the **Volumes** tab.
+2. Click **Add Volume**.
+3. Set the Mount Path to `/data`.
+
+#### Step 3: Set Variables & Networking
+1. In the **Variables** tab, add:
+   - `DISCORD_TOKEN`: `your_bot_token`
+   - `DISCORD_CLIENT_ID`: `your_client_id`
+   - `DISCORD_CLIENT_SECRET`: `your_client_secret`
+   - `CADDY_ENABLED`: `false`
+   - `SQLITE_DATA`: `/data`
+2. Under **Settings** > **Networking**, click **Generate Domain** (e.g. `helix-rss-production.up.railway.app`).
+3. Set `PUBLIC_URL` to `https://helix-rss-production.up.railway.app`.
+4. Deploy the service.
+
+---
+
+### 4. Heroku (`heroku.com`)
+
+Heroku supports standard Node.js applications via the official Heroku Node.js buildpack.
+
+#### Step 1: Create the Heroku Application
+```bash
+heroku create your-helix-app
+heroku buildpacks:set heroku/nodejs
+```
+
+#### Step 2: Configure Environment Variables
+```bash
+heroku config:set \
+  DISCORD_TOKEN="your_bot_token" \
+  DISCORD_CLIENT_ID="your_client_id" \
+  DISCORD_CLIENT_SECRET="your_client_secret" \
+  PUBLIC_URL="https://your-helix-app.herokuapp.com" \
+  CADDY_ENABLED="false" \
+  NODE_ENV="production"
+```
+
+#### Step 3: Deploy
+```bash
+git push heroku main
+```
+
+> [!WARNING]
+> **Ephemeral Filesystem on Heroku**: Heroku dynos operate with an ephemeral filesystem and restart at least once every 24 hours. Because SQLite saves to disk, any database changes on Heroku will reset upon dyno cycling unless an off-dyno backup strategy is used. For persistent self-hosting with zero maintenance, **Render**, **Fly.io**, **Railway**, or a standard **VPS** (which all support persistent volumes) are strongly recommended over Heroku.

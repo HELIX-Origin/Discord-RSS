@@ -44,7 +44,7 @@ Navigate to <http://127.0.0.1:3131> in your web browser.
 |---|---|
 | [Architecture & Design](Architecture-and-Design) | System components, SQLite schema, REST API reference, and frontend architecture. |
 | [Configuration](Configuration) | Complete guide to all environment variables and runtime settings. |
-| [Deployment & Hosting](Deployment-and-Hosting) | Local and VPS hosting (Linux, macOS, Windows, Docker) with built-in Caddy automatic HTTPS. |
+| [Deployment & Hosting](Deployment-and-Hosting) | Local, VPS, Docker, and Cloud PaaS hosting (Render, Fly.io, Heroku, Railway) with automatic HTTPS. |
 | [Development & Testing](Development-and-Testing) | Development workflow, Vitest test suites, ESLint, Prettier, and verification gates. |
 | [Discord Bot](Discord-Bot) | Developer Portal setup, permissions, owner detection, and slash commands. |
 | [Feeds & Web Scraper](Feeds-and-Scrapers) | RSS/Atom feeds, custom CSS webpage scrapers, and presets. |
