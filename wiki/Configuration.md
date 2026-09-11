@@ -47,10 +47,12 @@ Feed posting intervals are managed directly per-user via the dashboard **Feeds**
 
 ### Keep-Alive Network Ping (Optional)
 
-| Variable           | Default          | Description                                                                                                                                                                                            |
-| ------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PING_URL`         | _(auto-derived)_ | Health endpoint to ping periodically to prevent cloud spindown / throttling. Automatically derived from `INTERNAL_URL` (e.g. `http://${INTERNAL_URL}/health`). Override with an external URL or set to `disabled` to turn off. |
-| `PING_INTERVAL_MS` | `600000`         | Interval in milliseconds between keep-alive pings (default 10 minutes).                                                                                                                                |
+The keep-alive ping endpoint is **automatically derived from the host system** (cloud host URLs like Render, Railway, Fly.io, or `http://${INTERNAL_URL}/health`). You do not need to specify a ping URL in the environment.
+
+| Variable           | Default   | Description                                                                                                                   |
+| ------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `PING_INTERVAL_MS` | `600000`  | Interval in milliseconds between keep-alive pings (default 10 minutes: 600,000ms).                                            |
+| `PING_ENABLED`     | `true`    | Set to `false` (or `KEEP_ALIVE=false`) to disable keep-alive pings entirely.                                                  |
 
 ---
 

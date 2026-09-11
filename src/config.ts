@@ -158,9 +158,16 @@ export function defaultConfig(): AppConfig {
 
   const internalHealthUrl = `${internalUrl}/health`;
 
+  const pingDisabled =
+    process.env['PING_ENABLED']?.toLowerCase() === 'false' ||
+    process.env['KEEP_ALIVE']?.toLowerCase() === 'false' ||
+    process.env['KEEP_ALIVE_ENABLED']?.toLowerCase() === 'false';
+
   const rawPingUrl = process.env['PING_URL']?.trim() || process.env['KEEP_ALIVE_URL']?.trim();
   let pingUrl: string | null;
-  if (rawPingUrl) {
+  if (pingDisabled) {
+    pingUrl = null;
+  } else if (rawPingUrl) {
     const trimmed = rawPingUrl.toLowerCase();
     if (trimmed === 'none' || trimmed === 'disabled' || trimmed === 'off' || trimmed === 'false') {
       pingUrl = null;
@@ -180,8 +187,13 @@ export function defaultConfig(): AppConfig {
       pingUrl = resolved;
     }
   } else {
-    const renderExternal = process.env['RENDER_EXTERNAL_URL']?.trim();
-    pingUrl = renderExternal ? `${renderExternal.replace(/\/+$/, '')}/health` : internalHealthUrl;
+    // Auto-derived from host system (cloud host URLs, or internalUrl)
+    const hostDerivedUrl =
+      cloudHostUrl ||
+      (process.env['RENDER_EXTERNAL_URL']?.trim()
+        ? process.env['RENDER_EXTERNAL_URL']!.trim().replace(/\/+$/, '')
+        : null);
+    pingUrl = hostDerivedUrl ? `${hostDerivedUrl.replace(/\/+$/, '')}/health` : internalHealthUrl;
   }
   const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
 

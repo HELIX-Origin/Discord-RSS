@@ -165,7 +165,7 @@ render services create web \
 3. Enter your Discord credentials and deploy.
 
 > [!TIP]
-> **Prevent Inactivity Sleep**: On Render Free tier, web services sleep after 15 minutes of inactivity. Set `PING_URL=https://<your-service>.onrender.com/health` in your Render environment variables to enable the built-in keep-alive network ping, keeping your bot continuously online.
+> **Automatic Inactivity Sleep Prevention**: On Render Free tier, web services sleep after 15 minutes of inactivity. HELIX RSS automatically detects the Render host environment (`RENDER_EXTERNAL_URL`) and enables the built-in keep-alive network ping, keeping your bot continuously online without manual URL configuration.
 
 ---
 

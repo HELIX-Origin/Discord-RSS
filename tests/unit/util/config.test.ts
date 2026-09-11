@@ -65,6 +65,33 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.pingIntervalMs).toBe(300_000);
   });
 
+  it('auto-derives pingUrl from cloud host system (Render, Railway, Fly) when PING_URL is omitted', () => {
+    delete process.env['PING_URL'];
+    process.env['RENDER_EXTERNAL_URL'] = 'https://my-render-app.onrender.com';
+    let config = defaultConfig();
+    expect(config.pingUrl).toBe('https://my-render-app.onrender.com/health');
+
+    delete process.env['RENDER_EXTERNAL_URL'];
+    process.env['RAILWAY_STATIC_URL'] = 'railway-app.up.railway.app';
+    config = defaultConfig();
+    expect(config.pingUrl).toBe('https://railway-app.up.railway.app/health');
+
+    delete process.env['RAILWAY_STATIC_URL'];
+    process.env['FLY_APP_NAME'] = 'my-fly-app';
+    config = defaultConfig();
+    expect(config.pingUrl).toBe('https://my-fly-app.fly.dev/health');
+  });
+
+  it('disables pingUrl when PING_ENABLED=false or KEEP_ALIVE=false', () => {
+    delete process.env['PING_URL'];
+    process.env['PING_ENABLED'] = 'false';
+    expect(defaultConfig().pingUrl).toBeNull();
+
+    delete process.env['PING_ENABLED'];
+    process.env['KEEP_ALIVE'] = 'false';
+    expect(defaultConfig().pingUrl).toBeNull();
+  });
+
   it('derives internalUrl and default pingUrl from host and port', () => {
     delete process.env['INTERNAL_URL'];
     delete process.env['DISCORD_PORT'];
