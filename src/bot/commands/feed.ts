@@ -291,7 +291,7 @@ async function handlePoll(options: InteractionOption[], userId: number, deps: Ap
   }
 
   try {
-    await deps.feeds.pollFeed(userId, feed.id);
+    await deps.feeds.pollFeed(userId, feed.id, true);
     const updated = deps.repo.getFeed(userId, feed.id);
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

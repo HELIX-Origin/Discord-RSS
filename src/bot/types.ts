@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Discord API v10 types for Gateway, REST, and Interactions.
  */
 
@@ -137,14 +137,4 @@ export interface DiscordInteraction {
   };
   token: string;
   version: number;
-}
-
-export interface DiscordWebhookPayload {
-  id: string;
-  type: number;
-  guild_id?: string;
-  channel_id?: string;
-  name: string;
-  token?: string;
-  url?: string;
 }

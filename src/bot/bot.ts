@@ -189,19 +189,6 @@ export class DiscordBot {
     }
   }
 
-  async createChannelWebhook(
-    channelId: string,
-    name: string,
-    reason?: string,
-  ): Promise<{ id: string; name: string; url: string }> {
-    const wh = await this.rest.createChannelWebhook(channelId, name, reason);
-    return {
-      id: wh.id,
-      name: wh.name,
-      url: wh.url ?? '',
-    };
-  }
-
   async sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void> {
     await this.rest.sendChannelMessage(channelId, payload);
   }

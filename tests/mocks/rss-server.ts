@@ -47,23 +47,3 @@ export function startRssServer(initialBody = '<?xml version="1.0"?><rss></rss>')
     },
   }));
 }
-
-export interface WebhookMock extends MockServer {
-  deliveries: Array<{ headers: IncomingMessage['headers']; body: string }>;
-}
-
-export function startWebhookServer(): Promise<WebhookMock> {
-  const deliveries: WebhookMock['deliveries'] = [];
-  return startMockServer((req, res) => {
-    let body = '';
-    req.setEncoding('utf8');
-    req.on('data', (chunk: string) => {
-      body += chunk;
-    });
-    req.on('end', () => {
-      deliveries.push({ headers: req.headers, body });
-      res.writeHead(204);
-      res.end();
-    });
-  }).then((server) => ({ ...server, deliveries }));
-}

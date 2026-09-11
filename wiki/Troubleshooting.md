@@ -63,15 +63,15 @@ Test-NetConnection -ComputerName 127.0.0.1 -Port 3535
 
 ---
 
-## 📬 Webhook Delivery Failures
+## 📬 Discord Channel Delivery Failures
 
-### 404 Not Found / Unknown Webhook
+### Missing Permissions / Unknown Channel
 
-The webhook was deleted inside Discord. Recreate it from the channel settings and update the webhook URL in the HELIX RSS dashboard.
+Ensure the bot has `View Channel` and `Send Messages` (and `Embed Links`) permissions in the target channel. If the channel was deleted, update the feed's target channel in the HELIX RSS dashboard.
 
 ### 429 Too Many Requests
 
-Discord is rate-limiting webhook delivery. HELIX RSS automatically backs off using the `Retry-After` header. If rate limits persist, increase `POLL_INTERVAL_MS` in `.env`.
+Discord is rate-limiting message delivery. HELIX RSS automatically enforces hourly rate-limiting per feed and backs off using the `Retry-After` header. If rate limits persist, adjust `POLL_INTERVAL_MS` in `.env`.
 
 ---
 

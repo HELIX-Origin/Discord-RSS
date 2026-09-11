@@ -5,7 +5,6 @@ import {
   rowToOAuthConnection,
   rowToSession,
   rowToUser,
-  rowToWebhook,
   type ActivityEntry,
   type DiscordGuild,
   type Feed,
@@ -13,7 +12,6 @@ import {
   type OAuthState,
   type Session,
   type User,
-  type Webhook,
 } from './types.js';
 
 type Row = Record<string, unknown>;
@@ -35,7 +33,6 @@ export class AppState {
   private oauthByUser = new Map<string, OAuthConnection>();
   private oauthStates = new Map<string, OAuthState>();
   private feedsById = new Map<number, Feed>();
-  private webhooksById = new Map<number, Webhook>();
   private discordGuilds = new Map<string, DiscordGuild>();
   private settings = new Map<string, string>();
   private activity: ActivityEntry[] = [];
@@ -77,11 +74,6 @@ export class AppState {
     for (const r of raws.prepare('SELECT * FROM feeds').all() as Row[]) {
       const f = rowToFeed(r);
       if (f) this.putFeed(f);
-    }
-
-    for (const r of raws.prepare('SELECT * FROM webhooks').all() as Row[]) {
-      const w = rowToWebhook(r);
-      if (w) this.putWebhook(w);
     }
 
     for (const r of raws.prepare('SELECT * FROM discord_guilds').all() as Row[]) {
@@ -222,27 +214,6 @@ export class AppState {
   markEntrySent(feedId: number, entryId: string): void {
     if (!this.sentByFeed.has(feedId)) this.sentByFeed.set(feedId, new Set());
     this.sentByFeed.get(feedId)!.add(entryId);
-  }
-
-  // ---- Webhooks ----
-
-  listWebhooks(userId: number): Webhook[] {
-    return [...this.webhooksById.values()]
-      .filter((w) => w.userId === userId)
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  getWebhook(userId: number, id: number): Webhook | null {
-    const w = this.webhooksById.get(id);
-    return w && w.userId === userId ? w : null;
-  }
-
-  putWebhook(webhook: Webhook): void {
-    this.webhooksById.set(webhook.id, webhook);
-  }
-
-  deleteWebhook(id: number): void {
-    this.webhooksById.delete(id);
   }
 
   // ---- Discord Guilds ----

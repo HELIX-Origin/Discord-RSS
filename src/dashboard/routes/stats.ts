@@ -11,7 +11,6 @@ export function registerStatsRoutes(router: Router<AppDeps>): void {
     sendJson(res, 200, {
       ...dbStats,
       myFeeds: d.repo.listFeeds(userId).length,
-      myWebhooks: d.repo.listWebhooks(userId).length,
       activity: d.repo.recentActivity(12).map((a) => ({
         ts: a.ts,
         level: a.level,

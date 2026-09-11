@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { DiscordRestClient } from '../../../src/bot/rest.js';
 import { InteractionResponseType } from '../../../src/bot/types.js';
 
@@ -28,30 +28,6 @@ describe('DiscordRestClient', () => {
     );
   });
 
-  it('creates channel webhooks', async () => {
-    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-      new Response(
-        JSON.stringify({
-          id: 'wh-123',
-          name: 'RSS Webhook',
-          token: 'tok-abc',
-        }),
-        { status: 200 },
-      ),
-    );
-
-    const payload = await rest.createChannelWebhook('chan-456', 'RSS Webhook');
-    expect(payload.id).toBe('wh-123');
-    expect(payload.url).toBe('https://discord.com/api/webhooks/wh-123/tok-abc');
-
-    expect(fetchSpy).toHaveBeenCalledWith(
-      'https://discord.com/api/v10/channels/chan-456/webhooks',
-      expect.objectContaining({
-        method: 'POST',
-      }),
-    );
-  });
-
   it('sends interaction callback responses', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response(null, { status: 204 }));
 
@@ -71,6 +47,6 @@ describe('DiscordRestClient', () => {
   it('throws helpful error on failed requests', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(new Response('Missing Permissions', { status: 403 }));
 
-    await expect(rest.createChannelWebhook('chan-456', 'Test')).rejects.toThrow('HTTP 403');
+    await expect(rest.sendChannelMessage('chan-456', { content: 'Test' })).rejects.toThrow('HTTP 403');
   });
 });

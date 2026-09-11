@@ -3,20 +3,10 @@ import { AppState } from '../state/app-state.js';
 import { UserRepository } from './repositories/users.js';
 import { OAuthRepository } from './repositories/oauth.js';
 import { FeedRepository } from './repositories/feeds.js';
-import { WebhookRepository } from './repositories/webhooks.js';
 import { SettingsRepository } from './repositories/settings.js';
-import type { ActivityEntry, Feed, OAuthConnection, Session, User, UserRole, Webhook } from '../state/types.js';
+import type { ActivityEntry, Feed, OAuthConnection, Session, User, UserRole } from '../state/types.js';
 
-export type {
-  ActivityEntry,
-  Feed,
-  OAuthConnection,
-  OAuthState,
-  Session,
-  User,
-  UserRole,
-  Webhook,
-} from '../state/types.js';
+export type { ActivityEntry, Feed, OAuthConnection, OAuthState, Session, User, UserRole } from '../state/types.js';
 
 /**
  * Write-through persistence facade.
@@ -35,7 +25,6 @@ export class Repository {
   private readonly users: UserRepository;
   private readonly oauth: OAuthRepository;
   private readonly feeds: FeedRepository;
-  private readonly webhooks: WebhookRepository;
   private readonly settings: SettingsRepository;
 
   constructor(private readonly db: Database) {
@@ -43,7 +32,6 @@ export class Repository {
     this.users = new UserRepository(db, this.state);
     this.oauth = new OAuthRepository(db, this.state);
     this.feeds = new FeedRepository(db, this.state);
-    this.webhooks = new WebhookRepository(db, this.state);
     this.settings = new SettingsRepository(db, this.state);
   }
 
@@ -153,11 +141,11 @@ export class Repository {
     userId: number,
     name: string,
     url: string,
-    channelIdOrWebhookId: string | number | null,
+    channelId: string | null,
     feedType: 'rss' | 'scrape',
     scrape: Feed['scrape'],
   ): Feed {
-    return this.feeds.addFeed(userId, name, url, channelIdOrWebhookId, feedType, scrape);
+    return this.feeds.addFeed(userId, name, url, channelId, feedType, scrape);
   }
 
   updateFeed(
@@ -167,7 +155,6 @@ export class Repository {
       name?: string;
       url?: string;
       channelId?: string | null;
-      webhookId?: number | null;
       enabled?: number;
     },
   ): Feed | null {
@@ -192,28 +179,6 @@ export class Repository {
 
   latestFeeds(userId: number, limit: number): Feed[] {
     return this.feeds.latestFeeds(userId, limit);
-  }
-
-  // ---- Webhooks ----
-
-  listWebhooks(userId: number): Webhook[] {
-    return this.webhooks.listWebhooks(userId);
-  }
-
-  getWebhook(userId: number, id: number): Webhook | null {
-    return this.webhooks.getWebhook(userId, id);
-  }
-
-  addWebhook(userId: number, name: string, url: string): Webhook {
-    return this.webhooks.addWebhook(userId, name, url);
-  }
-
-  updateWebhook(userId: number, id: number, fields: { name?: string; url?: string; enabled?: number }): Webhook | null {
-    return this.webhooks.updateWebhook(userId, id, fields);
-  }
-
-  deleteWebhook(userId: number, id: number): void {
-    this.webhooks.deleteWebhook(userId, id);
   }
 
   // ---- Settings & activity ----

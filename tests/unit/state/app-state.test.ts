@@ -27,8 +27,7 @@ describe('AppState', () => {
 
   it('creates and reads feeds', () => {
     repo.createUser('a@b.com', 'hash', 'A');
-    repo.addWebhook(1, 'w', 'http://discord.com/webhook/1/token');
-    repo.addFeed(1, 'f', 'http://f', 1, 'rss', null);
+    repo.addFeed(1, 'f', 'http://f', 'chan-1', 'rss', null);
     expect(state.listFeeds(1)).toHaveLength(1);
     expect(state.getFeed(1, 1)?.name).toBe('f');
   });

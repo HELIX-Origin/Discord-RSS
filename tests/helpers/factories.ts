@@ -1,12 +1,4 @@
-import type {
-  ActivityEntry,
-  Feed,
-  OAuthConnection,
-  OAuthState,
-  Session,
-  User,
-  Webhook,
-} from '../../src/state/types.js';
+import type { ActivityEntry, Feed, OAuthConnection, OAuthState, Session, User } from '../../src/state/types.js';
 
 export function userFactory(overrides: Partial<User> = {}): User {
   const id = overrides.id ?? 1;
@@ -66,25 +58,11 @@ export function feedFactory(overrides: Partial<Feed> = {}): Feed {
     name: `Feed ${id}`,
     url: `https://example.com/feed-${id}.xml`,
     channelId: null,
-    webhookId: 1,
     enabled: 1,
     feedType: 'rss',
     scrape: null,
     lastEntryId: null,
     lastCheckedAt: null,
-    createdAt: new Date().toISOString(),
-    ...overrides,
-  };
-}
-
-export function webhookFactory(overrides: Partial<Webhook> = {}): Webhook {
-  const id = overrides.id ?? 1;
-  return {
-    id,
-    userId: 1,
-    name: `Webhook ${id}`,
-    url: `https://discord.com/api/webhooks/${id}/token-${id}`,
-    enabled: 1,
     createdAt: new Date().toISOString(),
     ...overrides,
   };

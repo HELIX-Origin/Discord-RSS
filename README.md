@@ -4,12 +4,12 @@ A lightweight and efficient utility designed to bridge RSS/Atom feeds directly i
 
 ## Overview
 
-HELIX-RSS automates content delivery from your favorite RSS and Atom feeds straight into your Discord server channels using webhooks or the built-in Discord Bot. Whether you're tracking release logs, blog updates, or news streams, this tool keeps your community in the loop without manual monitoring.
+HELIX-RSS automates content delivery from your favorite RSS and Atom feeds straight into your Discord server channels using the built-in Discord Bot. Whether you're tracking release logs, blog updates, or news streams, this tool keeps your community in the loop without manual monitoring.
 
 ## Features
 
-- **Automated Feed Polling:** Regularly checks configured RSS/Atom endpoints for new items.
-- **Discord Webhook & Bot Integration:** Cleanly formats and pushes updates straight to designated channels, with interactive Discord slash commands (`/feed`, `/stats`, `/about`, `/help`).
+- **Automated Feed Polling:** Regularly checks configured RSS/Atom endpoints for new items with hourly rate-limiting.
+- **Discord Bot Channel Integration:** Cleanly formats and pushes rich embed updates straight to designated channels, with interactive Discord slash commands (`/feed`, `/stats`, `/about`, `/help`).
 - **Lightweight and Efficient:** Minimal resource usage with zero runtime dependencies while maintaining high performance.
 
 ## Documentation & Wiki
@@ -57,7 +57,7 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
 - 👀 Keep an eye on the RSS feed sources for any changes in structure or availability that might affect the application's ability to fetch and post updates.
 - 🌐 Engage with the community through discussions and forums to stay updated on best practices and common issues.
 - 📝 Provide feedback and suggestions to help improve the project and its documentation.
-- 🔔 Stay informed about updates and changes in Discord's API that might affect webhook functionality.
+- 🔔 Stay informed about updates and changes in Discord's API that might affect bot messaging functionality.
 
 ## Community Links
 

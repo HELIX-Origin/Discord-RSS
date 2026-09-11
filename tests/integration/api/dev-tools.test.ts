@@ -30,12 +30,11 @@ describe('Dev Tools API & Pages', () => {
   it('returns comprehensive system stats for owner and admin', async () => {
     const res = await ownerClient.get<{
       feedCount: number;
-      webhookCount: number;
       userCount: number;
       adminCount: number;
     }>('/api/admin/stats');
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ feedCount: 0, webhookCount: 0 });
+    expect(res.body).toMatchObject({ feedCount: 0 });
     expect(res.body.userCount).toBeGreaterThanOrEqual(1);
     expect(res.body.adminCount).toBeGreaterThanOrEqual(1);
   });
@@ -54,14 +53,6 @@ describe('Dev Tools API & Pages', () => {
     const res = await ownerClient.post('/api/admin/db/optimize');
     expect(res.status).toBe(200);
     expect((res.body as { ok: boolean }).ok).toBe(true);
-  });
-
-  it('validates test webhook URL', async () => {
-    const res = await ownerClient.post('/api/admin/test-webhook', {
-      url: 'https://invalid-url.com',
-    });
-    expect(res.status).toBe(400);
-    expect((res.body as { error: string }).error).toContain('Invalid Discord webhook URL');
   });
 
   it('returns activity log for owner/admin', async () => {

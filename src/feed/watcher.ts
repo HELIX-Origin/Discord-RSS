@@ -5,7 +5,7 @@ import { fetchRaw, isCloudflareChallenge } from './fetch.js';
 import { parseHtml } from './html.js';
 import { parseFeed, withGuid, type FeedEntry } from './parser.js';
 import { scrapeItems, absoluteUrl } from './scraper.js';
-import { feedEmbed, sendWebhook } from '../webhook/discord.js';
+import { feedEmbed } from '../bot/embeds.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
 
 export interface ChannelMessageSender {
@@ -28,7 +28,7 @@ export class FeedWatcher {
     this.bot = bot;
   }
 
-  async pollFeed(userId: number, feedId: number): Promise<void> {
+  async pollFeed(userId: number, feedId: number, force = false): Promise<void> {
     const feed = this.repo.getFeed(userId, feedId);
     if (!feed) return;
     if (!feed.enabled) return;
@@ -38,17 +38,29 @@ export class FeedWatcher {
       return; // another instance is polling this feed
     }
     try {
-      await this.pollFeedLocked(userId, feed);
+      await this.pollFeedLocked(userId, feed, force);
     } finally {
       await this.redis?.releaseLock(lockKey);
     }
   }
 
-  private async pollFeedLocked(userId: number, feed: Feed): Promise<void> {
+  private async pollFeedLocked(userId: number, feed: Feed, force = false): Promise<void> {
+    const ONE_HOUR_MS = 60 * 60 * 1000;
+    if (!force && feed.lastCheckedAt) {
+      const lastCheck = new Date(feed.lastCheckedAt).getTime();
+      if (!Number.isNaN(lastCheck) && Date.now() - lastCheck < ONE_HOUR_MS) {
+        this.logger.debug('Skipping feed poll; feed was polled within the last hour', {
+          feedId: feed.id,
+          feedName: feed.name,
+          lastCheckedAt: feed.lastCheckedAt,
+        });
+        return;
+      }
+    }
+
     const targetChannelId = feed.channelId;
-    const webhook = feed.webhookId ? this.repo.getWebhook(userId, feed.webhookId) : null;
-    if (!targetChannelId && (!webhook || webhook.enabled === 0)) {
-      this.logger.warn('Feed has no configured Discord channel or enabled webhook; skipping poll', {
+    if (!targetChannelId) {
+      this.logger.warn('Feed has no configured Discord channel; skipping poll', {
         feedId: feed.id,
         feedName: feed.name,
       });
@@ -148,28 +160,19 @@ export class FeedWatcher {
       let delivered = false;
       let errorDetail: string | null = null;
 
-      if (targetChannelId && this.bot) {
-        try {
-          await this.bot.sendChannelMessage(targetChannelId, { embeds: [embed] });
-          delivered = true;
-        } catch (err) {
-          errorDetail = err instanceof Error ? err.message : String(err);
-        }
-      } else if (webhook && webhook.enabled !== 0) {
-        const result = await sendWebhook(webhook.url, {
-          username: feed.name.slice(0, 80),
-          embeds: [embed],
-        });
-        delivered = result.ok;
-        if (!result.ok) {
-          errorDetail = result.error;
-        }
-      } else if (targetChannelId && !this.bot) {
+      if (!this.bot) {
         this.logger.warn('Discord bot is offline; skipping channel message delivery', {
           feedId: feed.id,
           channelId: targetChannelId,
         });
         break;
+      }
+
+      try {
+        await this.bot.sendChannelMessage(targetChannelId, { embeds: [embed] });
+        delivered = true;
+      } catch (err) {
+        errorDetail = err instanceof Error ? err.message : String(err);
       }
 
       if (delivered) {
@@ -194,7 +197,7 @@ export class FeedWatcher {
     this.logger.info('Feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
   }
 
-  async pollAllFeeds(): Promise<void> {
+  async pollAllFeeds(force = false): Promise<void> {
     const userIds = new Set<number>();
     const allFeeds: Array<{ userId: number; id: number }> = [];
     for (const feed of this.repo.listFeedsForAllUsers()) {
@@ -202,6 +205,6 @@ export class FeedWatcher {
       userIds.add(feed.userId);
       allFeeds.push({ userId: feed.userId, id: feed.id });
     }
-    await Promise.all(allFeeds.map((f) => this.pollFeed(f.userId, f.id)));
+    await Promise.all(allFeeds.map((f) => this.pollFeed(f.userId, f.id, force)));
   }
 }

@@ -28,7 +28,6 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const body = (await readBodyJson(req)) as {
       name?: string;
       url?: string;
-      webhookId?: number | null;
       channelId?: string | null;
       feedType?: 'rss' | 'scrape';
       scrape?: { item?: string; title?: string; link?: string; description?: string } | null;
@@ -39,11 +38,6 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
 
     const channelId = body.channelId?.trim() || null;
-    const webhookId = body.webhookId ?? null;
-
-    if (webhookId !== null && !d.repo.getWebhook(userId, webhookId)) {
-      return sendError(res, 400, 'Webhook not found');
-    }
 
     try {
       const feedType = body.feedType === 'scrape' ? 'scrape' : 'rss';
@@ -56,7 +50,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
               description: body.scrape.description?.trim() || undefined,
             }
           : null;
-      const feed = d.repo.addFeed(userId, name, url, channelId || webhookId, feedType, scrape);
+      const feed = d.repo.addFeed(userId, name, url, channelId, feedType, scrape);
       d.repo.logActivity(userId, 'info', 'feeds', `Added ${feedType === 'scrape' ? 'scrape ' : ''}feed "${feed.name}"`);
       sendJson(res, 201, feed);
     } catch (err) {
@@ -72,14 +66,12 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
       name?: string;
       url?: string;
       channelId?: string | null;
-      webhookId?: number | null;
       enabled?: boolean;
     };
     const feed = d.repo.updateFeed(userId, id, {
       name: body.name?.trim(),
       url: body.url?.trim(),
       channelId: body.channelId !== undefined ? body.channelId?.trim() || null : undefined,
-      webhookId: body.webhookId,
       enabled: body.enabled === undefined ? undefined : body.enabled ? 1 : 0,
     });
     if (!feed) return sendError(res, 404, 'Feed not found');
@@ -94,10 +86,18 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     sendJson(res, 200, { ok: true });
   });
 
+  router.add('POST', '/api/feeds/poll-all', async (req, res, _ctx, d) => {
+    const userId = await requireUser(req, res, d);
+    if (userId === null) return;
+    const userFeeds = d.repo.listFeeds(userId);
+    await Promise.all(userFeeds.map((f) => d.feeds.pollFeed(userId, f.id, true)));
+    sendJson(res, 200, { ok: true, count: userFeeds.length });
+  });
+
   router.add('POST', '/api/feeds/:id/poll', async (req, res, ctx, d) => {
     const userId = await requireUser(req, res, d);
     if (userId === null) return;
-    await d.feeds.pollFeed(userId, Number(ctx.params['id']));
+    await d.feeds.pollFeed(userId, Number(ctx.params['id']), true);
     sendJson(res, 200, { ok: true });
   });
 }

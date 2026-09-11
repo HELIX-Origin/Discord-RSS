@@ -221,7 +221,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </div>
             <div>
               <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destination Discord Channel</label>
-              <select id="feed-webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+              <select id="feed-channel" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
                 <option value="">-- Select Discord channel --</option>
               </select>
             </div>
@@ -238,9 +238,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             <h2 class="text-base font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-list text-cyan-400"></i> My Feeds
             </h2>
-            <button onclick="fetchAll()" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition flex items-center gap-1.5 border border-gray-700">
-              <i class="fa-solid fa-rotate-right"></i> Refresh
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="pollAllUserFeeds()" id="btn-poll-all" class="px-3 py-1.5 rounded-lg bg-cyan-700/80 hover:bg-cyan-600 text-xs font-semibold text-white transition flex items-center gap-1.5 border border-cyan-600 shadow-sm">
+                <i class="fa-solid fa-bolt"></i> Poll Feeds Now
+              </button>
+              <button onclick="fetchAll()" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition flex items-center gap-1.5 border border-gray-700">
+                <i class="fa-solid fa-rotate-right"></i> Refresh
+              </button>
+            </div>
           </div>
           <div id="feeds-table-body" class="space-y-2">
             <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading feeds...</div>
@@ -283,7 +288,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </div>
             <div>
               <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destination Discord Channel</label>
-              <select id="builder-feed-webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500">
+              <select id="builder-feed-channel" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500">
                 <option value="">-- Select Discord channel --</option>
               </select>
             </div>
@@ -403,7 +408,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </div>
             <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
               <div class="text-[10px] uppercase font-semibold text-gray-500">Unlinked Channels</div>
-              <div id="diag-missing-webhooks" class="text-xl font-bold text-red-400 mt-1">-</div>
+              <div id="diag-missing-channels" class="text-xl font-bold text-red-400 mt-1">-</div>
             </div>
             <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
               <div class="text-[10px] uppercase font-semibold text-gray-500">Healthy Feeds</div>
@@ -567,17 +572,16 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       });
       return html;
     }
-
     function populateDestinationSelects() {
-      const feedsSel = document.getElementById('feed-webhook');
-      const builderSel = document.getElementById('builder-feed-webhook');
+      const feedsSel = document.getElementById('feed-channel');
+      const builderSel = document.getElementById('builder-feed-channel');
       if (feedsSel) feedsSel.innerHTML = buildChannelOptionsHtml(feedsSel.value);
       if (builderSel) builderSel.innerHTML = buildChannelOptionsHtml(builderSel.value);
-      refreshPresetWebhookOptions();
+      refreshPresetChannelOptions();
     }
 
-    function refreshPresetWebhookOptions() {
-      document.querySelectorAll('select[data-preset-webhook]').forEach(sel => {
+    function refreshPresetChannelOptions() {
+      document.querySelectorAll('select[data-preset-channel]').forEach(sel => {
         sel.innerHTML = buildChannelOptionsHtml(sel.value);
       });
     }
@@ -603,9 +607,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       if (!destination) return {};
       if (destination.startsWith('channel:')) {
         return { channelId: destination.replace('channel:', '') };
-      }
-      if (destination.startsWith('webhook:')) {
-        return { webhookId: Number(destination.replace('webhook:', '')) };
       }
       if (/^[0-9]+$/.test(destination)) {
         return { channelId: destination };
@@ -644,7 +645,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                   <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(p.url)}</div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                  <select data-preset-webhook class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                  <select data-preset-channel class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
                     <option value="">-- Select Discord channel --</option>
                   </select>
                   <button onclick="enablePreset('\${p.id}', this)" \${p.alreadyAdded ? 'disabled' : ''} class="px-3 py-2 rounded-lg \${p.alreadyAdded ? 'bg-green-950/60 text-green-400 border border-green-800 cursor-default' : 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40'} text-xs font-semibold transition"><i class="fa-solid \${p.alreadyAdded ? 'fa-check' : 'fa-bolt'} mr-1"></i>\${p.alreadyAdded ? 'Added' : 'Enable'}</button>
@@ -655,14 +656,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       \`).join('');
 
-      refreshPresetWebhookOptions();
+      refreshPresetChannelOptions();
     }
 
     async function enablePreset(presetId, btn) {
       const preset = presetsCache.find(p => p.id === presetId);
       if (!preset) return;
       const row = btn.closest('.flex');
-      const sel = row ? row.querySelector('select[data-preset-webhook]') : null;
+      const sel = row ? row.querySelector('select[data-preset-channel]') : null;
       const destination = sel ? sel.value : '';
       if (!destination) {
         if (botInviteUrlCache && (!discordGuildsCache || !discordGuildsCache.length)) {
@@ -720,7 +721,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               <span class="text-[10px] px-2 py-0.5 rounded \${f.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${f.enabled ? 'Enabled' : 'Disabled'}</span>
             </div>
             <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(f.url)}</div>
-            <div class="text-[10px] text-gray-500">Delivery: \${f.webhookId ? 'Discord Channel' : 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
+            <div class="text-[10px] text-gray-500">Delivery: \${f.channelId ? \`Discord Channel (<#\${escapeHtmlAttr(f.channelId)}>)\` : 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <button onclick="toggleFeed(\${f.id}, \${f.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${f.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${f.enabled ? 'Pause' : 'Resume'}</button>
@@ -830,7 +831,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     async function addDiscoveredFeed(url) {
       const name = prompt('Feed name:', url.split('/').pop() || 'Feed');
       if (!name) return;
-      const destination = document.getElementById('feed-webhook') ? document.getElementById('feed-webhook').value : '';
+      const destination = document.getElementById('feed-channel') ? document.getElementById('feed-channel').value : '';
       const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/feeds', {
         method: 'POST',
@@ -884,7 +885,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     async function saveBuilderFeed() {
       const url = builderUrlField || document.getElementById('builder-url').value.trim();
       const sel = builderSelectors();
-      const destination = document.getElementById('builder-feed-webhook').value;
+      const destination = document.getElementById('builder-feed-channel').value;
       const nameEl = document.getElementById('builder-feed-name');
       const feedName = nameEl.value.trim() || url.split('/').pop() || 'Scrape Feed';
       if (!url || !sel.itemSelector || !sel.titleSelector || !sel.linkSelector) return alert('Analyze a URL and set all selectors first.');
@@ -919,7 +920,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     async function addFeed() {
       const name = document.getElementById('feed-name').value.trim();
       const url = document.getElementById('feed-url').value.trim();
-      const destination = document.getElementById('feed-webhook').value;
+      const destination = document.getElementById('feed-channel').value;
       if (!name || !url) return alert('Please provide a feed name and URL.');
       const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/feeds', {
@@ -948,6 +949,32 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
       if (checkAuthError(res)) return;
       fetchAll();
+    }
+
+    async function pollAllUserFeeds() {
+      const btn = document.getElementById('btn-poll-all');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Polling...';
+      }
+      try {
+        const res = await fetch('/api/feeds/poll-all', { method: 'POST' });
+        if (checkAuthError(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          alert('Polled ' + (data.count !== undefined ? data.count : 'all') + ' feed(s) successfully.');
+          fetchAll();
+        } else {
+          alert(data.error || 'Failed to poll feeds');
+        }
+      } catch (err) {
+        alert('Failed to poll feeds: ' + (err && err.message ? err.message : String(err)));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fa-solid fa-bolt mr-1.5"></i>Poll Feeds Now';
+        }
+      }
     }
 
     async function deleteItem(collection, id, label) {
@@ -1005,7 +1032,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                   \${healthBadge}
                 </div>
                 <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(u.email)}</div>
-                <div class="text-[10px] text-gray-500 font-mono">User ID: #\${u.id} · Feeds: \${u.feedCount} · Webhooks: \${u.webhookCount} · Joined: \${new Date(u.createdAt).toLocaleDateString()}</div>
+                <div class="text-[10px] text-gray-500 font-mono">User ID: #\${u.id} · Feeds: \${u.feedCount} · Joined: \${new Date(u.createdAt).toLocaleDateString()}</div>
               </div>
               <div class="flex items-center gap-2 flex-wrap shrink-0">
                 <button onclick="inspectUserFeeds(\${u.id}, '\${safeUserName}')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-cyan-950/80 text-cyan-300 hover:text-cyan-200 text-xs border border-gray-700 hover:border-cyan-700 transition font-semibold flex items-center gap-1.5 shrink-0">
@@ -1054,9 +1081,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-green-950 text-green-300 border border-green-800">Active</span>'
             : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700">Paused</span>';
 
-          const webhookBadge = (!f.channelId && !f.webhookId)
+          const channelBadge = !f.channelId
             ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 flex items-center gap-1"><i class="fa-solid fa-link-slash"></i> No Channel</span>'
-            : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1"><i class="fa-solid fa-link"></i> \${escapeHtmlAttr(f.webhookName || (f.channelId ? '#' + f.channelId : 'Channel linked'))}</span>\`;
+            : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1"><i class="fa-solid fa-link"></i> \${escapeHtmlAttr(f.channelName || '#' + f.channelId)}</span>\`;
 
           const issuesHtml = (f.issues && f.issues.length)
             ? \`<div class="p-3 rounded-lg bg-amber-950/40 border border-amber-800/80 text-amber-300 text-xs space-y-1">
@@ -1076,7 +1103,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                   <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
                   <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-300 border border-gray-700 uppercase">\${escapeHtmlAttr(f.feedType)}</span>
                   \${statusBadge}
-                  \${webhookBadge}
+                  \${channelBadge}
                 </div>
                 <button onclick="testFeedFromModal('\${safeUrl}')" class="px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
                   <i class="fa-solid fa-stethoscope"></i> Test in Inspector
@@ -1118,12 +1145,12 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
         const totalEl = document.getElementById('diag-total-feeds');
         const issuesEl = document.getElementById('diag-issues-count');
-        const missingWhEl = document.getElementById('diag-missing-webhooks');
+        const missingChannelsEl = document.getElementById('diag-missing-channels') || document.getElementById('diag-missing-webhooks');
         const healthyEl = document.getElementById('diag-healthy-count');
 
         if (totalEl) totalEl.textContent = data.totalFeeds;
         if (issuesEl) issuesEl.textContent = data.issuesCount;
-        if (missingWhEl) missingWhEl.textContent = data.stats?.missingWebhookCount ?? 0;
+        if (missingChannelsEl) missingChannelsEl.textContent = data.stats?.missingChannelCount ?? data.stats?.missingWebhookCount ?? 0;
         if (healthyEl) healthyEl.textContent = data.healthyFeedsCount;
 
         const selectEl = document.getElementById('diag-test-feed-select');

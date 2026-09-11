@@ -1,9 +1,4 @@
-import type {
-  ApplicationCommand,
-  DiscordWebhookPayload,
-  InteractionResponse,
-  InteractionResponseData,
-} from './types.js';
+import type { ApplicationCommand, InteractionResponse, InteractionResponseData } from './types.js';
 
 export interface DiscordApplicationInfo {
   id: string;
@@ -93,27 +88,6 @@ export class DiscordRestClient {
     const all = (await res.json()) as Array<{ id: string; name: string; type: number; position?: number }>;
     // Filter to text and announcement channels (0 = GUILD_TEXT, 5 = GUILD_ANNOUNCEMENT)
     return all.filter((c) => c.type === 0 || c.type === 5);
-  }
-
-  async createChannelWebhook(channelId: string, name: string, reason?: string): Promise<DiscordWebhookPayload> {
-    const headers = this.headers(reason ? { 'X-Audit-Log-Reason': reason } : {});
-    const res = await fetch(`${this.baseUrl}/channels/${channelId}/webhooks`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({ name }),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Failed to create Discord webhook in channel ${channelId}: HTTP ${res.status} - ${text}`);
-    }
-
-    const json = (await res.json()) as DiscordWebhookPayload;
-    // Construct the public execution URL if not directly returned with token
-    if (!json.url && json.token) {
-      json.url = `https://discord.com/api/webhooks/${json.id}/${json.token}`;
-    }
-    return json;
   }
 
   async sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void> {

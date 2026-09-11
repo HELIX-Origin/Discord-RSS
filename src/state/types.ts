@@ -41,21 +41,11 @@ export interface Feed {
   name: string;
   url: string;
   channelId: string | null;
-  webhookId?: number | null;
   enabled: number;
   feedType: 'rss' | 'scrape';
   scrape: { item: string; title: string; link: string; description?: string } | null;
   lastEntryId: string | null;
   lastCheckedAt: string | null;
-  createdAt: string;
-}
-
-export interface Webhook {
-  id: number;
-  userId: number;
-  name: string;
-  url: string;
-  enabled: number;
   createdAt: string;
 }
 
@@ -139,7 +129,6 @@ export const rowToFeed = (r: Row | undefined): Feed | null => {
     name: String(r.name),
     url: String(r.url),
     channelId,
-    webhookId: r.webhook_id === null || r.webhook_id === undefined ? null : Number(r.webhook_id),
     enabled: Number(r.enabled),
     feedType: r.feed_type === 'scrape' ? 'scrape' : 'rss',
     scrape:
@@ -148,18 +137,6 @@ export const rowToFeed = (r: Row | undefined): Feed | null => {
         : null,
     lastEntryId: r.last_entry_id === null ? null : String(r.last_entry_id),
     lastCheckedAt: r.last_checked_at === null ? null : String(r.last_checked_at),
-    createdAt: String(r.created_at),
-  };
-};
-
-export const rowToWebhook = (r: Row | undefined): Webhook | null => {
-  if (!r) return null;
-  return {
-    id: Number(r.id),
-    userId: Number(r.user_id),
-    name: String(r.name),
-    url: String(r.url),
-    enabled: Number(r.enabled),
     createdAt: String(r.created_at),
   };
 };

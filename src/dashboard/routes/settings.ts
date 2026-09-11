@@ -40,7 +40,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     const users = d.repo.listUsers().map((u) => {
       const userFeeds = allFeeds.filter((f) => f.userId === u.id);
       const feedsWithIssuesCount = userFeeds.filter(
-        (f) => (!f.channelId && !f.webhookId) || f.enabled === 0 || f.lastCheckedAt === null,
+        (f) => !f.channelId || f.enabled === 0 || f.lastCheckedAt === null,
       ).length;
 
       return {
@@ -49,7 +49,6 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
         displayName: u.displayName,
         role: u.role,
         feedCount: userFeeds.length,
-        webhookCount: d.repo.listWebhooks(u.id).length,
         feedsWithIssuesCount,
         createdAt: u.createdAt,
       };
@@ -71,16 +70,11 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       return;
     }
     const feeds = d.repo.listFeeds(targetUserId);
-    const webhooks = d.repo.listWebhooks(targetUserId);
-    const webhookMap = new Map(webhooks.map((w) => [w.id, w]));
 
     const feedDiagnostics = feeds.map((f) => {
-      const webhook = f.webhookId !== null && f.webhookId !== undefined ? webhookMap.get(f.webhookId) : null;
       const issues: string[] = [];
-      if (!f.channelId && (f.webhookId === null || f.webhookId === undefined)) {
+      if (!f.channelId) {
         issues.push('No Discord channel configured (entries will not be posted)');
-      } else if (!f.channelId && f.webhookId && !webhook) {
-        issues.push('Linked webhook does not exist');
       }
       if (!f.enabled) {
         issues.push('Feed is currently paused');
@@ -91,8 +85,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
 
       return {
         ...f,
-        webhookName: f.channelId ? `<#${f.channelId}>` : (webhook?.name ?? null),
-        webhookEnabled: f.channelId ? true : (webhook?.enabled ?? null),
+        channelName: f.channelId ? `<#${f.channelId}>` : null,
         issues,
       };
     });
@@ -105,12 +98,6 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
         role: targetUser.role,
       },
       feeds: feedDiagnostics,
-      webhooks: webhooks.map((w) => ({
-        id: w.id,
-        name: w.name,
-        enabled: Boolean(w.enabled),
-        createdAt: w.createdAt,
-      })),
     });
   });
 
@@ -144,8 +131,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       userEmail: string;
       userDisplayName: string;
       channelId: string | null;
-      webhookId: number | null;
-      webhookName: string | null;
+      channelName: string | null;
       enabled: boolean;
       lastCheckedAt: string | null;
       problems: Array<{
@@ -157,7 +143,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       }>;
     }> = [];
 
-    let missingWebhookCount = 0;
+    let missingChannelCount = 0;
     let disabledFeedCount = 0;
     let staleCount = 0;
 
@@ -167,9 +153,9 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       const userEmail = user ? user.email : `User #${feed.userId}`;
       const userDisplayName = user ? user.displayName : `User #${feed.userId}`;
 
-      let destinationName: string | null = feed.channelId ? `<#${feed.channelId}>` : null;
-      if (!feed.channelId && (feed.webhookId === null || feed.webhookId === undefined)) {
-        missingWebhookCount += 1;
+      const destinationName: string | null = feed.channelId ? `<#${feed.channelId}>` : null;
+      if (!feed.channelId) {
+        missingChannelCount += 1;
         feedProblems.push({
           type: 'missing_destination',
           severity: 'error',
@@ -177,11 +163,6 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
           description: 'This feed has no Discord channel selected. New feed entries will not be delivered.',
           recommendation: 'Select a target Discord channel for this feed so entries can be posted.',
         });
-      } else if (feed.webhookId) {
-        const webhook = d.repo.getWebhook(feed.userId, feed.webhookId);
-        if (webhook) {
-          destinationName = webhook.name;
-        }
       }
 
       if (!feed.enabled) {
@@ -224,8 +205,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
           userEmail,
           userDisplayName,
           channelId: feed.channelId,
-          webhookId: feed.webhookId ?? null,
-          webhookName: destinationName,
+          channelName: destinationName,
           enabled: Boolean(feed.enabled),
           lastCheckedAt: feed.lastCheckedAt,
           problems: feedProblems,
@@ -238,7 +218,8 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       issuesCount: issues.length,
       healthyFeedsCount: allFeeds.length - issues.length,
       stats: {
-        missingWebhookCount,
+        missingWebhookCount: missingChannelCount,
+        missingChannelCount,
         disabledFeedCount,
         staleCount,
       },
@@ -251,7 +232,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
         userId: f.userId,
         userEmail: userMap.get(f.userId)?.email ?? `User #${f.userId}`,
         enabled: Boolean(f.enabled),
-        webhookId: f.webhookId,
+        channelId: f.channelId,
         lastCheckedAt: f.lastCheckedAt,
       })),
     });

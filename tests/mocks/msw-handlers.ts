@@ -1,13 +1,9 @@
-import { http, HttpResponse } from 'msw';
+import { http, type HttpResponseResolver } from 'msw';
 
-export function discordWebhookHandler(response: () => Response | HttpResponse) {
-  return http.post(/https:\/\/discord\.com\/api\/webhooks\/.+/, response);
-}
-
-export function cloudflareTokenHandler(response: () => Response | HttpResponse) {
+export function cloudflareTokenHandler(response: HttpResponseResolver) {
   return http.post('https://api.cloudflare.com/client/v4/user/tokens/verify', response);
 }
 
-export function cloudflareBrowserRenderHandler(response: () => Response | HttpResponse) {
+export function cloudflareBrowserRenderHandler(response: HttpResponseResolver) {
   return http.post('https://api.cloudflare.com/client/v4/accounts/:accountId/browser-rendering/content', response);
 }

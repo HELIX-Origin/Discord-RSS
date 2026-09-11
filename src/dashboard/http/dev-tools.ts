@@ -1,9 +1,8 @@
 import type { AppDeps } from '../../app.js';
 import type { Router } from './router.js';
-import { readBodyJson, sendError, sendJson } from './helpers.js';
+import { sendError, sendJson } from './helpers.js';
 import { isAdminOrOwner, isOwnerUser, requireAdminOrOwner } from '../routes/shared.js';
 import { allBotCommands } from '../../bot/commands/index.js';
-import { sendWebhook } from '../../webhook/discord.js';
 
 export { isAdminOrOwner, isOwnerUser };
 
@@ -78,45 +77,6 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
     }
   });
 
-  router.add('POST', '/api/admin/test-webhook', async (req, res, _ctx, deps) => {
-    const userId = await requireAdminOrOwner(req, res, deps);
-    if (userId === null) return;
-
-    const body = (await readBodyJson(req)) as { url?: string; message?: string };
-    const url = body.url?.trim();
-    if (!url || !url.startsWith('https://discord.com/api/webhooks/')) {
-      sendError(res, 400, 'Invalid Discord webhook URL');
-      return;
-    }
-
-    const testPayload = {
-      username: 'HELIX Dev Tools',
-      content: body.message?.trim() || '🛠️ **HELIX RSS Dev Tools Test Notification**',
-      embeds: [
-        {
-          title: 'Webhook Diagnostic Test',
-          description: 'This test message was sent from the HELIX RSS Developer Tools page to verify delivery.',
-          color: 0x06b6d4,
-          timestamp: new Date().toISOString(),
-          footer: { text: 'HELIX RSS · Diagnostic Suite' },
-        },
-      ],
-    };
-
-    try {
-      const result = await sendWebhook(url, testPayload, deps.config.requestTimeoutMs);
-      if (result.ok) {
-        deps.repo.logActivity(userId, 'info', 'dev-tools', 'Test webhook message delivered successfully');
-        sendJson(res, 200, { ok: true, status: result.status, attempts: result.attempts });
-      } else {
-        deps.repo.logActivity(userId, 'warn', 'dev-tools', `Test webhook delivery failed: ${result.error}`);
-        sendJson(res, 400, { ok: false, error: result.error, status: result.status, attempts: result.attempts });
-      }
-    } catch (err) {
-      sendError(res, 500, err instanceof Error ? err.message : 'Failed to send webhook');
-    }
-  });
-
   router.add('POST', '/api/admin/db/optimize', async (req, res, _ctx, deps) => {
     const userId = await requireAdminOrOwner(req, res, deps);
     if (userId === null) return;
@@ -149,7 +109,7 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
 
     deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual feed poll triggered');
     deps.feeds
-      .pollAllFeeds()
+      .pollAllFeeds(true)
       .then(() => deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual feed poll completed'))
       .catch((err) =>
         deps.repo.logActivity(userId, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)),
@@ -214,14 +174,10 @@ export function renderDevToolsSection(canAccess: boolean): string {
         </div>
 
         <!-- Metric Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
           <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
             <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Feeds</div>
             <div id="dt-feed-count" class="text-xl font-bold text-white mt-1">-</div>
-          </div>
-          <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
-            <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Webhooks</div>
-            <div id="dt-webhook-count" class="text-xl font-bold text-white mt-1">-</div>
           </div>
           <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
             <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Users / Admins</div>
@@ -266,7 +222,7 @@ export function renderDevToolsSection(canAccess: boolean): string {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="p-4 rounded-xl bg-gray-900/90 border border-gray-800 space-y-2">
             <div class="text-xs font-semibold text-gray-300">Invite Bot to Server</div>
-            <p class="text-xs text-gray-400">Share this authorization link with server owners to install the bot with required slash command and webhook permissions.</p>
+            <p class="text-xs text-gray-400">Share this authorization link with server owners to install the bot with required slash command and channel message permissions.</p>
             <div class="flex items-center gap-2 pt-1">
               <a id="dt-bot-invite-btn" href="#" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-semibold transition inline-flex items-center gap-1.5 shrink-0">
                 <i class="fa-brands fa-discord"></i> Invite Bot
@@ -284,27 +240,6 @@ export function renderDevToolsSection(canAccess: boolean): string {
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Webhook Diagnostic Tester -->
-      <div class="glass rounded-2xl p-6 border border-gray-800 space-y-4">
-        <div>
-          <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-paper-plane text-blue-400"></i> Discord Webhook Diagnostic Tester
-          </h3>
-          <p class="text-xs text-gray-400 mt-0.5">Test webhook delivery and inspect raw Discord response headers and rate limits.</p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="md:col-span-2">
-            <input type="text" id="dt-test-webhook-url" placeholder="https://discord.com/api/webhooks/..." class="w-full bg-black/40 border border-gray-800 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
-          </div>
-          <div>
-            <button onclick="sendTestWebhook()" class="w-full h-full min-h-[42px] px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20">
-              <i class="fa-solid fa-paper-plane"></i> Send Test Notification
-            </button>
-          </div>
-        </div>
-        <div id="dt-webhook-test-result" class="hidden p-3 rounded-xl text-xs font-mono"></div>
       </div>
 
       <!-- Runtime Configuration & Activity -->
@@ -366,7 +301,6 @@ export function renderDevToolsScript(): string {
         if (statsRes.ok) {
           const stats = await statsRes.json();
           document.getElementById('dt-feed-count').textContent = stats.feedCount ?? 0;
-          document.getElementById('dt-webhook-count').textContent = stats.webhookCount ?? 0;
           document.getElementById('dt-users-count').textContent = (stats.userCount ?? 0) + ' (' + (stats.adminCount ?? 0) + ' admin)';
           document.getElementById('dt-db-size').textContent = Math.round((stats.dbSizeBytes ?? 0) / 1024) + ' KB';
           const mins = Math.floor((stats.processUptimeSeconds ?? 0) / 60);
@@ -478,34 +412,6 @@ export function renderDevToolsScript(): string {
         refreshDevTools();
       } else {
         alert(data.error || 'Failed to sync bot commands');
-      }
-    }
-
-    async function sendTestWebhook() {
-      const url = document.getElementById('dt-test-webhook-url').value.trim();
-      const resultBox = document.getElementById('dt-webhook-test-result');
-      if (!url) return alert('Enter a Discord webhook URL to test.');
-      resultBox.classList.remove('hidden', 'bg-green-950/60', 'bg-red-950/60', 'text-green-300', 'text-red-300', 'border-green-800', 'border-red-800');
-      resultBox.className = 'p-3 rounded-xl text-xs font-mono bg-gray-900 border border-gray-800 text-gray-400';
-      resultBox.textContent = 'Sending test notification...';
-
-      try {
-        const res = await fetch('/api/admin/test-webhook', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        const data = await res.json();
-        if (res.ok) {
-          resultBox.className = 'p-3 rounded-xl text-xs font-mono bg-green-950/60 border border-green-800 text-green-300';
-          resultBox.textContent = '✓ Webhook test succeeded! Status: ' + data.status + ' (Attempts: ' + data.attempts + ')';
-        } else {
-          resultBox.className = 'p-3 rounded-xl text-xs font-mono bg-red-950/60 border border-red-800 text-red-300';
-          resultBox.textContent = '✗ Webhook test failed: ' + (data.error || 'Unknown error');
-        }
-      } catch (err) {
-        resultBox.className = 'p-3 rounded-xl text-xs font-mono bg-red-950/60 border border-red-800 text-red-300';
-        resultBox.textContent = '✗ Network error: ' + err.message;
       }
     }
 

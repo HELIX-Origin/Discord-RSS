@@ -6,7 +6,6 @@ import { createLogger, type LogLevel } from '../util/logger.js';
 
 export interface DbStats {
   feedCount: number;
-  webhookCount: number;
   sentCount: number;
   dbSizeBytes: number;
   dbPath: string;
@@ -89,14 +88,12 @@ export class Database {
       return Number(row?.c ?? 0);
     };
     const feedCount = count('SELECT COUNT(*) AS c FROM feeds');
-    const webhookCount = count('SELECT COUNT(*) AS c FROM webhooks');
     const sentCount = count('SELECT COUNT(*) AS c FROM sent_entries');
     const pageRow = this.db.prepare('PRAGMA page_count').get() as { page_count?: number | bigint } | undefined;
     const pageSizeRow = this.db.prepare('PRAGMA page_size').get() as { page_size?: number | bigint } | undefined;
     const sizeBytes = Number(pageRow?.page_count ?? 0) * Number(pageSizeRow?.page_size ?? 4096);
     return {
       feedCount,
-      webhookCount,
       sentCount,
       dbSizeBytes: sizeBytes,
       dbPath: this.dbPathValue,

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { buildAppDeps, type BuiltAppDeps } from '../../helpers/app-deps.js';
 import { DiscordBot } from '../../../src/bot/bot.js';
 import { ApplicationCommandOptionType, InteractionType, type DiscordInteraction } from '../../../src/bot/types.js';
-import { startRssServer, startWebhookServer } from '../../mocks/rss-server.js';
+import { startRssServer } from '../../mocks/rss-server.js';
 
 const SAMPLE_RSS = `<?xml version="1.0"?>
 <rss version="2.0">
@@ -23,10 +23,9 @@ describe('DiscordBot Integration', () => {
   let ctx: BuiltAppDeps;
   let bot: DiscordBot;
   let rss: Awaited<ReturnType<typeof startRssServer>>;
-  let webhook: Awaited<ReturnType<typeof startWebhookServer>>;
 
   beforeAll(async () => {
-    [rss, webhook] = await Promise.all([startRssServer(SAMPLE_RSS), startWebhookServer()]);
+    rss = await startRssServer(SAMPLE_RSS);
     ctx = await buildAppDeps({
       config: {
         botToken: 'mock-bot-token',
@@ -45,7 +44,6 @@ describe('DiscordBot Integration', () => {
   afterAll(async () => {
     bot.stop();
     rss.close();
-    webhook.close();
     await ctx.cleanup();
   });
 
@@ -145,7 +143,7 @@ describe('DiscordBot Integration', () => {
     });
 
     vi.spyOn(httpBot.rest, 'getCurrentApplication').mockResolvedValue({ id: 'mock-client', name: 'TestBot' });
-    vi.spyOn(httpBot.rest, 'registerGlobalCommands').mockResolvedValue(0);
+    vi.spyOn(httpBot.rest, 'registerGlobalCommands').mockResolvedValue(undefined);
     vi.spyOn(httpBot['gateway'], 'connect').mockImplementation(() => {});
 
     await httpBot.start();

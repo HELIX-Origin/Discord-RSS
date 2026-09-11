@@ -29,17 +29,12 @@ describe('Presets API', () => {
   });
 
   it('marks preset as alreadyAdded after adding it as a feed', async () => {
-    const webhook = await client.post('/api/webhooks', {
-      name: 'discord',
-      url: 'https://discord.com/api/webhooks/1/token',
-    });
-    const webhookId = (webhook.body as { id: number }).id;
     const preset = FEED_PRESETS[0];
 
     const create = await client.post('/api/feeds', {
       name: preset.name,
       url: preset.url,
-      webhookId,
+      channelId: '123456789012345678',
       feedType: 'rss',
     });
     expect(create.status).toBe(201);

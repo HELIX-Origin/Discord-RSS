@@ -35,11 +35,11 @@ describe('Feeds API', () => {
     expect((list.body as Array<{ name: string }>).length).toBe(1);
   });
 
-  it('rejects feed creation with nonexistent webhook id', async () => {
+  it('rejects feed creation without name or url', async () => {
     const res = await client.post('/api/feeds', {
-      name: 'My Feed',
+      name: '',
       url: 'https://example.com/feed.xml',
-      webhookId: 999,
+      channelId: '123456789012345678',
       feedType: 'rss',
     });
     expect(res.status).toBe(400);

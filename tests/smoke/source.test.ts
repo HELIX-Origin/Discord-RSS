@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll, afterAll } from 'vitest';
-import { startRssServer, startWebhookServer } from '../mocks/rss-server.js';
+import { startRssServer } from '../mocks/rss-server.js';
 import { buildAppDeps } from '../helpers/app-deps.js';
 import { startAppServer } from '../helpers/server.js';
 import { TestClient } from '../helpers/http-client.js';
@@ -20,13 +20,12 @@ const RSS = `<?xml version="1.0"?>
 
 describe('source smoke', () => {
   let rss: Awaited<ReturnType<typeof startRssServer>>;
-  let webhook: Awaited<ReturnType<typeof startWebhookServer>>;
   let client: TestClient;
   let cleanup: () => Promise<void>;
   const deliveries: Array<{ channelId: string; payload: unknown }> = [];
 
   beforeAll(async () => {
-    [rss, webhook] = await Promise.all([startRssServer(RSS), startWebhookServer()]);
+    rss = await startRssServer(RSS);
     const ctx = await buildAppDeps();
     cleanup = ctx.cleanup;
     const server = await startAppServer(ctx.deps);
@@ -40,7 +39,6 @@ describe('source smoke', () => {
 
   afterAll(async () => {
     rss.close();
-    webhook.close();
     await cleanup();
   });
 

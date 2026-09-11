@@ -64,7 +64,6 @@ erDiagram
     USERS ||--o{ SESSIONS : "has"
     USERS ||--o{ OAUTH_CONNECTIONS : "owns"
     USERS ||--o{ FEEDS : "creates"
-    USERS ||--o{ WEBHOOKS : "manages"
     USERS ||--o{ ACTIVITY_LOG : "generates"
 
     USERS {
@@ -101,7 +100,6 @@ erDiagram
         text name
         text url
         text channel_id
-        integer webhook_id
         text feed_type
         text scrape_config
         integer enabled
