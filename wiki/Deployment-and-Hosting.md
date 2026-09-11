@@ -211,36 +211,32 @@ npm run build
 ```
 
 #### Step 3: Run as a 24/7 systemd Service
-Create the service unit file:
+
+You can either run the automated installer script included in the repository or manually copy the included `helix-rss.service` file.
+
+##### Option A: Automated Installer (Recommended)
 ```bash
-sudo tee /etc/systemd/system/helix-rss.service << 'EOF'
-[Unit]
-Description=HELIX RSS Daemon
-After=network.target
-
-[Service]
-Type=simple
-User=ubuntu
-WorkingDirectory=/opt/helix-rss
-ExecStart=/usr/bin/npm start
-Restart=always
-RestartSec=10
-EnvironmentFile=/opt/helix-rss/.env
-AmbientCapabilities=CAP_NET_BIND_SERVICE
-
-[Install]
-WantedBy=multi-user.target
-EOF
+sudo ./scripts/install-service.sh
 ```
 
-Enable and start the service:
+##### Option B: Manual Setup
+Copy the pre-configured service unit:
 ```bash
+sudo cp helix-rss.service /etc/systemd/system/helix-rss.service
 sudo systemctl daemon-reload
 sudo systemctl enable --now helix-rss
+```
 
-# Check service status and logs
+##### Managing the Service:
+```bash
+# Check service status
 sudo systemctl status helix-rss
+
+# Stream live service logs
 sudo journalctl -u helix-rss -f
+
+# Restart the service
+sudo systemctl restart helix-rss
 ```
 
 ---

@@ -53,6 +53,12 @@ HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy r
    npm start
    ```
 
+4. **(Optional) Run 24/7 as a Linux systemd Service:**
+
+   ```bash
+   sudo ./scripts/install-service.sh
+   ```
+
 > 📖 For a detailed setup guide covering Linux systemd services, Windows services, and Docker Compose, see the [Deployment & Hosting Wiki Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting).
 
 ### 🌐 Recommended Low-Cost Compatible VPS Providers

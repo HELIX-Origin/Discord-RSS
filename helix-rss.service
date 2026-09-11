@@ -1,0 +1,35 @@
+[Unit]
+Description=HELIX RSS - 24/7 Self-Hosted Discord RSS/Atom Bot & Dashboard
+Documentation=https://github.com/HELIX-Origin/HELIX-RSS/wiki
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/opt/helix-rss
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10
+TimeoutStopSec=20
+
+# Environment and capability bindings
+Environment=NODE_ENV=production
+EnvironmentFile=-/opt/helix-rss/.env
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+
+# Security & Sandboxing hardening
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/opt/helix-rss/data
+
+# Logging configuration
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=helix-rss
+
+[Install]
+WantedBy=multi-user.target
