@@ -17,8 +17,8 @@ HELIX RSS includes a built-in, native Discord Bot that connects directly to the 
    - Enable **Server Members Intent** and **Message Content Intent** if using extended member lookup.
 6. Under **OAuth2** -> **URL Generator**:
    - Select Scopes: `bot`, `applications.commands`
-   - Select Bot Permissions: `Manage Webhooks`, `Send Messages`, `Embed Links`, `View Channels`, `Read Message History` (or `Administrator`).
-   - Copy the generated URL and save it as `DISCORD_REDIRECT_URL` in `.env`.
+    - Select Bot Permissions: `Send Messages`, `Embed Links`, `View Channels`, `Read Message History` (or `Administrator`).
+    - Copy the generated URL and save it as `DISCORD_REDIRECT_URL` in `.env`.
 
 ---
 
@@ -43,27 +43,20 @@ All commands are registered globally and available in any Discord server where t
 
 | Subcommand     | Arguments                                                                                                  | Description                                                                                          |
 | -------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `/feed add`    | `name` (required)<br>`url` (required)<br>`channel` (optional)<br>`feed_type` (optional: `rss` or `scrape`) | Adds a new feed. If `channel` is specified, the bot automatically creates a webhook in that channel. |
+| `/feed add`    | `name` (required)<br>`url` (required)<br>`channel` (optional)<br>`feed_type` (optional: `rss` or `scrape`) | Adds a new feed. Posts updates directly to the specified channel (or the current channel if omitted). |
 | `/feed list`   | _none_                                                                                                     | Displays all feeds configured for this Discord server.                                               |
 | `/feed remove` | `id` (required, feed ID or name)                                                                           | Removes the feed subscription.                                                                       |
 | `/feed poll`   | `id` (required, feed ID or name)                                                                           | Manually triggers an immediate poll of the feed.                                                     |
 | `/feed toggle` | `id` (required)<br>`enabled` (true/false)                                                                  | Enables or pauses automatic polling for the feed.                                                    |
 
-### `/webhook` — Webhook Management
-
-| Subcommand        | Arguments                                 | Description                                           |
-| ----------------- | ----------------------------------------- | ----------------------------------------------------- |
-| `/webhook create` | `name` (required)<br>`channel` (required) | Generates and registers a new channel webhook.        |
-| `/webhook list`   | _none_                                    | Lists all webhooks registered for the current server. |
-
 ### `/monitor` — Website Uptime Monitors
 
-| Subcommand        | Arguments                                                     | Description                                                                       |
-| ----------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `/monitor add`    | `name` (required)<br>`url` (required)<br>`channel` (optional) | Registers a website URL to monitor for uptime.                                    |
-| `/monitor list`   | _none_                                                        | Lists all website monitors and their current statuses (Online / Down / Degraded). |
-| `/monitor remove` | `id` (required, monitor ID or name)                           | Deletes a status monitor.                                                         |
-| `/monitor check`  | `id` (required, monitor ID or name)                           | Executes an on-demand HTTP health check.                                          |
+| Subcommand        | Arguments                                                     | Description                                                                                         |
+| ----------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `/monitor add`    | `name` (required)<br>`url` (required)<br>`channel` (optional) | Registers a website URL to monitor for uptime. Alerts post directly to the channel.                |
+| `/monitor list`   | _none_                                                        | Lists all website monitors and their current statuses (Online / Down / Degraded).                   |
+| `/monitor remove` | `id` (required, monitor ID or name)                           | Deletes a status monitor.                                                                           |
+| `/monitor check`  | `id` (required, monitor ID or name)                           | Executes an on-demand HTTP health check.                                                            |
 
 ### `/stats` — System Health & Diagnostics
 

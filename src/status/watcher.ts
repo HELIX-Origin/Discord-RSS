@@ -3,6 +3,7 @@ import type { RedisCoordinator } from '../state/redis.js';
 import { fetchRaw } from '../feed/fetch.js';
 import { feedEmbed, sendWebhook } from '../webhook/discord.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
+import type { ChannelMessageSender } from '../feed/watcher.js';
 
 type SiteStatus = 'online' | 'down' | 'unknown';
 
@@ -17,8 +18,13 @@ export class StatusWatcher {
     private readonly repo: Repository,
     private readonly redis: RedisCoordinator | null = null,
     logLevel?: LogLevel,
+    private bot?: ChannelMessageSender | null,
   ) {
     this.logger = createLogger('status', logLevel);
+  }
+
+  setBot(bot: ChannelMessageSender | null): void {
+    this.bot = bot;
   }
 
   async checkMonitor(userId: number, monitorId: number): Promise<void> {
@@ -38,7 +44,14 @@ export class StatusWatcher {
 
   private async checkMonitorLocked(
     userId: number,
-    monitor: { id: number; name: string; url: string; status: string; webhookId: number | null },
+    monitor: {
+      id: number;
+      name: string;
+      url: string;
+      status: string;
+      channelId?: string | null;
+      webhookId?: number | null;
+    },
   ): Promise<void> {
     let newStatus: SiteStatus;
     let detail: string;
@@ -72,13 +85,14 @@ export class StatusWatcher {
 
   private async notifyTransition(
     userId: number,
-    monitor: { name: string; url: string; webhookId: number | null },
+    monitor: { name: string; url: string; channelId?: string | null; webhookId?: number | null },
     previous: string,
     current: string,
     detail: string,
   ): Promise<void> {
+    const targetChannelId = monitor.channelId;
     const webhook = monitor.webhookId ? this.repo.getWebhook(userId, monitor.webhookId) : null;
-    if (!webhook || webhook.enabled === 0) return;
+    if (!targetChannelId && (!webhook || webhook.enabled === 0)) return;
 
     const isDown = current === 'down';
     const title = isDown ? `⛔ ${monitor.name} went down` : `✅ ${monitor.name} is back online`;
@@ -92,27 +106,45 @@ export class StatusWatcher {
       color: isDown ? 0xef4444 : 0x22c55e,
     });
 
-    const result = await sendWebhook(webhook.url, {
-      username: 'Status Monitor',
-      embeds: [embed],
-    });
+    if (targetChannelId && this.bot) {
+      try {
+        await this.bot.sendChannelMessage(targetChannelId, { embeds: [embed] });
+        this.logger.info('Status transition notified via bot', {
+          monitorName: monitor.name,
+          channelId: targetChannelId,
+          previous,
+          current,
+        });
+      } catch (err) {
+        this.logger.warn('Status transition bot delivery failed', {
+          monitorName: monitor.name,
+          channelId: targetChannelId,
+          err: err instanceof Error ? err.message : String(err),
+        });
+      }
+    } else if (webhook && webhook.enabled !== 0) {
+      const result = await sendWebhook(webhook.url, {
+        username: 'Status Monitor',
+        embeds: [embed],
+      });
 
-    if (!result.ok) {
-      this.logger.warn('Status transition notification failed', {
-        monitorName: monitor.name,
-        url: monitor.url,
-        previous,
-        current,
-        attempts: result.attempts,
-        error: result.error,
-      });
-    } else {
-      this.logger.info('Status transition notified', {
-        monitorName: monitor.name,
-        url: monitor.url,
-        previous,
-        current,
-      });
+      if (!result.ok) {
+        this.logger.warn('Status transition notification failed', {
+          monitorName: monitor.name,
+          url: monitor.url,
+          previous,
+          current,
+          attempts: result.attempts,
+          error: result.error,
+        });
+      } else {
+        this.logger.info('Status transition notified', {
+          monitorName: monitor.name,
+          url: monitor.url,
+          previous,
+          current,
+        });
+      }
     }
   }
 }

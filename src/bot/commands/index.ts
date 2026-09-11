@@ -7,16 +7,10 @@ import {
   type InteractionResponse,
 } from '../types.js';
 import { feedCommandDef, handleFeedCommand } from './feed.js';
-import { handleWebhookCommand, webhookCommandDef } from './webhook.js';
 import { handleMonitorCommand, monitorCommandDef } from './monitor.js';
 import { handleStatsCommand, statsCommandDef } from './stats.js';
 
-export const allBotCommands: ApplicationCommand[] = [
-  feedCommandDef,
-  webhookCommandDef,
-  monitorCommandDef,
-  statsCommandDef,
-];
+export const allBotCommands: ApplicationCommand[] = [feedCommandDef, monitorCommandDef, statsCommandDef];
 
 export async function dispatchInteraction(
   interaction: DiscordInteraction,
@@ -28,8 +22,6 @@ export async function dispatchInteraction(
   switch (commandName) {
     case 'feed':
       return handleFeedCommand(interaction, deps, rest);
-    case 'webhook':
-      return handleWebhookCommand(interaction, deps, rest);
     case 'monitor':
       return handleMonitorCommand(interaction, deps, rest);
     case 'stats':

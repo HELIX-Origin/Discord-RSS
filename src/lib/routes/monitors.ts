@@ -24,33 +24,15 @@ export function registerMonitorsRoutes(router: Router<AppDeps>): void {
     if (!name || !url) return sendError(res, 400, 'name and url are required');
     if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
 
-    let resolvedWebhookId: number | null = body.webhookId ?? null;
+    const channelId = body.channelId?.trim() || null;
+    const webhookId = body.webhookId ?? null;
 
-    if (!resolvedWebhookId && body.channelId?.trim()) {
-      if (!d.bot) {
-        return sendError(res, 400, 'Discord bot is not running. Cannot auto-provision channel webhook.');
-      }
-      try {
-        const wh = await d.bot.createChannelWebhook(body.channelId.trim(), `HELIX - ${name}`);
-        const savedWh = d.repo.addWebhook(userId, wh.name, wh.url);
-        d.repo.logActivity(
-          userId,
-          'info',
-          'webhooks',
-          `Auto-provisioned Discord webhook "${savedWh.name}" for monitor "${name}"`,
-        );
-        resolvedWebhookId = savedWh.id;
-      } catch (err) {
-        return sendError(
-          res,
-          400,
-          err instanceof Error ? err.message : 'Failed to auto-create Discord channel webhook',
-        );
-      }
+    if (webhookId !== null && !d.repo.getWebhook(userId, webhookId)) {
+      return sendError(res, 400, 'Webhook not found');
     }
 
     try {
-      const monitor = d.repo.addMonitor(userId, name, url, resolvedWebhookId);
+      const monitor = d.repo.addMonitor(userId, name, url, channelId || webhookId);
       sendJson(res, 201, monitor);
     } catch (err) {
       sendError(res, 409, err instanceof Error ? err.message : 'Failed to add monitor');
@@ -64,12 +46,14 @@ export function registerMonitorsRoutes(router: Router<AppDeps>): void {
     const body = (await readBodyJson(req)) as {
       name?: string;
       url?: string;
+      channelId?: string | null;
       webhookId?: number | null;
       enabled?: boolean;
     };
     const monitor = d.repo.updateMonitor(userId, id, {
       name: body.name?.trim(),
       url: body.url?.trim(),
+      channelId: body.channelId !== undefined ? body.channelId?.trim() || null : undefined,
       webhookId: body.webhookId,
       enabled: body.enabled === undefined ? undefined : body.enabled ? 1 : 0,
     });

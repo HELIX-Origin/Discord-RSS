@@ -166,17 +166,23 @@ export class Repository {
     userId: number,
     name: string,
     url: string,
-    webhookId: number | null,
+    channelIdOrWebhookId: string | number | null,
     feedType: 'rss' | 'scrape',
     scrape: Feed['scrape'],
   ): Feed {
-    return this.feeds.addFeed(userId, name, url, webhookId, feedType, scrape);
+    return this.feeds.addFeed(userId, name, url, channelIdOrWebhookId, feedType, scrape);
   }
 
   updateFeed(
     userId: number,
     id: number,
-    fields: { name?: string; url?: string; webhookId?: number | null; enabled?: number },
+    fields: {
+      name?: string;
+      url?: string;
+      channelId?: string | null;
+      webhookId?: number | null;
+      enabled?: number;
+    },
   ): Feed | null {
     return this.feeds.updateFeed(userId, id, fields);
   }
@@ -237,14 +243,20 @@ export class Repository {
     return this.monitors.listMonitorsForAllUsers();
   }
 
-  addMonitor(userId: number, name: string, url: string, webhookId: number | null): SiteMonitor {
-    return this.monitors.addMonitor(userId, name, url, webhookId);
+  addMonitor(userId: number, name: string, url: string, channelIdOrWebhookId: string | number | null): SiteMonitor {
+    return this.monitors.addMonitor(userId, name, url, channelIdOrWebhookId);
   }
 
   updateMonitor(
     userId: number,
     id: number,
-    fields: { name?: string; url?: string; webhookId?: number | null; enabled?: number },
+    fields: {
+      name?: string;
+      url?: string;
+      channelId?: string | null;
+      webhookId?: number | null;
+      enabled?: number;
+    },
   ): SiteMonitor | null {
     return this.monitors.updateMonitor(userId, id, fields);
   }

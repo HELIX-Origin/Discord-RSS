@@ -24,7 +24,7 @@ Unlike noisy monitors that post messages on every ping, HELIX RSS employs **tran
    - **Name**: e.g., `Main API Server`
    - **Target URL**: e.g., `https://api.example.com/health`
    - **Expected Status Code**: e.g., `200`
-   - **Notification Webhook**: The Discord webhook that receives alerts when an outage or recovery occurs.
+   - **Notification Channel**: The Discord channel that receives alerts when an outage or recovery occurs.
 4. Click **Save Monitor**.
 
 ### Via Discord Slash Command

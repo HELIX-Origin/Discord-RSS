@@ -27,22 +27,26 @@ export class FeedRepository {
     userId: number,
     name: string,
     url: string,
-    webhookId: number | null,
+    channelIdOrWebhookId: string | number | null,
     feedType: 'rss' | 'scrape',
     scrape: Feed['scrape'],
   ): Feed {
     if (feedType === 'scrape' && !scrape) {
       throw new Error('Scrape feeds require a scrape configuration');
     }
+    const channelId = typeof channelIdOrWebhookId === 'string' ? channelIdOrWebhookId : null;
+    const webhookId = typeof channelIdOrWebhookId === 'number' ? channelIdOrWebhookId : null;
+
     const result = this.db.raw
       .prepare(
-        `INSERT INTO feeds (user_id, name, url, webhook_id, feed_type, scrape_item, scrape_title, scrape_link, scrape_description, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO feeds (user_id, name, url, channel_id, webhook_id, feed_type, scrape_item, scrape_title, scrape_link, scrape_description, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         userId,
         name,
         url,
+        channelId,
         webhookId,
         feedType,
         scrape && feedType === 'scrape' ? scrape.item : null,
@@ -56,6 +60,7 @@ export class FeedRepository {
       userId,
       name,
       url,
+      channelId,
       webhookId,
       enabled: 1,
       feedType,
@@ -71,7 +76,13 @@ export class FeedRepository {
   updateFeed(
     userId: number,
     id: number,
-    fields: { name?: string; url?: string; webhookId?: number | null; enabled?: number },
+    fields: {
+      name?: string;
+      url?: string;
+      channelId?: string | null;
+      webhookId?: number | null;
+      enabled?: number;
+    },
   ): Feed | null {
     const current = this.state.getFeed(userId, id);
     if (!current) return null;
@@ -79,12 +90,23 @@ export class FeedRepository {
       ...current,
       name: fields.name ?? current.name,
       url: fields.url ?? current.url,
-      webhookId: fields.webhookId ?? current.webhookId,
+      channelId: fields.channelId !== undefined ? fields.channelId : current.channelId,
+      webhookId: fields.webhookId !== undefined ? fields.webhookId : current.webhookId,
       enabled: fields.enabled ?? current.enabled,
     };
     this.db.raw
-      .prepare('UPDATE feeds SET name = ?, url = ?, webhook_id = ?, enabled = ? WHERE id = ? AND user_id = ?')
-      .run(updated.name, updated.url, updated.webhookId, updated.enabled, id, userId);
+      .prepare(
+        'UPDATE feeds SET name = ?, url = ?, channel_id = ?, webhook_id = ?, enabled = ? WHERE id = ? AND user_id = ?',
+      )
+      .run(
+        updated.name,
+        updated.url,
+        updated.channelId ?? null,
+        updated.webhookId ?? null,
+        updated.enabled,
+        id,
+        userId,
+      );
     this.state.putFeed(updated);
     return updated;
   }

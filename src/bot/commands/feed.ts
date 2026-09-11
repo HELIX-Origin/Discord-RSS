@@ -128,7 +128,7 @@ export async function handleFeedCommand(
 
   switch (subCommand.name) {
     case 'add':
-      return handleAdd(subCommand.options ?? [], user.id, guildId, deps, rest);
+      return handleAdd(subCommand.options ?? [], user.id, guildId, deps, rest, interaction);
     case 'list':
       return handleList(user.id, deps);
     case 'remove':
@@ -151,10 +151,12 @@ async function handleAdd(
   guildId: string,
   deps: AppDeps,
   rest: DiscordRestClient,
+  interaction: DiscordInteraction,
 ): Promise<InteractionResponse> {
   const name = String(options.find((o) => o.name === 'name')?.value ?? '').trim();
   const url = String(options.find((o) => o.name === 'url')?.value ?? '').trim();
-  const channelId = options.find((o) => o.name === 'channel')?.value as string | undefined;
+  const channelOption = options.find((o) => o.name === 'channel')?.value as string | undefined;
+  const targetChannelId = channelOption || interaction.channel_id || null;
   const feedType = (options.find((o) => o.name === 'feed_type')?.value as 'rss' | 'scrape') ?? 'rss';
 
   if (!name || !url) {
@@ -164,41 +166,8 @@ async function handleAdd(
     };
   }
 
-  let webhookId: number | null = null;
-  let webhookName = 'None';
-
-  if (channelId) {
-    try {
-      const webhookPayload = await rest.createChannelWebhook(
-        channelId,
-        `RSS: ${name.slice(0, 75)}`,
-        'Automated webhook created by Discord RSS Bot for feed updates',
-      );
-      if (webhookPayload.url) {
-        const createdWebhook = deps.repo.addWebhook(userId, `discord-${name}`, webhookPayload.url);
-        webhookId = createdWebhook.id;
-        webhookName = `<#${channelId}>`;
-      }
-    } catch (err) {
-      return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          flags: 64,
-          content: `⚠️ Failed to create webhook in channel <#${channelId}>: ${(err as Error).message}. Please ensure the bot has 'Manage Webhooks' permission in that channel.`,
-        },
-      };
-    }
-  } else {
-    // If no channel given, check if a webhook exists
-    const userWebhooks = deps.repo.listWebhooks(userId);
-    if (userWebhooks.length > 0) {
-      webhookId = userWebhooks[0]!.id;
-      webhookName = userWebhooks[0]!.name;
-    }
-  }
-
   try {
-    const feed = deps.repo.addFeed(userId, name, url, webhookId, feedType, null);
+    const feed = deps.repo.addFeed(userId, name, url, targetChannelId, feedType, null);
     deps.repo.logActivity(userId, 'info', 'bot', `Added feed "${name}" via Discord bot`);
 
     return {
@@ -212,11 +181,15 @@ async function handleAdd(
               { name: 'Feed Name', value: feed.name, inline: true },
               { name: 'Feed ID', value: `#${feed.id}`, inline: true },
               { name: 'Type', value: feed.feedType.toUpperCase(), inline: true },
-              { name: 'Target Webhook / Channel', value: webhookName, inline: true },
+              {
+                name: 'Target Channel',
+                value: targetChannelId ? `<#${targetChannelId}>` : 'None',
+                inline: true,
+              },
               { name: 'Feed URL', value: `\`${feed.url}\``, inline: false },
             ],
             footer: {
-              text: 'HELIX RSS • Synchronized with Dashboard',
+              text: 'HELIX RSS • Direct Bot Delivery',
             },
             timestamp: new Date().toISOString(),
           },
@@ -233,7 +206,6 @@ async function handleAdd(
 
 function handleList(userId: number, deps: AppDeps): InteractionResponse {
   const feeds = deps.repo.listFeeds(userId);
-  const webhooks = deps.repo.listWebhooks(userId);
 
   if (feeds.length === 0) {
     return {
@@ -251,12 +223,12 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
   }
 
   const fields = feeds.slice(0, 25).map((f) => {
-    const wh = webhooks.find((w) => w.id === f.webhookId);
     const status = f.enabled ? '🟢 Enabled' : '⏸️ Paused';
     const lastChecked = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never';
+    const target = f.channelId ? `<#${f.channelId}>` : 'None';
     return {
       name: `#${f.id} — ${f.name} (${status})`,
-      value: `**URL:** \`${f.url}\`\n**Webhook:** ${wh ? wh.name : 'None'}\n**Last Checked:** ${lastChecked}`,
+      value: `**URL:** \`${f.url}\`\n**Channel:** ${target}\n**Last Checked:** ${lastChecked}`,
       inline: false,
     };
   });

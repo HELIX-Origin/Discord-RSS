@@ -8,6 +8,10 @@ import { scrapeItems, absoluteUrl } from './scraper.js';
 import { feedEmbed, sendWebhook } from '../webhook/discord.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
 
+export interface ChannelMessageSender {
+  sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void>;
+}
+
 export class FeedWatcher {
   private readonly logger;
 
@@ -15,8 +19,13 @@ export class FeedWatcher {
     private readonly repo: Repository,
     private readonly redis: RedisCoordinator | null = null,
     logLevel?: LogLevel,
+    private bot?: ChannelMessageSender | null,
   ) {
     this.logger = createLogger('feed', logLevel);
+  }
+
+  setBot(bot: ChannelMessageSender | null): void {
+    this.bot = bot;
   }
 
   async pollFeed(userId: number, feedId: number): Promise<void> {
@@ -36,9 +45,13 @@ export class FeedWatcher {
   }
 
   private async pollFeedLocked(userId: number, feed: Feed): Promise<void> {
+    const targetChannelId = feed.channelId;
     const webhook = feed.webhookId ? this.repo.getWebhook(userId, feed.webhookId) : null;
-    if (!webhook || webhook.enabled === 0) {
-      this.logger.warn('Feed has no enabled webhook; skipping poll', { feedId: feed.id, feedName: feed.name });
+    if (!targetChannelId && (!webhook || webhook.enabled === 0)) {
+      this.logger.warn('Feed has no configured Discord channel or enabled webhook; skipping poll', {
+        feedId: feed.id,
+        feedName: feed.name,
+      });
       return;
     }
 
@@ -126,21 +139,42 @@ export class FeedWatcher {
         color: 0x06b6d4,
       });
 
-      const result = await sendWebhook(webhook.url, {
-        username: feed.name.slice(0, 80),
-        embeds: [embed],
-      });
+      let delivered = false;
+      let errorDetail: string | null = null;
 
-      if (result.ok) {
+      if (targetChannelId && this.bot) {
+        try {
+          await this.bot.sendChannelMessage(targetChannelId, { embeds: [embed] });
+          delivered = true;
+        } catch (err) {
+          errorDetail = err instanceof Error ? err.message : String(err);
+        }
+      } else if (webhook && webhook.enabled !== 0) {
+        const result = await sendWebhook(webhook.url, {
+          username: feed.name.slice(0, 80),
+          embeds: [embed],
+        });
+        delivered = result.ok;
+        if (!result.ok) {
+          errorDetail = result.error;
+        }
+      } else if (targetChannelId && !this.bot) {
+        this.logger.warn('Discord bot is offline; skipping channel message delivery', {
+          feedId: feed.id,
+          channelId: targetChannelId,
+        });
+        break;
+      }
+
+      if (delivered) {
         this.repo.markEntrySent(feed.id, entry.guid);
         await this.redis?.markEntrySent(feed.id, entry.guid);
       } else {
-        this.logger.warn('Webhook delivery failed for feed entry', {
+        this.logger.warn('Delivery failed for feed entry', {
           feedId: feed.id,
           feedName: feed.name,
           entryGuid: entry.guid,
-          attempts: result.attempts,
-          error: result.error,
+          error: errorDetail,
         });
         break;
       }

@@ -38,33 +38,10 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     if (!name || !url) return sendError(res, 400, 'name and url are required');
     if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
 
-    let resolvedWebhookId: number | null = body.webhookId ?? null;
+    const channelId = body.channelId?.trim() || null;
+    const webhookId = body.webhookId ?? null;
 
-    // If channelId is provided and no webhookId, auto-provision Discord webhook via bot
-    if (!resolvedWebhookId && body.channelId?.trim()) {
-      if (!d.bot) {
-        return sendError(res, 400, 'Discord bot is not running. Cannot auto-provision channel webhook.');
-      }
-      try {
-        const wh = await d.bot.createChannelWebhook(body.channelId.trim(), `HELIX - ${name}`);
-        const savedWh = d.repo.addWebhook(userId, wh.name, wh.url);
-        d.repo.logActivity(
-          userId,
-          'info',
-          'webhooks',
-          `Auto-provisioned Discord webhook "${savedWh.name}" for feed "${name}"`,
-        );
-        resolvedWebhookId = savedWh.id;
-      } catch (err) {
-        return sendError(
-          res,
-          400,
-          err instanceof Error ? err.message : 'Failed to auto-create Discord channel webhook',
-        );
-      }
-    }
-
-    if (resolvedWebhookId !== null && !d.repo.getWebhook(userId, resolvedWebhookId)) {
+    if (webhookId !== null && !d.repo.getWebhook(userId, webhookId)) {
       return sendError(res, 400, 'Webhook not found');
     }
 
@@ -79,7 +56,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
               description: body.scrape.description?.trim() || undefined,
             }
           : null;
-      const feed = d.repo.addFeed(userId, name, url, resolvedWebhookId, feedType, scrape);
+      const feed = d.repo.addFeed(userId, name, url, channelId || webhookId, feedType, scrape);
       d.repo.logActivity(userId, 'info', 'feeds', `Added ${feedType === 'scrape' ? 'scrape ' : ''}feed "${feed.name}"`);
       sendJson(res, 201, feed);
     } catch (err) {
@@ -94,12 +71,14 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const body = (await readBodyJson(req)) as {
       name?: string;
       url?: string;
+      channelId?: string | null;
       webhookId?: number | null;
       enabled?: boolean;
     };
     const feed = d.repo.updateFeed(userId, id, {
       name: body.name?.trim(),
       url: body.url?.trim(),
+      channelId: body.channelId !== undefined ? body.channelId?.trim() || null : undefined,
       webhookId: body.webhookId,
       enabled: body.enabled === undefined ? undefined : body.enabled ? 1 : 0,
     });

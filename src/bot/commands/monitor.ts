@@ -96,7 +96,7 @@ export async function handleMonitorCommand(
 
   switch (subCommand.name) {
     case 'add':
-      return handleAdd(subCommand.options ?? [], user.id, deps, rest);
+      return handleAdd(subCommand.options ?? [], user.id, deps, rest, interaction);
     case 'list':
       return handleList(user.id, deps);
     case 'remove':
@@ -116,10 +116,12 @@ async function handleAdd(
   userId: number,
   deps: AppDeps,
   rest: DiscordRestClient,
+  interaction: DiscordInteraction,
 ): Promise<InteractionResponse> {
   const name = String(options.find((o) => o.name === 'name')?.value ?? '').trim();
   const url = String(options.find((o) => o.name === 'url')?.value ?? '').trim();
-  const channelId = options.find((o) => o.name === 'channel')?.value as string | undefined;
+  const channelOption = options.find((o) => o.name === 'channel')?.value as string | undefined;
+  const targetChannelId = channelOption || interaction.channel_id || null;
 
   if (!name || !url) {
     return {
@@ -128,34 +130,8 @@ async function handleAdd(
     };
   }
 
-  let webhookId: number | null = null;
-  let webhookName = 'None';
-
-  if (channelId) {
-    try {
-      const webhookPayload = await rest.createChannelWebhook(
-        channelId,
-        `Status: ${name.slice(0, 75)}`,
-        'Automated webhook created by HELIX RSS Bot for status alerts',
-      );
-      if (webhookPayload.url) {
-        const createdWebhook = deps.repo.addWebhook(userId, `status-${name}`, webhookPayload.url);
-        webhookId = createdWebhook.id;
-        webhookName = `<#${channelId}>`;
-      }
-    } catch (err) {
-      return {
-        type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-        data: {
-          flags: 64,
-          content: `⚠️ Failed to create webhook in <#${channelId}>: ${(err as Error).message}`,
-        },
-      };
-    }
-  }
-
   try {
-    const monitor = deps.repo.addMonitor(userId, name, url, webhookId);
+    const monitor = deps.repo.addMonitor(userId, name, url, targetChannelId);
     deps.repo.logActivity(userId, 'info', 'bot', `Added monitor "${name}" via Discord bot`);
 
     return {
@@ -168,7 +144,11 @@ async function handleAdd(
             fields: [
               { name: 'Name', value: monitor.name, inline: true },
               { name: 'ID', value: `#${monitor.id}`, inline: true },
-              { name: 'Alert Channel', value: webhookName, inline: true },
+              {
+                name: 'Alert Channel',
+                value: targetChannelId ? `<#${targetChannelId}>` : 'None',
+                inline: true,
+              },
               { name: 'URL', value: `\`${monitor.url}\``, inline: false },
             ],
             footer: { text: 'HELIX RSS • Checked automatically every interval' },

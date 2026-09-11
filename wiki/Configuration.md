@@ -22,7 +22,7 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `POLL_INTERVAL_MS`   | `60000` | Feed polling frequency in milliseconds (default: 60 seconds). All active RSS/Atom and scraper feeds are polled on this cadence. |
 | `STATUS_INTERVAL_MS` | `30000` | Site status health check frequency in milliseconds (default: 30 seconds).                                                       |
-| `REQUEST_TIMEOUT_MS` | `15000` | Timeout in milliseconds for outgoing HTTP requests (fetching feeds, scraping web pages, sending webhooks).                      |
+| `REQUEST_TIMEOUT_MS` | `15000` | Timeout in milliseconds for outgoing HTTP requests (fetching feeds, scraping web pages, delivering messages). |
 
 ### Logging & Storage
 

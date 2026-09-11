@@ -40,7 +40,8 @@ export interface Feed {
   userId: number;
   name: string;
   url: string;
-  webhookId: number | null;
+  channelId: string | null;
+  webhookId?: number | null;
   enabled: number;
   feedType: 'rss' | 'scrape';
   scrape: { item: string; title: string; link: string; description?: string } | null;
@@ -66,7 +67,8 @@ export interface SiteMonitor {
   enabled: number;
   status: string;
   lastCheckedAt: string | null;
-  webhookId: number | null;
+  channelId: string | null;
+  webhookId?: number | null;
   createdAt: string;
 }
 
@@ -143,12 +145,14 @@ export const rowToFeed = (r: Row | undefined): Feed | null => {
   const scrapeLink = r.scrape_link === null || r.scrape_link === undefined ? null : String(r.scrape_link);
   const scrapeDescription =
     r.scrape_description === null || r.scrape_description === undefined ? null : String(r.scrape_description);
+  const channelId = r.channel_id !== null && r.channel_id !== undefined ? String(r.channel_id) : null;
   return {
     id: Number(r.id),
     userId: Number(r.user_id),
     name: String(r.name),
     url: String(r.url),
-    webhookId: r.webhook_id === null ? null : Number(r.webhook_id),
+    channelId,
+    webhookId: r.webhook_id === null || r.webhook_id === undefined ? null : Number(r.webhook_id),
     enabled: Number(r.enabled),
     feedType: r.feed_type === 'scrape' ? 'scrape' : 'rss',
     scrape:
@@ -175,6 +179,7 @@ export const rowToWebhook = (r: Row | undefined): Webhook | null => {
 
 export const rowToMonitor = (r: Row | undefined): SiteMonitor | null => {
   if (!r) return null;
+  const channelId = r.channel_id !== null && r.channel_id !== undefined ? String(r.channel_id) : null;
   return {
     id: Number(r.id),
     userId: Number(r.user_id),
@@ -183,7 +188,8 @@ export const rowToMonitor = (r: Row | undefined): SiteMonitor | null => {
     enabled: Number(r.enabled),
     status: String(r.status),
     lastCheckedAt: r.last_checked_at === null ? null : String(r.last_checked_at),
-    webhookId: r.webhook_id === null ? null : Number(r.webhook_id),
+    channelId,
+    webhookId: r.webhook_id === null || r.webhook_id === undefined ? null : Number(r.webhook_id),
     createdAt: String(r.created_at),
   };
 };

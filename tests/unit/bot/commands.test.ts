@@ -49,14 +49,7 @@ describe('Discord Bot Slash Commands', () => {
   describe('/feed commands', () => {
     const guildId = 'guild-test-123';
 
-    it('adds an RSS feed with automatic webhook creation', async () => {
-      vi.spyOn(rest, 'createChannelWebhook').mockResolvedValueOnce({
-        id: 'wh-99',
-        name: 'RSS: Test Blog',
-        type: 1,
-        url: 'https://discord.com/api/webhooks/wh-99/tok-99',
-      });
-
+    it('adds an RSS feed with direct channel destination', async () => {
       const interaction: DiscordInteraction = {
         id: 'inter-2',
         application_id: 'app-1',
@@ -88,7 +81,7 @@ describe('Discord Bot Slash Commands', () => {
 
       const user = ctx.deps.repo.getOrCreateGuildUser(guildId);
       const feeds = ctx.deps.repo.listFeeds(user.id);
-      expect(feeds.some((f) => f.name === 'Test Blog')).toBe(true);
+      expect(feeds.some((f) => f.name === 'Test Blog' && f.channelId === 'chan-123')).toBe(true);
     });
 
     it('lists feeds for the guild', async () => {
@@ -199,37 +192,27 @@ describe('Discord Bot Slash Commands', () => {
       const res = await dispatchInteraction(interaction, ctx.deps, rest);
       expect(res.data?.embeds?.[0]?.title).toContain('Feed Deleted');
     });
-  });
 
-  describe('/webhook commands', () => {
-    const guildId = 'guild-webhook-test';
-
-    it('creates a webhook in channel', async () => {
-      vi.spyOn(rest, 'createChannelWebhook').mockResolvedValueOnce({
-        id: 'wh-custom',
-        name: 'Custom Hook',
-        type: 1,
-        url: 'https://discord.com/api/webhooks/wh-custom/tok-custom',
-      });
-
+    it('defaults to interaction channel when channel option is omitted', async () => {
       const interaction: DiscordInteraction = {
         id: 'inter-7',
         application_id: 'app-1',
         type: InteractionType.APPLICATION_COMMAND,
         guild_id: guildId,
+        channel_id: 'chan-current',
         token: 'tok-7',
         version: 1,
         data: {
-          id: 'cmd-webhook',
-          name: 'webhook',
+          id: 'cmd-feed-default',
+          name: 'feed',
           type: 1,
           options: [
             {
-              name: 'create',
+              name: 'add',
               type: ApplicationCommandOptionType.SUB_COMMAND,
               options: [
-                { name: 'name', type: ApplicationCommandOptionType.STRING, value: 'Custom Hook' },
-                { name: 'channel', type: ApplicationCommandOptionType.CHANNEL, value: 'chan-custom' },
+                { name: 'name', type: ApplicationCommandOptionType.STRING, value: 'Default Channel Feed' },
+                { name: 'url', type: ApplicationCommandOptionType.STRING, value: 'https://test.com/default.xml' },
               ],
             },
           ],
@@ -237,28 +220,10 @@ describe('Discord Bot Slash Commands', () => {
       };
 
       const res = await dispatchInteraction(interaction, ctx.deps, rest);
-      expect(res.data?.embeds?.[0]?.title).toContain('Webhook Created & Registered');
-    });
-
-    it('lists registered webhooks', async () => {
-      const interaction: DiscordInteraction = {
-        id: 'inter-8',
-        application_id: 'app-1',
-        type: InteractionType.APPLICATION_COMMAND,
-        guild_id: guildId,
-        token: 'tok-8',
-        version: 1,
-        data: {
-          id: 'cmd-webhook',
-          name: 'webhook',
-          type: 1,
-          options: [{ name: 'list', type: ApplicationCommandOptionType.SUB_COMMAND }],
-        },
-      };
-
-      const res = await dispatchInteraction(interaction, ctx.deps, rest);
-      expect(res.data?.embeds?.[0]?.title).toContain('Webhooks for this Server');
-      expect(res.data?.embeds?.[0]?.fields?.[0]?.name).toContain('Custom Hook');
+      expect(res.data?.embeds?.[0]?.title).toContain('Feed Added Successfully');
+      const user = ctx.deps.repo.getOrCreateGuildUser(guildId);
+      const feed = ctx.deps.repo.listFeeds(user.id).find((f) => f.name === 'Default Channel Feed');
+      expect(feed?.channelId).toBe('chan-current');
     });
   });
 

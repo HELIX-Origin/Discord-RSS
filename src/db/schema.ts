@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta (
@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS feeds (
   user_id INTEGER NOT NULL,
   name TEXT NOT NULL,
   url TEXT NOT NULL,
+  channel_id TEXT,
   webhook_id INTEGER,
   enabled INTEGER NOT NULL DEFAULT 1,
   feed_type TEXT NOT NULL DEFAULT 'rss',
@@ -61,8 +62,7 @@ CREATE TABLE IF NOT EXISTS feeds (
   last_checked_at TEXT,
   created_at TEXT NOT NULL,
   UNIQUE (user_id, url),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE SET NULL
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS webhooks (
@@ -92,11 +92,11 @@ CREATE TABLE IF NOT EXISTS site_status (
   enabled INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'unknown',
   last_checked_at TEXT,
+  channel_id TEXT,
   webhook_id INTEGER,
   created_at TEXT NOT NULL,
   UNIQUE (user_id, name),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (webhook_id) REFERENCES webhooks(id) ON DELETE SET NULL
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS settings (

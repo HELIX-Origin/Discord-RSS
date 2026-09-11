@@ -277,6 +277,10 @@ export class DiscordBot {
     };
   }
 
+  async sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void> {
+    await this.rest.sendChannelMessage(channelId, payload);
+  }
+
   async detectApplicationOwners(): Promise<{ ownerIds: string[]; adminIds: string[] }> {
     try {
       const app = await this.rest.getCurrentApplication();

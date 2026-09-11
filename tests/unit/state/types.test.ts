@@ -70,6 +70,7 @@ describe('row mappers', () => {
       userId: 2,
       name: 'f',
       url: 'u',
+      channelId: null,
       webhookId: 3,
       enabled: 1,
       feedType: 'scrape',

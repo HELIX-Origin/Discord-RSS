@@ -46,6 +46,8 @@ export async function main(): Promise<void> {
         sslCert: config.botSslCert,
       },
     );
+    feeds.setBot(bot);
+    status.setBot(bot);
   }
 
   const deps: AppDeps = { config, db, repo, oauth, feeds, status, redis, bot };

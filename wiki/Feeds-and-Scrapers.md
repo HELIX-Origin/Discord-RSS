@@ -20,7 +20,7 @@ HELIX RSS provides native parsing for standard RSS and Atom feeds, as well as a 
 3. Provide:
    - **Feed Name**: A friendly label (e.g. `TechCrunch News`).
    - **Feed URL**: The XML endpoint (e.g. `https://techcrunch.com/feed/`).
-   - **Delivery Webhook**: Choose the Discord channel webhook.
+   - **Delivery Channel**: Choose the Discord channel where updates should be posted.
 4. Click **Create Feed**.
 
 ---
@@ -59,6 +59,6 @@ The **Popular Feeds** tab provides one-click templates:
 
 ## 🔒 Deduplication & Delivery Guarantee
 
-- **Primary SQLite Deduplication**: Every delivered item is indexed in SQLite (`sent_entries`). A feed entry will never be posted twice to the same webhook.
+- **Primary SQLite Deduplication**: Every delivered item is indexed in SQLite (`sent_entries`). A feed entry will never be posted twice to the same channel.
 - **Distributed Redis Coordination**: In multi-instance deployments, instances share deduplication keys and distributed polling locks in Redis (`drss:sent:<feedId>`), preventing duplicate deliveries across separate containers.
 - **Rate-Limit Backoff**: If Discord returns an HTTP `429 Too Many Requests`, deliveries pause according to the `Retry-After` header.

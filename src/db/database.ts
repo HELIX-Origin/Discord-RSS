@@ -36,8 +36,18 @@ export class Database {
 
   private migrate(): void {
     this.db.exec(SCHEMA);
+    try {
+      this.db.exec('ALTER TABLE feeds ADD COLUMN channel_id TEXT;');
+    } catch {
+      // Column may already exist
+    }
+    try {
+      this.db.exec('ALTER TABLE site_status ADD COLUMN channel_id TEXT;');
+    } catch {
+      // Column may already exist
+    }
     this.db
-      .prepare('INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)')
+      .prepare('INSERT OR REPLACE INTO meta (key, value) VALUES (?, ?)')
       .run('schema_version', String(SCHEMA_VERSION));
     this.logger.debug('Database migrated', { schemaVersion: SCHEMA_VERSION, dbPath: this.dbPathValue });
   }

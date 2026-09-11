@@ -47,10 +47,8 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     const allFeeds = d.repo.listFeedsForAllUsers();
     const users = d.repo.listUsers().map((u) => {
       const userFeeds = allFeeds.filter((f) => f.userId === u.id);
-      const userWebhooks = d.repo.listWebhooks(u.id);
-      const webhookIds = new Set(userWebhooks.map((w) => w.id));
       const feedsWithIssuesCount = userFeeds.filter(
-        (f) => f.webhookId === null || !webhookIds.has(f.webhookId) || f.enabled === 0 || f.lastCheckedAt === null,
+        (f) => (!f.channelId && !f.webhookId) || f.enabled === 0 || f.lastCheckedAt === null,
       ).length;
 
       return {
@@ -59,7 +57,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
         displayName: u.displayName,
         role: u.role,
         feedCount: userFeeds.length,
-        webhookCount: userWebhooks.length,
+        webhookCount: d.repo.listWebhooks(u.id).length,
         feedsWithIssuesCount,
         createdAt: u.createdAt,
       };
@@ -85,14 +83,12 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     const webhookMap = new Map(webhooks.map((w) => [w.id, w]));
 
     const feedDiagnostics = feeds.map((f) => {
-      const webhook = f.webhookId !== null ? webhookMap.get(f.webhookId) : null;
+      const webhook = f.webhookId !== null && f.webhookId !== undefined ? webhookMap.get(f.webhookId) : null;
       const issues: string[] = [];
-      if (f.webhookId === null) {
-        issues.push('Missing Discord webhook (entries will not be posted)');
-      } else if (!webhook) {
+      if (!f.channelId && (f.webhookId === null || f.webhookId === undefined)) {
+        issues.push('No Discord channel configured (entries will not be posted)');
+      } else if (!f.channelId && f.webhookId && !webhook) {
         issues.push('Linked webhook does not exist');
-      } else if (!webhook.enabled) {
-        issues.push(`Linked webhook "${webhook.name}" is disabled`);
       }
       if (!f.enabled) {
         issues.push('Feed is currently paused');
@@ -103,8 +99,8 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
 
       return {
         ...f,
-        webhookName: webhook?.name ?? null,
-        webhookEnabled: webhook?.enabled ?? null,
+        webhookName: f.channelId ? `<#${f.channelId}>` : (webhook?.name ?? null),
+        webhookEnabled: f.channelId ? true : (webhook?.enabled ?? null),
         issues,
       };
     });
@@ -155,6 +151,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       userId: number;
       userEmail: string;
       userDisplayName: string;
+      channelId: string | null;
       webhookId: number | null;
       webhookName: string | null;
       enabled: boolean;
@@ -178,37 +175,20 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       const userEmail = user ? user.email : `User #${feed.userId}`;
       const userDisplayName = user ? user.displayName : `User #${feed.userId}`;
 
-      let webhookName: string | null = null;
-      if (feed.webhookId === null) {
+      let destinationName: string | null = feed.channelId ? `<#${feed.channelId}>` : null;
+      if (!feed.channelId && (feed.webhookId === null || feed.webhookId === undefined)) {
         missingWebhookCount += 1;
         feedProblems.push({
-          type: 'missing_webhook',
+          type: 'missing_destination',
           severity: 'error',
-          title: 'No Webhook Linked',
-          description: 'This feed has no Discord webhook linked. New feed entries will not be delivered anywhere.',
-          recommendation: 'Link an active Discord webhook to this feed so entries can be posted.',
+          title: 'No Discord Channel Configured',
+          description: 'This feed has no Discord channel selected. New feed entries will not be delivered.',
+          recommendation: 'Select a target Discord channel for this feed so entries can be posted.',
         });
-      } else {
+      } else if (feed.webhookId) {
         const webhook = d.repo.getWebhook(feed.userId, feed.webhookId);
-        if (!webhook) {
-          feedProblems.push({
-            type: 'orphaned_webhook',
-            severity: 'error',
-            title: 'Linked Webhook Missing',
-            description: `Referenced webhook ID #${feed.webhookId} does not exist.`,
-            recommendation: 'Select a valid webhook for this feed in the Feeds management tab.',
-          });
-        } else {
-          webhookName = webhook.name;
-          if (!webhook.enabled) {
-            feedProblems.push({
-              type: 'disabled_webhook',
-              severity: 'warning',
-              title: 'Linked Webhook Disabled',
-              description: `Linked webhook "${webhook.name}" is currently disabled.`,
-              recommendation: 'Enable the webhook on the Webhooks tab to resume deliveries.',
-            });
-          }
+        if (webhook) {
+          destinationName = webhook.name;
         }
       }
 
@@ -251,8 +231,9 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
           userId: feed.userId,
           userEmail,
           userDisplayName,
-          webhookId: feed.webhookId,
-          webhookName,
+          channelId: feed.channelId,
+          webhookId: feed.webhookId ?? null,
+          webhookName: destinationName,
           enabled: Boolean(feed.enabled),
           lastCheckedAt: feed.lastCheckedAt,
           problems: feedProblems,

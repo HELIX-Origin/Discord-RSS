@@ -23,6 +23,7 @@ describe('source smoke', () => {
   let webhook: Awaited<ReturnType<typeof startWebhookServer>>;
   let client: TestClient;
   let cleanup: () => Promise<void>;
+  const deliveries: Array<{ channelId: string; payload: unknown }> = [];
 
   beforeAll(async () => {
     [rss, webhook] = await Promise.all([startRssServer(RSS), startWebhookServer()]);
@@ -30,6 +31,11 @@ describe('source smoke', () => {
     cleanup = ctx.cleanup;
     const server = await startAppServer(ctx.deps);
     client = new TestClient(server.url);
+    ctx.deps.feeds.setBot({
+      async sendChannelMessage(channelId, payload) {
+        deliveries.push({ channelId, payload });
+      },
+    });
   }, 15_000);
 
   afterAll(async () => {
@@ -44,21 +50,17 @@ describe('source smoke', () => {
     expect(res.body).toBe('ok');
   });
 
-  it('full flow: register -> webhook -> feed -> poll -> delivery', async () => {
+  it('full flow: register -> feed -> poll -> direct delivery', async () => {
     const register = await client.post('/api/auth/register', {
       email: 'smoke@example.com',
       password: 'smokepass123',
     });
     expect(register.status).toBe(201);
 
-    const webhookRes = await client.post('/api/webhooks', { name: 'mock-discord', url: webhook.url });
-    expect(webhookRes.status).toBe(201);
-    const webhookId = (webhookRes.body as { id: number }).id;
-
     const feedRes = await client.post('/api/feeds', {
       name: 'Smoke Feed',
       url: rss.url,
-      webhookId,
+      channelId: 'smoke-channel-1',
       feedType: 'rss',
     });
     expect(feedRes.status).toBe(201);
@@ -67,8 +69,8 @@ describe('source smoke', () => {
     const pollRes = await client.post(`/api/feeds/${feedId}/poll`);
     expect(pollRes.status).toBe(200);
 
-    expect(webhook.deliveries.length).toBeGreaterThanOrEqual(1);
-    const payload = JSON.parse(webhook.deliveries[0]!.body) as { embeds?: Array<{ title?: string; url?: string }> };
+    expect(deliveries.length).toBeGreaterThanOrEqual(1);
+    const payload = deliveries[0]!.payload as { embeds?: Array<{ title?: string; url?: string }> };
     expect(payload.embeds?.[0]?.title).toBe('Smoke entry');
     expect(payload.embeds?.[0]?.url).toContain('/1');
   }, 30_000);

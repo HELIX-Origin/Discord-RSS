@@ -4,7 +4,7 @@ import { startAppServer } from '../../helpers/server.js';
 import { TestClient } from '../../helpers/http-client.js';
 import type { BuiltAppDeps } from '../../helpers/app-deps.js';
 
-describe('Webhooks API', () => {
+describe('Discord Channels API', () => {
   let ctx: BuiltAppDeps;
   let client: TestClient;
 
@@ -19,21 +19,16 @@ describe('Webhooks API', () => {
     await ctx.cleanup();
   });
 
-  it('creates and lists webhooks', async () => {
-    const create = await client.post('/api/webhooks', {
-      name: 'discord',
-      url: 'https://discord.com/api/webhooks/1/token',
-    });
-    expect(create.status).toBe(201);
-
-    const list = await client.get('/api/webhooks');
-    expect(list.status).toBe(200);
-    expect(Array.isArray(list.body)).toBe(true);
-    expect((list.body as Array<{ name: string }>)[0]?.name).toBe('discord');
+  it('lists discord channels and bot status', async () => {
+    const res = await client.get('/api/discord/channels');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('botEnabled');
+    expect(res.body).toHaveProperty('guilds');
   });
 
-  it('rejects invalid webhook URL', async () => {
-    const res = await client.post('/api/webhooks', { name: 'bad', url: 'not-a-url' });
-    expect(res.status).toBe(400);
+  it('requires authentication to access discord channels', async () => {
+    const unauthedClient = new TestClient(client.baseUrl);
+    const res = await unauthedClient.get('/api/discord/channels');
+    expect(res.status).toBe(401);
   });
 });

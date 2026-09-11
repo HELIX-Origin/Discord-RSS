@@ -1,6 +1,6 @@
 # Welcome to the HELIX RSS Wiki
 
-**HELIX RSS** is a self-hosted, multi-user RSS/Atom-to-Discord service built in TypeScript ESM. It delivers feed updates directly to Discord webhooks, provides an interactive Discord Bot with slash commands, and features a built-in web dashboard with zero required runtime dependencies.
+**HELIX RSS** is a self-hosted, multi-user RSS/Atom-to-Discord service built in TypeScript ESM. It delivers feed updates directly to Discord channels via the built-in Discord Bot, provides an interactive Discord Bot with slash commands, and features a built-in web dashboard with zero required runtime dependencies.
 
 ---
 

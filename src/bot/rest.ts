@@ -116,6 +116,19 @@ export class DiscordRestClient {
     return json;
   }
 
+  async sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/channels/${channelId}/messages`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to send Discord channel message in channel ${channelId}: HTTP ${res.status} - ${text}`);
+    }
+  }
+
   async sendInteractionResponse(
     interactionId: string,
     interactionToken: string,

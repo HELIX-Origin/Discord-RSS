@@ -23,10 +23,15 @@ export class MonitorRepository {
     return this.state.allMonitors();
   }
 
-  addMonitor(userId: number, name: string, url: string, webhookId: number | null): SiteMonitor {
+  addMonitor(userId: number, name: string, url: string, channelIdOrWebhookId: string | number | null): SiteMonitor {
+    const channelId = typeof channelIdOrWebhookId === 'string' ? channelIdOrWebhookId : null;
+    const webhookId = typeof channelIdOrWebhookId === 'number' ? channelIdOrWebhookId : null;
+
     const result = this.db.raw
-      .prepare('INSERT INTO site_status (user_id, name, url, webhook_id, created_at) VALUES (?, ?, ?, ?, ?)')
-      .run(userId, name, url, webhookId, nowIso());
+      .prepare(
+        'INSERT INTO site_status (user_id, name, url, channel_id, webhook_id, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      )
+      .run(userId, name, url, channelId, webhookId, nowIso());
     const monitor: SiteMonitor = {
       id: Number(result.lastInsertRowid),
       userId,
@@ -35,6 +40,7 @@ export class MonitorRepository {
       enabled: 1,
       status: 'unknown',
       lastCheckedAt: null,
+      channelId,
       webhookId,
       createdAt: nowIso(),
     };
@@ -45,7 +51,13 @@ export class MonitorRepository {
   updateMonitor(
     userId: number,
     id: number,
-    fields: { name?: string; url?: string; webhookId?: number | null; enabled?: number },
+    fields: {
+      name?: string;
+      url?: string;
+      channelId?: string | null;
+      webhookId?: number | null;
+      enabled?: number;
+    },
   ): SiteMonitor | null {
     const current = this.state.getMonitor(userId, id);
     if (!current) return null;
@@ -53,12 +65,23 @@ export class MonitorRepository {
       ...current,
       name: fields.name ?? current.name,
       url: fields.url ?? current.url,
-      webhookId: fields.webhookId ?? current.webhookId,
+      channelId: fields.channelId !== undefined ? fields.channelId : current.channelId,
+      webhookId: fields.webhookId !== undefined ? fields.webhookId : current.webhookId,
       enabled: fields.enabled ?? current.enabled,
     };
     this.db.raw
-      .prepare('UPDATE site_status SET name = ?, url = ?, webhook_id = ?, enabled = ? WHERE id = ? AND user_id = ?')
-      .run(updated.name, updated.url, updated.webhookId, updated.enabled, id, userId);
+      .prepare(
+        'UPDATE site_status SET name = ?, url = ?, channel_id = ?, webhook_id = ?, enabled = ? WHERE id = ? AND user_id = ?',
+      )
+      .run(
+        updated.name,
+        updated.url,
+        updated.channelId ?? null,
+        updated.webhookId ?? null,
+        updated.enabled,
+        id,
+        userId,
+      );
     this.state.putMonitor(updated);
     return updated;
   }

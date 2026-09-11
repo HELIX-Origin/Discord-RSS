@@ -49,15 +49,9 @@ describe('DiscordBot Integration', () => {
     await ctx.cleanup();
   });
 
-  it('completes full bot flow: slash command -> webhook setup -> feed add -> poll -> delivery', async () => {
-    // 1. Mock Discord REST API for webhook creation and interaction response
-    vi.spyOn(bot.rest, 'createChannelWebhook').mockResolvedValueOnce({
-      id: 'wh-discord-bot',
-      name: 'RSS: Bot Feed',
-      type: 1,
-      url: webhook.url,
-    });
-
+  it('completes full bot flow: slash command -> channel setup -> feed add -> poll -> direct channel delivery', async () => {
+    ctx.deps.feeds.setBot(bot);
+    const channelMessageSpy = vi.spyOn(bot.rest, 'sendChannelMessage').mockResolvedValue(undefined);
     const responseSpy = vi.spyOn(bot.rest, 'sendInteractionResponse').mockResolvedValue(undefined);
 
     // 2. Simulate Discord Gateway sending an INTERACTION_CREATE for `/feed add`
@@ -99,6 +93,7 @@ describe('DiscordBot Integration', () => {
     const feeds = ctx.deps.repo.listFeeds(user.id);
     const createdFeed = feeds.find((f) => f.name === 'Bot Feed');
     expect(createdFeed).toBeDefined();
+    expect(createdFeed?.channelId).toBe('chan-integration-1');
 
     // 3. Simulate Discord Gateway sending an INTERACTION_CREATE for `/feed poll`
     const pollInteraction: DiscordInteraction = {
@@ -126,13 +121,18 @@ describe('DiscordBot Integration', () => {
       pollInteraction,
     );
 
-    // 4. Verify webhook received the Discord embed message
-    expect(webhook.deliveries.length).toBeGreaterThanOrEqual(1);
-    const payload = JSON.parse(webhook.deliveries[0]!.body) as {
-      embeds?: Array<{ title?: string; url?: string }>;
-    };
-    expect(payload.embeds?.[0]?.title).toBe('Bot Entry 1');
-    expect(payload.embeds?.[0]?.url).toContain('/entry-1');
+    // 4. Verify bot delivered the embed message directly to the Discord channel
+    expect(channelMessageSpy).toHaveBeenCalledWith(
+      'chan-integration-1',
+      expect.objectContaining({
+        embeds: expect.arrayContaining([
+          expect.objectContaining({
+            title: 'Bot Entry 1',
+            url: expect.stringContaining('/entry-1'),
+          }),
+        ]),
+      }),
+    );
   });
 
   it('serves health status and handles interactions via HTTP endpoint', async () => {

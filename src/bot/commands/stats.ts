@@ -47,7 +47,7 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
             },
             {
               name: '🌐 Global Totals',
-              value: `**Feeds:** ${stats.feedCount}\n**Webhooks:** ${stats.webhookCount}\n**Monitors:** ${stats.monitorCount}\n**Entries Sent:** ${stats.sentCount}`,
+              value: `**Feeds:** ${stats.feedCount}\n**Monitors:** ${stats.monitorCount}\n**Entries Sent:** ${stats.sentCount}`,
               inline: true,
             },
             {
