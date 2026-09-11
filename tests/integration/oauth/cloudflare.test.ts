@@ -110,4 +110,51 @@ describe('Cloudflare OAuth flow', () => {
     });
     expect(oauthRes.status).toBe(403);
   });
+
+  it('supports secret-less OAuth code exchange when clientSecret is empty or omitted', async () => {
+    let capturedBody: string | null = null;
+    mswServer.use(
+      http.post(CLOUDFLARE_TOKEN_URL, async ({ request }) => {
+        capturedBody = await request.text();
+        return HttpResponse.json(
+          {
+            access_token: 'mock-access-token-no-secret',
+            expires_in: 3600,
+            scope: 'zone:read',
+          },
+          { status: 200 },
+        );
+      }),
+    );
+
+    // Reconfigure Cloudflare with clientId only (no clientSecret)
+    const updateRes = await client.post('/api/settings/oauth/cloudflare', {
+      clientId: 'public-client-id',
+      clientSecret: '',
+      enabled: true,
+    });
+    expect(updateRes.status).toBe(200);
+
+    const connect = await client.get('/api/oauth/cloudflare/connect');
+    expect(connect.status).toBe(200);
+    const url = (connect.body as { url: string }).url;
+    const parsedUrl = new URL(url);
+    expect(parsedUrl.searchParams.get('client_id')).toBe('public-client-id');
+    const state = parsedUrl.searchParams.get('state')!;
+
+    const callback = await client.get(`/api/oauth/cloudflare/callback?state=${state}&code=secretless-code`);
+    expect(callback.status).toBe(200);
+    expect(callback.raw).toContain('success');
+
+    expect(capturedBody).not.toBeNull();
+    const params = new URLSearchParams(capturedBody!);
+    expect(params.get('grant_type')).toBe('authorization_code');
+    expect(params.get('client_id')).toBe('public-client-id');
+    expect(params.get('code')).toBe('secretless-code');
+    expect(params.has('client_secret')).toBe(false);
+
+    const me = await client.get('/api/auth/me');
+    const connections = (me.body as { connections: Array<{ provider: string }> }).connections;
+    expect(connections.some((c) => c.provider === 'cloudflare')).toBe(true);
+  });
 });

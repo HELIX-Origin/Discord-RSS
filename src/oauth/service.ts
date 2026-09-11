@@ -102,7 +102,9 @@ export class OAuthService {
     const p = this.getProvider(provider);
     if (!p) throw new Error(`Unknown OAuth provider: ${provider}`);
     const config = this.getConfig(provider);
-    if (!config?.enabled || !config.clientId || !config.clientSecret) {
+    const isConfigured =
+      provider === 'cloudflare' ? Boolean(config?.clientId) : Boolean(config?.clientId && config?.clientSecret);
+    if (!config?.enabled || !isConfigured) {
       throw new Error(`OAuth provider "${provider}" is not configured`);
     }
     const state = randomBytes(16).toString('hex');

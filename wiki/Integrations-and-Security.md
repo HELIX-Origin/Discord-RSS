@@ -26,18 +26,118 @@ The service enforces a three-tier permission hierarchy:
 
 ---
 
-## ☁️ Cloudflare Access OAuth Integration
+## ☁️ Cloudflare Access OAuth & WAF Integration
 
-When fetching feeds from domains protected by **Cloudflare Zero Trust / Cloudflare Access**:
+HELIX RSS integrates with Cloudflare to fetch feeds behind **Cloudflare Zero Trust / Cloudflare Access** and allow sites to bypass Cloudflare security checks (WAF, Bot Fight Mode, Rate Limiting, Browser Integrity Check) for the feed crawler.
 
-1. Configure an OAuth application in your Cloudflare Zero Trust dashboard.
-2. In `.env`, provide:
+### 1. Cloudflare OAuth Setup (Public Client / Code Flow)
+
+Cloudflare supports standard OAuth 2.0 Authorization Code grant:
+
+1. In the Cloudflare Dashboard, navigate to **Manage Account** > **OAuth clients** > **Create client**.
+2. **Client Configuration**:
+   - **Client Type**: Public / SPA / Native client (uses `token_endpoint_auth_method: "none"`).
+   - **Redirect URI**: `https://<YOUR_DOMAIN>/api/oauth/cloudflare/callback` (or `http://localhost:3434/api/oauth/cloudflare/callback` for local testing).
+   - **Client Secret**: When configuring public / code-only authorization, Cloudflare only issues a **Client ID** (no client secret). HELIX RSS natively supports this mode without demanding a secret.
+   - **Scopes**: Cloudflare requires **dot-delimited** scopes (e.g. `zone.read`, `zone.rulesets.write`, `offline_access`). Note that legacy colon-delimited formats (`zone:read`) are rejected by Cloudflare's OAuth server. If no scope is explicitly passed, Cloudflare applies the scopes configured on the client.
+3. In `.env`, provide:
    ```env
    CLOUDFLARE_CLIENT_ID=your_cloudflare_client_id
-   CLOUDFLARE_CLIENT_SECRET=your_cloudflare_client_secret
+   # CLOUDFLARE_CLIENT_SECRET is optional for public / code-based OAuth
+   CLOUDFLARE_CLIENT_SECRET=
    ```
-3. Set `PUBLIC_URL` to your instance’s public HTTPS address so Cloudflare can route the OAuth callback back to your server.
-4. On the **Integrations** tab in the dashboard, click **Connect** next to Cloudflare to authorize your session.
+4. On the **Integrations** tab in the HELIX RSS dashboard, click the **Connect** button next to Cloudflare. Complete authorization in Cloudflare; your access token is automatically stored in SQLite.
+
+---
+
+### 2. Cloudflare WAF Ruleset Bypass for Feeds
+
+To ensure HELIX RSS can fetch feeds from your Cloudflare-protected domains without triggering 403 Forbidden, 503 challenges, or Turnstile blocks:
+
+#### Crucial Considerations:
+- **User-Agent Matching**: HELIX RSS identifies itself with `HelixRSS/0.1 (+https://github.com/HELIX-Origin/HELIX-RSS)` (`src/feed/fetch.ts`). Your WAF rule must match `(http.user_agent contains "HelixRSS")`.
+- **Feed Path Freedom**: Do not restrict rules to path `/feed`. Feeds often reside at `/rss.xml`, `/atom.xml`, `/feed.xml`, `/index.xml`, or domain roots.
+- **Rule Ordering (`position`)**: Cloudflare evaluates rules sequentially. The `skip` action **only** bypasses rules evaluated *after* it. Always specify `"position": { "index": 1 }` so the bypass rule executes before blocking rules.
+- **Ruleset Discovery**: Custom WAF rules must be added to the zone's `http_request_firewall_custom` entry point ruleset.
+
+#### Step-by-Step API Deployment:
+
+1. **Get Zone ID**:
+   ```bash
+   curl -s -X GET "https://api.cloudflare.com/client/v4/zones?name=example.com" \
+     -H "Authorization: Bearer $OAUTH_ACCESS_TOKEN" \
+     -H "Content-Type: application/json"
+   # Extract: .result[0].id -> $ZONE_ID
+   ```
+
+2. **Get Custom Firewall Ruleset ID**:
+   ```bash
+   curl -s -X GET "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/rulesets/phases/http_request_firewall_custom/entrypoint" \
+     -H "Authorization: Bearer $OAUTH_ACCESS_TOKEN" \
+     -H "Content-Type: application/json"
+   # Extract: .result.id -> $RULESET_ID
+   ```
+
+3. **Deploy Skip Rule (Option A: Legacy Products + Current Ruleset)**:
+   ```bash
+   curl "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/rulesets/$RULESET_ID/rules" \
+     --request POST \
+     --header "Authorization: Bearer $OAUTH_ACCESS_TOKEN" \
+     --header "Content-Type: application/json" \
+     --data '{
+       "description": "Bypass Cloudflare security checks for HELIX RSS Feed Fetcher",
+       "expression": "(http.user_agent contains \"HelixRSS\")",
+       "action": "skip",
+       "action_parameters": {
+           "ruleset": "current",
+           "products": [
+               "bic",
+               "hot",
+               "securityLevel",
+               "rateLimit",
+               "zoneLockdown",
+               "uaBlock",
+               "waf"
+           ]
+       },
+       "position": {
+           "index": 1
+       },
+       "enabled": true
+   }'
+   ```
+
+4. **Deploy Skip Rule (Option B: Modern Phases Skip)**:
+   *Bypasses Managed WAF, Rate Limiting, and Super Bot Fight Mode (SBFM). Note that Cloudflare API requires omitting `"ruleset"` when `"phases"` is provided:*
+   ```bash
+   curl "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/rulesets/$RULESET_ID/rules" \
+     --request POST \
+     --header "Authorization: Bearer $OAUTH_ACCESS_TOKEN" \
+     --header "Content-Type: application/json" \
+     --data '{
+       "description": "Bypass Cloudflare security checks for HELIX RSS Feed Fetcher",
+       "expression": "(http.user_agent contains \"HelixRSS\")",
+       "action": "skip",
+       "action_parameters": {
+           "phases": [
+               "http_request_firewall_managed",
+               "http_ratelimit",
+               "http_request_sbfm"
+           ],
+           "products": [
+               "bic",
+               "hot",
+               "securityLevel",
+               "zoneLockdown",
+               "uaBlock"
+           ]
+       },
+       "position": {
+           "index": 1
+       },
+       "enabled": true
+   }'
+   ```
 
 ---
 

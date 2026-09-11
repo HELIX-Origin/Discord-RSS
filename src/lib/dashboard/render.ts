@@ -395,8 +395,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                     <input type="text" id="cfg-${p.provider}-client-id" placeholder="Client ID" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
                   </div>
                   <div>
-                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Client Secret</label>
-                    <input type="password" id="cfg-${p.provider}-client-secret" placeholder="Client Secret" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
+                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">
+                      Client Secret ${p.provider === 'cloudflare' ? '<span class="text-gray-500 normal-case font-normal">(Optional for public / code auth)</span>' : ''}
+                    </label>
+                    <input type="password" id="cfg-${p.provider}-client-secret" placeholder="${p.provider === 'cloudflare' ? 'Client Secret (optional)' : 'Client Secret'}" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
                   </div>
                 </div>
                 <div class="flex items-center justify-between">
@@ -594,7 +596,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               <span class="px-2 py-0.5 rounded text-[10px] font-mono \${statusClass}">\${conn ? 'Connected' : (p.configured ? 'Available' : 'Not configured')}</span>
               \${conn
                 ? \`<button onclick="disconnect('\${p.provider}')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-unlink mr-1"></i>Disconnect</button>\`
-                : \`<button onclick="connect('\${p.provider}')" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-semibold transition"><i class="fa-solid fa-link mr-1"></i>Connect</button>\`}
+                : \`<button onclick="connect('\${p.provider}')" \${!p.configured ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg \${p.configured ? 'bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer' : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'} text-xs font-semibold transition"><i class="fa-solid fa-link mr-1"></i>Connect</button>\`}
             </div>
           </div>\`;
       }).join('');

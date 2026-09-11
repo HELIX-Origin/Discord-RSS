@@ -38,20 +38,25 @@ export class CloudflareProvider implements OAuthProvider {
       client_id: config.clientId,
       redirect_uri: redirectUri,
       response_type: 'code',
-      scope: config.scope,
       state,
     });
+    if (config.scope?.trim()) {
+      params.set('scope', config.scope.trim());
+    }
     return `${config.authorizeUrl}?${params.toString()}`;
   }
 
   async exchangeCode(code: string, redirectUri: string, config: OAuthProviderConfig): Promise<OAuthTokenResponse> {
-    const body = new URLSearchParams({
+    const params: Record<string, string> = {
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri,
       client_id: config.clientId,
-      client_secret: config.clientSecret,
-    });
+    };
+    if (config.clientSecret?.trim()) {
+      params['client_secret'] = config.clientSecret.trim();
+    }
+    const body = new URLSearchParams(params);
 
     const res = await fetch(config.tokenUrl, {
       method: 'POST',
