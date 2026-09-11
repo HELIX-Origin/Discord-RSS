@@ -42,7 +42,7 @@ export function defaultConfig(): AppConfig {
     }
   }
 
-  const host = envHost ?? process.env['HOST']?.trim() ?? '127.0.0.1';
+  const host = (envHost === 'localhost' ? '0.0.0.0' : envHost) ?? process.env['HOST']?.trim() ?? '127.0.0.1';
   const dataDir = process.env['SQLITE_DATA'] ?? resolve(process.cwd(), 'data');
 
   // Cloud host-provided dynamic URLs

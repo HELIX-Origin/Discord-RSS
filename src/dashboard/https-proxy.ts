@@ -14,6 +14,7 @@ export interface HttpsProxyOptions {
 
 export class HttpsProxyServer {
   private server: HttpsServer | null = null;
+  private defaultPortServer: HttpsServer | null = null;
   private isStarted = false;
   private readonly logger: Logger;
   readonly proxyPort: number;
@@ -25,7 +26,7 @@ export class HttpsProxyServer {
     this.proxyPort = options.proxyPort;
     this.targetPort = options.targetPort;
     this.actualPort = options.proxyPort;
-    this.host = options.host ?? '0.0.0.0';
+    this.host = options.host === 'localhost' || !options.host ? '0.0.0.0' : options.host;
     this.logger = options.logger ?? createLogger('https-proxy');
   }
 
@@ -83,6 +84,38 @@ export class HttpsProxyServer {
       this.server.once('listening', onListening);
       this.server.listen(this.proxyPort, this.host);
     });
+
+    // If running on a non-standard port (e.g. 3132), also attempt to bind default HTTPS port 443
+    // so hosts-file custom domains (e.g. https://helix-rss.io) work directly in browsers without typing a port.
+    if (this.actualPort !== 443 && this.actualPort !== 0) {
+      try {
+        const p443 = https.createServer(tls, (req: IncomingMessage, res: ServerResponse) => {
+          this.handleRequest(req, res);
+        });
+        p443.on('upgrade', (req: IncomingMessage, socket: Socket, head: Buffer) => {
+          this.handleUpgrade(req, socket, head);
+        });
+        p443.on('error', (err: NodeJS.ErrnoException) => {
+          this.logger.debug(
+            `Default HTTPS port 443 unavailable (${err.message}); HTTPS proxy accessible via port ${this.actualPort}`,
+          );
+        });
+        await new Promise<void>((resolve) => {
+          p443.once('listening', () => {
+            this.defaultPortServer = p443;
+            this.logger.info(`HTTPS Proxy also listening on default HTTPS port https://${this.host}:443`);
+            resolve();
+          });
+          p443.once('error', () => {
+            p443.close();
+            resolve();
+          });
+          p443.listen(443, this.host);
+        });
+      } catch {
+        // Ignore if port 443 cannot be bound
+      }
+    }
   }
 
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
@@ -149,6 +182,10 @@ export class HttpsProxyServer {
     if (this.server) {
       this.server.close();
       this.server = null;
+    }
+    if (this.defaultPortServer) {
+      this.defaultPortServer.close();
+      this.defaultPortServer = null;
     }
     this.logger.info('HTTPS Proxy stopped');
   }

@@ -12,16 +12,16 @@ export function clearPorts(ports: number[], logger?: Logger): void {
     if (!port || port <= 0) continue;
     try {
       if (os.platform() === 'win32') {
-        const out = execSync('netstat -ano -p tcp', {
+        const out = execSync('netstat -ano', {
           encoding: 'utf8',
           stdio: ['pipe', 'pipe', 'ignore'],
         });
         const lines = out.split('\n');
         for (const line of lines) {
           if (!line.includes('LISTENING')) continue;
-          const match = line.trim().match(/TCP\s+\S+:(\d+)\s+\S+\s+LISTENING\s+(\d+)/);
-          if (match && Number(match[1]) === port) {
-            const pid = Number(match[2]);
+          const match = line.trim().match(/TCP\s+(\[[^\]]+\]|\S+):(\d+)\s+\S+\s+LISTENING\s+(\d+)/i);
+          if (match && Number(match[2]) === port) {
+            const pid = Number(match[3]);
             if (pid > 0 && pid !== process.pid) {
               logger?.warn(`Port ${port} is currently in use by process PID ${pid}. Clearing port...`);
               execSync(`taskkill /F /PID ${pid}`, { stdio: 'ignore' });
