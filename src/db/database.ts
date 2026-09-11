@@ -7,7 +7,6 @@ import { createLogger, type LogLevel } from '../util/logger.js';
 export interface DbStats {
   feedCount: number;
   webhookCount: number;
-  monitorCount: number;
   sentCount: number;
   dbSizeBytes: number;
   dbPath: string;
@@ -41,11 +40,7 @@ export class Database {
     } catch {
       // Column may already exist
     }
-    try {
-      this.db.exec('ALTER TABLE site_status ADD COLUMN channel_id TEXT;');
-    } catch {
-      // Column may already exist
-    }
+
     try {
       this.db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'member';");
     } catch {
@@ -95,7 +90,6 @@ export class Database {
     };
     const feedCount = count('SELECT COUNT(*) AS c FROM feeds');
     const webhookCount = count('SELECT COUNT(*) AS c FROM webhooks');
-    const monitorCount = count('SELECT COUNT(*) AS c FROM site_status');
     const sentCount = count('SELECT COUNT(*) AS c FROM sent_entries');
     const pageRow = this.db.prepare('PRAGMA page_count').get() as { page_count?: number | bigint } | undefined;
     const pageSizeRow = this.db.prepare('PRAGMA page_size').get() as { page_size?: number | bigint } | undefined;
@@ -103,7 +97,6 @@ export class Database {
     return {
       feedCount,
       webhookCount,
-      monitorCount,
       sentCount,
       dbSizeBytes: sizeBytes,
       dbPath: this.dbPathValue,

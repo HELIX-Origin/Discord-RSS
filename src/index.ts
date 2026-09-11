@@ -6,7 +6,6 @@ import { OAuthService } from './oauth/service.js';
 import { Scheduler } from './scheduler/scheduler.js';
 import { launchRedisServer } from './state/redis-process.js';
 import { createRedisCoordinator } from './state/redis.js';
-import { StatusWatcher } from './status/watcher.js';
 import { createLogger } from './util/logger.js';
 import { clearPorts } from './util/ports.js';
 
@@ -27,11 +26,10 @@ export async function main(): Promise<void> {
   const oauth = new OAuthService(repo, config);
   const redis = await createRedisCoordinator(config.redisUrl);
   const feeds = new FeedWatcher(repo, redis, config.logLevel);
-  const status = new StatusWatcher(repo, redis, config.logLevel);
 
   // 3. Create Discord Bot as primary application process
   const bot = new DiscordBot(
-    { config, db, repo, oauth, feeds, status, redis },
+    { config, db, repo, oauth, feeds, redis },
     {
       token: config.botToken || '',
       clientId: config.clientId,
@@ -44,12 +42,10 @@ export async function main(): Promise<void> {
     },
   );
   feeds.setBot(bot);
-  status.setBot(bot);
 
   // 4. Start background polling schedules
   const scheduler = new Scheduler(config.logLevel);
   scheduler.schedule('feed-poll', config.pollIntervalMs, () => feeds.pollAllFeeds());
-  scheduler.schedule('status-check', config.statusIntervalMs, () => status.checkAllMonitors());
   scheduler.start();
 
   // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)

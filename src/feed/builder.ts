@@ -41,7 +41,7 @@ export async function analyzeUrl(url: string): Promise<UrlAnalysis> {
   if (result.challenged || isCloudflareChallenge(result.contentType, null)) {
     return {
       ...base,
-      error: 'This site is behind a Cloudflare challenge. Connect a Cloudflare account in Integrations to fetch it.',
+      error: 'This site is behind a Cloudflare challenge and cannot be fetched automatically.',
     };
   }
 

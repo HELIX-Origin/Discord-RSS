@@ -84,21 +84,6 @@ CREATE TABLE IF NOT EXISTS sent_entries (
   FOREIGN KEY (feed_id) REFERENCES feeds(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS site_status (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
-  name TEXT NOT NULL,
-  url TEXT NOT NULL,
-  enabled INTEGER NOT NULL DEFAULT 1,
-  status TEXT NOT NULL DEFAULT 'unknown',
-  last_checked_at TEXT,
-  channel_id TEXT,
-  webhook_id INTEGER,
-  created_at TEXT NOT NULL,
-  UNIQUE (user_id, name),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
-
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
@@ -127,7 +112,6 @@ CREATE INDEX IF NOT EXISTS idx_oauth_user_provider ON oauth_connections(user_id,
 CREATE INDEX IF NOT EXISTS idx_oauth_states_state ON oauth_states(state);
 CREATE INDEX IF NOT EXISTS idx_feeds_user ON feeds(user_id);
 CREATE INDEX IF NOT EXISTS idx_webhooks_user ON webhooks(user_id);
-CREATE INDEX IF NOT EXISTS idx_site_status_user ON site_status(user_id);
 CREATE INDEX IF NOT EXISTS idx_sent_entries_feed ON sent_entries(feed_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_ts ON activity_log(ts DESC);
 CREATE INDEX IF NOT EXISTS idx_discord_guilds_user ON discord_guilds(user_id);

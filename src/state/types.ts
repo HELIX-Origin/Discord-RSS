@@ -59,19 +59,6 @@ export interface Webhook {
   createdAt: string;
 }
 
-export interface SiteMonitor {
-  id: number;
-  userId: number;
-  name: string;
-  url: string;
-  enabled: number;
-  status: string;
-  lastCheckedAt: string | null;
-  channelId: string | null;
-  webhookId?: number | null;
-  createdAt: string;
-}
-
 export interface DiscordGuild {
   guildId: string;
   userId: number;
@@ -173,23 +160,6 @@ export const rowToWebhook = (r: Row | undefined): Webhook | null => {
     name: String(r.name),
     url: String(r.url),
     enabled: Number(r.enabled),
-    createdAt: String(r.created_at),
-  };
-};
-
-export const rowToMonitor = (r: Row | undefined): SiteMonitor | null => {
-  if (!r) return null;
-  const channelId = r.channel_id !== null && r.channel_id !== undefined ? String(r.channel_id) : null;
-  return {
-    id: Number(r.id),
-    userId: Number(r.user_id),
-    name: String(r.name),
-    url: String(r.url),
-    enabled: Number(r.enabled),
-    status: String(r.status),
-    lastCheckedAt: r.last_checked_at === null ? null : String(r.last_checked_at),
-    channelId,
-    webhookId: r.webhook_id === null || r.webhook_id === undefined ? null : Number(r.webhook_id),
     createdAt: String(r.created_at),
   };
 };

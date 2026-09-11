@@ -31,12 +31,11 @@ describe('Dev Tools API & Pages', () => {
     const res = await ownerClient.get<{
       feedCount: number;
       webhookCount: number;
-      monitorCount: number;
       userCount: number;
       adminCount: number;
     }>('/api/admin/stats');
     expect(res.status).toBe(200);
-    expect(res.body).toMatchObject({ feedCount: 0, webhookCount: 0, monitorCount: 0 });
+    expect(res.body).toMatchObject({ feedCount: 0, webhookCount: 0 });
     expect(res.body.userCount).toBeGreaterThanOrEqual(1);
     expect(res.body.adminCount).toBeGreaterThanOrEqual(1);
   });
@@ -71,12 +70,9 @@ describe('Dev Tools API & Pages', () => {
     expect(Array.isArray(res.body)).toBe(true);
   });
 
-  it('allows owner to trigger manual feed and status checks', async () => {
+  it('allows owner to trigger manual feed poll', async () => {
     const feedRes = await ownerClient.post('/api/admin/trigger-feeds');
     expect(feedRes.status).toBe(202);
-
-    const statusRes = await ownerClient.post('/api/admin/trigger-status');
-    expect(statusRes.status).toBe(202);
   });
 
   it('forbids member role from accessing dev tools endpoints', async () => {

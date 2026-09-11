@@ -4,18 +4,8 @@ import { UserRepository } from './repositories/users.js';
 import { OAuthRepository } from './repositories/oauth.js';
 import { FeedRepository } from './repositories/feeds.js';
 import { WebhookRepository } from './repositories/webhooks.js';
-import { MonitorRepository } from './repositories/monitors.js';
 import { SettingsRepository } from './repositories/settings.js';
-import type {
-  ActivityEntry,
-  Feed,
-  OAuthConnection,
-  Session,
-  SiteMonitor,
-  User,
-  UserRole,
-  Webhook,
-} from '../state/types.js';
+import type { ActivityEntry, Feed, OAuthConnection, Session, User, UserRole, Webhook } from '../state/types.js';
 
 export type {
   ActivityEntry,
@@ -23,7 +13,6 @@ export type {
   OAuthConnection,
   OAuthState,
   Session,
-  SiteMonitor,
   User,
   UserRole,
   Webhook,
@@ -47,7 +36,6 @@ export class Repository {
   private readonly oauth: OAuthRepository;
   private readonly feeds: FeedRepository;
   private readonly webhooks: WebhookRepository;
-  private readonly monitors: MonitorRepository;
   private readonly settings: SettingsRepository;
 
   constructor(private readonly db: Database) {
@@ -56,7 +44,6 @@ export class Repository {
     this.oauth = new OAuthRepository(db, this.state);
     this.feeds = new FeedRepository(db, this.state);
     this.webhooks = new WebhookRepository(db, this.state);
-    this.monitors = new MonitorRepository(db, this.state);
     this.settings = new SettingsRepository(db, this.state);
   }
 
@@ -227,46 +214,6 @@ export class Repository {
 
   deleteWebhook(userId: number, id: number): void {
     this.webhooks.deleteWebhook(userId, id);
-  }
-
-  // ---- Status monitors ----
-
-  listMonitors(userId: number): SiteMonitor[] {
-    return this.monitors.listMonitors(userId);
-  }
-
-  getMonitor(userId: number, id: number): SiteMonitor | null {
-    return this.monitors.getMonitor(userId, id);
-  }
-
-  listMonitorsForAllUsers(): SiteMonitor[] {
-    return this.monitors.listMonitorsForAllUsers();
-  }
-
-  addMonitor(userId: number, name: string, url: string, channelIdOrWebhookId: string | number | null): SiteMonitor {
-    return this.monitors.addMonitor(userId, name, url, channelIdOrWebhookId);
-  }
-
-  updateMonitor(
-    userId: number,
-    id: number,
-    fields: {
-      name?: string;
-      url?: string;
-      channelId?: string | null;
-      webhookId?: number | null;
-      enabled?: number;
-    },
-  ): SiteMonitor | null {
-    return this.monitors.updateMonitor(userId, id, fields);
-  }
-
-  setMonitorChecked(userId: number, id: number, status: string): void {
-    this.monitors.setMonitorChecked(userId, id, status);
-  }
-
-  deleteMonitor(userId: number, id: number): void {
-    this.monitors.deleteMonitor(userId, id);
   }
 
   // ---- Settings & activity ----

@@ -12,7 +12,6 @@ import { registerOAuthRoutes } from './routes/oauth.js';
 import { registerFeedsRoutes } from './routes/feeds.js';
 import { registerBuilderRoutes } from './routes/builder.js';
 import { registerDiscordRoutes } from './routes/discord.js';
-import { registerMonitorsRoutes } from './routes/monitors.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerStatsRoutes } from './routes/stats.js';
 import { authedUserId, isAdminOrOwner } from './routes/shared.js';
@@ -157,7 +156,6 @@ export function createHelixRssServer(deps: AppDeps): Server {
   registerFeedsRoutes(router);
   registerBuilderRoutes(router);
   registerDiscordRoutes(router);
-  registerMonitorsRoutes(router);
   registerSettingsRoutes(router);
   registerStatsRoutes(router);
 

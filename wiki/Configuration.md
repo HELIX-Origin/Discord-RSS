@@ -15,12 +15,11 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | `REDIS_PORT`   | `3535`      | The port for the Redis coordinator. Redis automatically binds to `INTERNAL_URL`.                                                                                                                                                      |
 | `PUBLIC_URL`   | _(empty)_   | **Optional**. The public domain where HELIX RSS is hosted (e.g., `https://rss.example.com`). When provided, public-facing links, Discord bot invite links, and OAuth redirect URIs will use this URL instead of the internal address. |
 
-### Monitoring & Polling Timers
+### Feed Polling & Timeouts
 
 | Variable             | Default | Description                                                                                                                     |
 | -------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `POLL_INTERVAL_MS`   | `60000` | Feed polling frequency in milliseconds (default: 60 seconds). All active RSS/Atom and scraper feeds are polled on this cadence. |
-| `STATUS_INTERVAL_MS` | `30000` | Site status health check frequency in milliseconds (default: 30 seconds).                                                       |
 | `REQUEST_TIMEOUT_MS` | `15000` | Timeout in milliseconds for outgoing HTTP requests (fetching feeds, scraping web pages, delivering messages). |
 
 ### Logging & Storage
@@ -39,12 +38,6 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | `DISCORD_CLIENT_ID`     | _(empty)_        | **Required**. Your Discord Application Client ID found in the Discord Developer Portal under **General Information**.                                                          |
 | `DISCORD_CLIENT_SECRET` | _(empty)_        | **Required for Web Login**. Your Discord Application Client Secret found in the Developer Portal under **OAuth2**. Used to authenticate users via Discord.                     |
 | `DISCORD_REDIRECT_URL`  | _(auto-derived)_ | The Bot Invite & Authorization URL. Format: `https://discord.com/oauth2/authorize?client_id=<your_client_id>&permissions=8&integration_type=0&scope=bot+applications.commands` |
-
-### Cloudflare Access OAuth (Optional)
-
-| Variable               | Default   | Description                                                                                                                                                 |
-| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_CLIENT_ID` | _(empty)_ | **Optional**. OAuth Client ID for authenticating with Cloudflare Access. Uses code-based public client authentication (no client secret used or needed). |
 
 ### Native SSL / HTTPS (Optional)
 

@@ -49,16 +49,17 @@ All commands are registered globally and available in any Discord server where t
 | `/feed poll`   | `id` (required, feed ID or name)                                                                           | Manually triggers an immediate poll of the feed.                                                     |
 | `/feed toggle` | `id` (required)<br>`enabled` (true/false)                                                                  | Enables or pauses automatic polling for the feed.                                                    |
 
-### `/monitor` — Website Uptime Monitors
-
-| Subcommand        | Arguments                                                     | Description                                                                                         |
-| ----------------- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `/monitor add`    | `name` (required)<br>`url` (required)<br>`channel` (optional) | Registers a website URL to monitor for uptime. Alerts post directly to the channel.                |
-| `/monitor list`   | _none_                                                        | Lists all website monitors and their current statuses (Online / Down / Degraded).                   |
-| `/monitor remove` | `id` (required, monitor ID or name)                           | Deletes a status monitor.                                                                           |
-| `/monitor check`  | `id` (required, monitor ID or name)                           | Executes an on-demand HTTP health check.                                                            |
-
 ### `/stats` — System Health & Diagnostics
 
 - **Usage**: `/stats`
 - **Output**: Returns service uptime, database size, active subscriptions, and an **"Add Bot to Server"** button.
+
+### `/about` — Service Information & Overview
+
+- **Usage**: `/about`
+- **Output**: Returns comprehensive details regarding HELIX RSS architecture, capabilities, runtime dependencies, and repository links.
+
+### `/help` — Available Slash Commands
+
+- **Usage**: `/help`
+- **Output**: Returns an interactive formatted guide with all available slash commands and usage instructions.

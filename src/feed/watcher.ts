@@ -3,7 +3,7 @@ import type { RedisCoordinator } from '../state/redis.js';
 import type { Feed } from '../state/types.js';
 import { fetchRaw, isCloudflareChallenge } from './fetch.js';
 import { parseHtml } from './html.js';
-import { parseFeed, stripHtml, withGuid, type FeedEntry } from './parser.js';
+import { parseFeed, withGuid, type FeedEntry } from './parser.js';
 import { scrapeItems, absoluteUrl } from './scraper.js';
 import { feedEmbed, sendWebhook } from '../webhook/discord.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
@@ -100,6 +100,11 @@ export class FeedWatcher {
           description: item.description,
           publishedAt: null,
           author: null,
+          imageUrl: item.imageUrl
+            ? item.imageUrl.startsWith('http')
+              ? item.imageUrl
+              : absoluteUrl(feed.url, item.imageUrl)
+            : null,
         })),
       );
     } else {
@@ -132,11 +137,12 @@ export class FeedWatcher {
       const embed = feedEmbed({
         title: entry.title,
         url: entry.link,
-        description: stripHtml(entry.description),
+        description: entry.description,
         author: entry.author,
         publishedAt: entry.publishedAt,
         feedTitle: feed.name,
         color: 0x06b6d4,
+        imageUrl: entry.imageUrl,
       });
 
       let delivered = false;

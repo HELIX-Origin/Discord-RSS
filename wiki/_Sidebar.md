@@ -1,10 +1,12 @@
 ### HELIX RSS Wiki
 
 - [Home](Home)
+- [Architecture & Design](Architecture-and-Design)
 - [Configuration Guide](Configuration)
+- [Deployment & Hosting](Deployment-and-Hosting)
+- [Development & Testing](Development-and-Testing)
 - [Discord Bot & Commands](Discord-Bot)
 - [Feeds & Web Scraper](Feeds-and-Scrapers)
-- [Status Monitors](Status-Monitors)
 - [Integrations & Security](Integrations-and-Security)
 - [Troubleshooting](Troubleshooting)
 

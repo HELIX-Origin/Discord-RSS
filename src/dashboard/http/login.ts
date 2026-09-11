@@ -8,9 +8,47 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
   <title>${title} · HELIX RSS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('helix-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'light' || (!saved && !prefersDark)) {
+          document.documentElement.classList.add('light-theme');
+        } else {
+          document.documentElement.classList.remove('light-theme');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <style>
-    body { background-color: #0b0f19; color: #f3f4f6; }
-    .glass { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(55, 65, 81, 0.5); }
+    :root {
+      --bg-main: #0b0f19;
+      --bg-glass: rgba(17, 24, 39, 0.75);
+      --border-glass: rgba(55, 65, 81, 0.5);
+      --text-main: #f3f4f6;
+    }
+    html.light-theme {
+      --bg-main: #e8ecf2;
+      --bg-glass: rgba(248, 250, 252, 0.9);
+      --border-glass: rgba(203, 213, 225, 0.9);
+      --text-main: #1e293b;
+    }
+    body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.2s ease, color 0.2s ease; }
+    .glass { background: var(--bg-glass); backdrop-filter: blur(12px); border: 1px solid var(--border-glass); }
+
+    html.light-theme .text-white { color: #1e293b !important; }
+    html.light-theme .text-gray-400 { color: #475569 !important; }
+    html.light-theme .text-gray-500 { color: #64748b !important; }
+    html.light-theme .bg-gray-900 { background-color: #f8fafc !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme .bg-gray-800 { background-color: #edf1f7 !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme .border-gray-800 { border-color: #cbd5e1 !important; }
+    html.light-theme .border-gray-700 { border-color: #cbd5e1 !important; }
+    html.light-theme input { background-color: #ffffff !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme input::placeholder { color: #94a3b8 !important; }
+    html.light-theme #theme-toggle-btn { background-color: #edf1f7 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light-theme #theme-toggle-btn:hover { background-color: #dfe4ec !important; color: #0f172a !important; }
+    html.light-theme .shadow-2xl { box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between font-sans p-4 selection:bg-cyan-500 selection:text-white">
@@ -23,13 +61,18 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
       <span class="font-extrabold text-white text-base tracking-tight">HELIX <span class="text-cyan-400">RSS</span></span>
     </a>
 
-    ${
-      botInviteUrl
-        ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
-      <i class="fa-brands fa-discord text-sm"></i> Invite Bot to Server
-    </a>`
-        : ''
-    }
+    <div class="flex items-center gap-3">
+      <button id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Theme" class="inline-flex items-center justify-center h-8 w-8 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
+        <i id="theme-toggle-icon" class="fa-solid fa-moon text-cyan-400"></i>
+      </button>
+      ${
+        botInviteUrl
+          ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
+        <i class="fa-brands fa-discord text-sm"></i> Invite Bot to Server
+      </a>`
+          : ''
+      }
+    </div>
   </header>
 
   <div class="w-full max-w-md mx-auto my-auto py-8">
@@ -98,6 +141,41 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
       box.textContent = '✖ ' + urlError;
       box.classList.remove('hidden');
     }
+
+    function initTheme() {
+      const isLight = document.documentElement.classList.contains('light-theme');
+      updateThemeIcon(isLight);
+      try {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('helix-theme')) {
+            if (e.matches) {
+              document.documentElement.classList.remove('light-theme');
+              updateThemeIcon(false);
+            } else {
+              document.documentElement.classList.add('light-theme');
+              updateThemeIcon(true);
+            }
+          }
+        });
+      } catch {}
+    }
+
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.toggle('light-theme');
+      try {
+        localStorage.setItem('helix-theme', isLight ? 'light' : 'dark');
+      } catch {}
+      updateThemeIcon(isLight);
+    }
+
+    function updateThemeIcon(isLight) {
+      const icon = document.getElementById('theme-toggle-icon');
+      if (icon) {
+        icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-cyan-400';
+      }
+    }
+
+    initTheme();
   </script>
 </body>
 </html>`;

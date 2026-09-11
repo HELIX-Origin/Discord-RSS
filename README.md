@@ -9,7 +9,7 @@ HELIX-RSS automates content delivery from your favorite RSS and Atom feeds strai
 ## Features
 
 - **Automated Feed Polling:** Regularly checks configured RSS/Atom endpoints for new items.
-- **Discord Webhook & Bot Integration:** Cleanly formats and pushes updates straight to designated channels, with interactive Discord slash commands (`/feed`, `/webhook`, `/monitor`, `/stats`).
+- **Discord Webhook & Bot Integration:** Cleanly formats and pushes updates straight to designated channels, with interactive Discord slash commands (`/feed`, `/stats`, `/about`, `/help`).
 - **Lightweight and Efficient:** Minimal resource usage with zero runtime dependencies while maintaining high performance.
 
 ## Documentation & Wiki

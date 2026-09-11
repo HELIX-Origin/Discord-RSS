@@ -32,7 +32,6 @@ coverage/
 .DS_Store
 Thumbs.db
 
-
 # Lock files for alternative package managers (npm lock file is committed)
 npm-shrinkwrap.json
 .pnpm-lock.yaml
@@ -46,3 +45,5 @@ yarn.lock
 !./agents/plans/roadmap.md
 !./agents/plans/phase*.md
 
+# Temporary files that are created during development and should not be tracked.
+IMPORTANT.md

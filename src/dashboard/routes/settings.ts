@@ -23,20 +23,12 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     sendJson(res, 200, { ok: true });
   });
 
-  router.add('POST', '/api/settings/oauth/:provider', async (req, res, ctx, d) => {
-    const userId = await requireAdminOrOwner(req, res, d);
-    if (userId === null) return;
-    const body = (await readBodyJson(req)) as { clientId?: string; clientSecret?: string; enabled?: boolean };
-    try {
-      d.oauth.saveConfig(ctx.params['provider'], {
-        clientId: body.clientId,
-        clientSecret: body.clientSecret,
-        enabled: body.enabled,
-      });
-      sendJson(res, 200, { ok: true });
-    } catch (err) {
-      sendError(res, 400, err instanceof Error ? err.message : 'Failed to save OAuth config');
-    }
+  router.add('POST', '/api/settings/oauth/:provider', async (req, res) => {
+    sendError(
+      res,
+      400,
+      'OAuth provider credentials cannot be configured via the dashboard. Please configure DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET in your .env file.',
+    );
   });
 
   // ---- User & Member Management ----
@@ -298,7 +290,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
 
       if (fetchRes.challenged) {
         recommendations.push(
-          'Cloudflare Anti-Bot Challenge detected. The user should connect their Cloudflare account in Integrations.',
+          'Cloudflare Anti-Bot Challenge detected. The target site blocks automated crawler requests.',
         );
       }
 

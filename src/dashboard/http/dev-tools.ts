@@ -157,20 +157,6 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
     sendJson(res, 202, { ok: true });
   });
 
-  router.add('POST', '/api/admin/trigger-status', async (req, res, _ctx, deps) => {
-    const userId = await requireAdminOrOwner(req, res, deps);
-    if (userId === null) return;
-
-    deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual status check triggered');
-    deps.status
-      .checkAllMonitors()
-      .then(() => deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual status check completed'))
-      .catch((err) =>
-        deps.repo.logActivity(userId, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)),
-      );
-    sendJson(res, 202, { ok: true });
-  });
-
   router.add('GET', '/api/admin/config', async (req, res, _ctx, deps) => {
     if ((await requireAdminOrOwner(req, res, deps)) === null) return;
     const cfg = deps.config;
@@ -180,7 +166,6 @@ export function registerDevToolsRoutes(router: Router<AppDeps>): void {
       dbPath: cfg.dbPath,
       logLevel: cfg.logLevel,
       pollIntervalMs: cfg.pollIntervalMs,
-      statusIntervalMs: cfg.statusIntervalMs,
       requestTimeoutMs: cfg.requestTimeoutMs,
       publicBaseUrl: cfg.publicBaseUrl,
       sslConfigured: Boolean(cfg.sslKey && cfg.sslCert),
@@ -229,7 +214,7 @@ export function renderDevToolsSection(canAccess: boolean): string {
         </div>
 
         <!-- Metric Cards -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-6">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
           <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
             <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Feeds</div>
             <div id="dt-feed-count" class="text-xl font-bold text-white mt-1">-</div>
@@ -237,10 +222,6 @@ export function renderDevToolsSection(canAccess: boolean): string {
           <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
             <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Webhooks</div>
             <div id="dt-webhook-count" class="text-xl font-bold text-white mt-1">-</div>
-          </div>
-          <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
-            <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Monitors</div>
-            <div id="dt-monitor-count" class="text-xl font-bold text-white mt-1">-</div>
           </div>
           <div class="bg-gray-900/80 rounded-xl p-3.5 border border-gray-800">
             <div class="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Users / Admins</div>
@@ -260,9 +241,6 @@ export function renderDevToolsSection(canAccess: boolean): string {
         <div class="flex flex-wrap gap-2.5 mt-6 pt-6 border-t border-gray-800/80">
           <button onclick="triggerFeedPoll()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition flex items-center gap-1.5 shadow-md shadow-cyan-600/20">
             <i class="fa-solid fa-rotate"></i> Poll all feeds now
-          </button>
-          <button onclick="triggerStatusCheck()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20">
-            <i class="fa-solid fa-heart-pulse"></i> Check monitors now
           </button>
           <button onclick="optimizeDb()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-700 hover:bg-emerald-600 text-white transition flex items-center gap-1.5">
             <i class="fa-solid fa-database"></i> Optimize SQLite DB
@@ -389,7 +367,6 @@ export function renderDevToolsScript(): string {
           const stats = await statsRes.json();
           document.getElementById('dt-feed-count').textContent = stats.feedCount ?? 0;
           document.getElementById('dt-webhook-count').textContent = stats.webhookCount ?? 0;
-          document.getElementById('dt-monitor-count').textContent = stats.monitorCount ?? 0;
           document.getElementById('dt-users-count').textContent = (stats.userCount ?? 0) + ' (' + (stats.adminCount ?? 0) + ' admin)';
           document.getElementById('dt-db-size').textContent = Math.round((stats.dbSizeBytes ?? 0) / 1024) + ' KB';
           const mins = Math.floor((stats.processUptimeSeconds ?? 0) / 60);
@@ -481,11 +458,6 @@ export function renderDevToolsScript(): string {
       refreshDevTools();
     }
 
-    async function triggerStatusCheck() {
-      const res = await fetch('/api/admin/trigger-status', { method: 'POST' });
-      if (res.ok) alert('Status check triggered.');
-      refreshDevTools();
-    }
 
     async function optimizeDb() {
       const res = await fetch('/api/admin/db/optimize', { method: 'POST' });

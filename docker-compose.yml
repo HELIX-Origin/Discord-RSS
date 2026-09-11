@@ -1,0 +1,39 @@
+services:
+  helix-rss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helix-rss
+    restart: unless-stopped
+    ports:
+      - "${DISCORD_PORT:-3131}:3131"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=production
+      - INTERNAL_URL=0.0.0.0
+      - DISCORD_PORT=3131
+      - SQLITE_DATA=/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3131/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Optional Redis service for cross-instance deduplication coordination
+  # Uncomment if running multiple coordinated instances:
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: helix-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "3535:6379"
+  #   volumes:
+  #     - redis-data:/data
+
+# volumes:
+#   redis-data:

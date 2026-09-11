@@ -7,7 +7,6 @@ export interface AppConfig {
   port: number;
   dbPath: string;
   pollIntervalMs: number;
-  statusIntervalMs: number;
   requestTimeoutMs: number;
   publicBaseUrl: string | null;
   sslKey: string | null;
@@ -21,8 +20,6 @@ export interface AppConfig {
   botPort: number;
   clientId: string | null;
   clientSecret: string | null;
-  cloudflareClientId: string | null;
-  cloudflareClientSecret: string | null;
   redirectUrl: string | null;
   callbackUrl: string | null;
 }
@@ -43,8 +40,6 @@ export function defaultConfig(): AppConfig {
   const redisUrl = `redis://${host}:${redisPort}`;
   const clientId = process.env['DISCORD_CLIENT_ID']?.trim() || null;
   const clientSecret = process.env['DISCORD_CLIENT_SECRET']?.trim() || null;
-  const cloudflareClientId = process.env['CLOUDFLARE_CLIENT_ID']?.trim() || null;
-  const cloudflareClientSecret = process.env['CLOUDFLARE_CLIENT_SECRET']?.trim() || null;
   const callbackHost = host === '127.0.0.1' || host === '0.0.0.0' ? 'localhost' : host;
   const botProto = botSslKey && botSslCert ? 'https' : 'http';
 
@@ -79,7 +74,6 @@ export function defaultConfig(): AppConfig {
     port,
     dbPath: resolve(dataDir, 'helix-rss.db'),
     pollIntervalMs: parsePositiveInt(process.env['POLL_INTERVAL_MS'], 60_000),
-    statusIntervalMs: parsePositiveInt(process.env['STATUS_INTERVAL_MS'], 30_000),
     requestTimeoutMs: parsePositiveInt(process.env['REQUEST_TIMEOUT_MS'], 15_000),
     publicBaseUrl,
     sslKey,
@@ -93,8 +87,6 @@ export function defaultConfig(): AppConfig {
     botPort,
     clientId,
     clientSecret,
-    cloudflareClientId,
-    cloudflareClientSecret,
     redirectUrl,
     callbackUrl,
   };

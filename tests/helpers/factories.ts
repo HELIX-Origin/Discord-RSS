@@ -4,7 +4,6 @@ import type {
   OAuthConnection,
   OAuthState,
   Session,
-  SiteMonitor,
   User,
   Webhook,
 } from '../../src/state/types.js';
@@ -16,6 +15,7 @@ export function userFactory(overrides: Partial<User> = {}): User {
     email: `user-${id}@example.com`,
     passwordHash: 'scrypt$hash',
     displayName: `User ${id}`,
+    role: 'member',
     createdAt: new Date().toISOString(),
     ...overrides,
   };
@@ -38,7 +38,7 @@ export function oauthConnectionFactory(overrides: Partial<OAuthConnection> = {})
   return {
     id,
     userId: 1,
-    provider: 'cloudflare',
+    provider: 'discord',
     providerAccountId: `account-${id}`,
     accessToken: `access-${id}`,
     refreshToken: null,
@@ -52,7 +52,7 @@ export function oauthStateFactory(overrides: Partial<OAuthState> = {}): OAuthSta
   return {
     state: `state-${Date.now()}`,
     userId: 1,
-    provider: 'cloudflare',
+    provider: 'discord',
     createdAt: new Date().toISOString(),
     ...overrides,
   };
@@ -65,6 +65,7 @@ export function feedFactory(overrides: Partial<Feed> = {}): Feed {
     userId: 1,
     name: `Feed ${id}`,
     url: `https://example.com/feed-${id}.xml`,
+    channelId: null,
     webhookId: 1,
     enabled: 1,
     feedType: 'rss',
@@ -84,22 +85,6 @@ export function webhookFactory(overrides: Partial<Webhook> = {}): Webhook {
     name: `Webhook ${id}`,
     url: `https://discord.com/api/webhooks/${id}/token-${id}`,
     enabled: 1,
-    createdAt: new Date().toISOString(),
-    ...overrides,
-  };
-}
-
-export function monitorFactory(overrides: Partial<SiteMonitor> = {}): SiteMonitor {
-  const id = overrides.id ?? 1;
-  return {
-    id,
-    userId: 1,
-    name: `Monitor ${id}`,
-    url: `https://example.com/status-${id}`,
-    enabled: 1,
-    status: 'unknown',
-    lastCheckedAt: null,
-    webhookId: null,
     createdAt: new Date().toISOString(),
     ...overrides,
   };

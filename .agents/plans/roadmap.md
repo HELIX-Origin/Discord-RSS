@@ -1,16 +1,18 @@
-# Discord RSS — Rebuild Roadmap
+# Discord RSS — Global Repository Roadmap
 
-> The live tracking roadmap is **GitHub Issue #4** (`[PLAN] Multi-user Discord RSS rebuild`) at `HELIX-Origin/Discord-RSS`. This file mirrors the local context and links to the legacy phase plans.
+> **Global Repository Roadmap**: This document is the overarching repository roadmap recording all plans, major architectural shifts, and milestone evolutions across HELIX RSS.
+>
+> **GitHub Issue Relationship**: In contrast to this local repository-wide roadmap, **GitHub issue roadmaps are per-plan**. Each time a new plan is created, it is run within its own dedicated parent `[PLAN]` issue (e.g. Issue #4 for the Service Rebuild, Issue #13 for Modernization & Productionization). That parent issue serves as the roadmap exclusively for that plan and its dedicated sub-issues.
 
 ```mermaid
-flowchart LR
-    subgraph Foundation ["Foundation"]
+flowchart TD
+    subgraph Foundation ["1. Foundation"]
         P0["AGENTS + rules + standards ✅"]
-        A["AppState layer (primary in-memory)"]
-        R["Optional Redis coordinator"]
+        A["AppState in-memory write-through ✅"]
+        R["Optional Redis coordinator ✅"]
     end
 
-    subgraph Rebuild ["Service Rebuild — complete"]
+    subgraph Rebuild ["2. Service Rebuild (Plan #4)"]
         S1["#5 Architecture ✅"]
         S2["#6 Implementation ✅"]
         S3["#7 Vitest suite ✅"]
@@ -18,36 +20,87 @@ flowchart LR
         S5["#9 Testing/linting suite ✅"]
     end
 
-    subgraph Extension ["Extensions — complete"]
+    subgraph Extensions ["3. Extensions (Plan #4)"]
         S6["#10 Popular Feeds tab ✅"]
         S7["#11 lib/ Module Split ✅"]
-        S8["#12 Runbook + Cloudflare OAuth test ✅"]
+        S8["#12 Runbook + Mocks ✅"]
+    end
+
+    subgraph Modernization ["4. Modernization & Productionization (Plan #13)"]
+        M1["#14 Cloudflare Retirement & Error Recovery ✅"]
+        M2["#15 Dashboard UI Cleanup & Theme Engine ✅"]
+        M3["#16 Production Containerization ✅"]
+        M4["#17 Wiki Guides & Architecture Overhaul ✅"]
+        M5["#18 Agent Modernization & AGENTS.md Refresh ✅"]
     end
 
     P0 --> A --> S1 --> S2 --> S3 --> S4 --> S5
     A --> R
     S5 --> S6 --> S7 --> S8
+    S8 --> M1 --> M2 --> M3 --> M4 --> M5
 ```
 
-## Milestones & GitHub Tracking
+---
 
-| Item | Milestone | Status | Tracking |
-|------|-----------|--------|----------|
-| Standards | Roadmap-first issue/PR/commit standards, emoji commit matrix | Done (local, Rule 04 + templates) | `.agents/rules/remote-issue-protocol.md` |
-| AppState | In-memory primary layer over SQLite write-through, optional Redis | Done | [#5](https://github.com/HELIX-Origin/Discord-RSS/issues/5) |
-| Implementation | Repository write-through, RedisCoordinator, watcher locks/config wiring | Done | [#6](https://github.com/HELIX-Origin/Discord-RSS/issues/6) |
-| Tests | Vitest suite rebuild (state, auth, xml/parser, html/scraper, webhook, router) | Done | [#7](https://github.com/HELIX-Origin/Discord-RSS/issues/7) |
-| Verification | Smoke test (register -> webhook -> preset feed -> poll), agents rewrite, docs/wiki | Done | [#8](https://github.com/HELIX-Origin/Discord-RSS/issues/8) |
-| Popular Feeds | Dashboard tab with presets + one-click add | Done | [#10](https://github.com/HELIX-Origin/Discord-RSS/issues/10) |
-| `lib/` split | Large modules decomposed under `src/lib/` | Done | [#11](https://github.com/HELIX-Origin/Discord-RSS/issues/11) |
-| Runbook + OAuth | Reproduction-safe runbook + Cloudflare OAuth mocks | Done | [#12](https://github.com/HELIX-Origin/Discord-RSS/issues/12) |
+## Global Repository Milestones
 
-## Legacy Phases (superseded)
+| Plan / Milestone | Target Domain | Status | Tracking / Issue |
+|---|---|---|---|
+| **Standards & Rules** | Roadmap-first protocol, emoji matrix, safety invariants | Complete | `.agents/rules/remote-issue-protocol.md` |
+| **AppState Persistence** | In-memory primary layer over SQLite write-through | Complete | [#5](https://github.com/HELIX-Origin/HELIX-RSS/issues/5) (Plan #4) |
+| **Service Implementation** | Repository write-through, Redis coordinator, watchers | Complete | [#6](https://github.com/HELIX-Origin/HELIX-RSS/issues/6) (Plan #4) |
+| **Vitest Suite Rebuild** | Comprehensive unit & integration testing harness | Complete | [#7](https://github.com/HELIX-Origin/HELIX-RSS/issues/7) (Plan #4) |
+| **Verification & Docs** | Multi-user onboarding smoke test, documentation sync | Complete | [#8](https://github.com/HELIX-Origin/HELIX-RSS/issues/8) (Plan #4) |
+| **Popular Feeds** | Presets catalog and one-click subscription dashboard tab | Complete | [#10](https://github.com/HELIX-Origin/HELIX-RSS/issues/10) (Plan #4) |
+| **Modular Refactor** | Codebase decomposition and type isolation | Complete | [#11](https://github.com/HELIX-Origin/HELIX-RSS/issues/11) (Plan #4) |
+| **Runbook & OAuth Mocking** | Zero-downtime operations and test mock servers | Complete | [#12](https://github.com/HELIX-Origin/HELIX-RSS/issues/12) (Plan #4) |
+| **Cloudflare Retirement & Error Recovery** | Remove Cloudflare OAuth, add `/oauth/error` and `/api/oauth/error` | Complete | [#14](https://github.com/HELIX-Origin/HELIX-RSS/issues/14) (Plan #13) |
+| **Dashboard Cleanup & Theme Engine** | Remove Integrations tab, UI OAuth settings, Light/Dark themes | Complete | [#15](https://github.com/HELIX-Origin/HELIX-RSS/issues/15) (Plan #13) |
+| **Containerization** | Production Node 22 Alpine `Dockerfile`, `docker-compose.yml`, healthcheck | Complete | [#16](https://github.com/HELIX-Origin/HELIX-RSS/issues/16) (Plan #13) |
+| **Wiki Overhaul** | Cloud hosting (Heroku, Render, Fly, Railway, Vercel), local OS guides, ER diagrams | Complete | [#17](https://github.com/HELIX-Origin/HELIX-RSS/issues/17) (Plan #13) |
+| **Agent Catalog Modernization** | Multi-agent catalog, current issues tracking in `AGENTS.md` | Complete | [#18](https://github.com/HELIX-Origin/HELIX-RSS/issues/18) (Plan #13) |
+| **Bot Commands & Rich Presentation** | `/about` and `/help` commands (dynamic import, human-readable embeds), RSS primary images and clean links | Complete | `src/bot/commands/` & `src/webhook/` |
+| **Site Status Monitors Retirement** | Complete removal of site monitors from backend, DB, UI, and bot commands | Complete | Plan #13 / Roadmap |
 
-The original 8-phase plan (`phase1.md`..`phase7.md`) described the legacy Site-Feed-Discord Python/Discohook architecture and is superseded by the multi-user Discord RSS rebuild. `phase8.md` was removed. These files are retained as historical context only.
+---
 
-## Progress Notes (roadmap-first, Rule 04)
+## Plan 13: Modernization & Productionization ([#13](https://github.com/HELIX-Origin/HELIX-RSS/issues/13))
 
-- Progress updates belong in the **first post** of GitHub Issue #4 (`gh issue edit 4 --body-file <roadmap.md>`), never new comments.
-- New discoveries get added to the Issue #4 roadmap, followed by a single explanatory comment.
-- All sub-issues (#5–#12) are closed; the parent roadmap acceptance criteria are fully met. `npm run check` passes with 95 tests.
+- [x] **Sub-Issue 9: Cloudflare OAuth Retirement & `/oauth/error` Recovery** ([#14](https://github.com/HELIX-Origin/HELIX-RSS/issues/14))
+  - [x] Removed `src/oauth/cloudflare.ts` and associated env configurations.
+  - [x] Implemented `/oauth/error` and `/api/oauth/error` recovery routes.
+  - [x] Restricted OAuth credential modifications to `.env` variables exclusively.
+  - [x] Replaced legacy Cloudflare integration tests with `tests/integration/oauth/oauth.test.ts`.
+- [x] **Sub-Issue 10: Dashboard UI Cleanup & Modern Theme System** ([#15](https://github.com/HELIX-Origin/HELIX-RSS/issues/15))
+  - [x] Removed obsolete `Integrations` tab navigation and panels.
+  - [x] Removed `OAuth Provider Credentials` form from settings.
+  - [x] Replaced legacy webhook terminology with direct Discord channel destination labels.
+  - [x] Implemented dynamic Light & Dark themes with `localStorage` persistence and header toggle.
+- [x] **Sub-Issue 11: Production Containerization** ([#16](https://github.com/HELIX-Origin/HELIX-RSS/issues/16))
+  - [x] Multi-stage `Dockerfile` using Node 22 Alpine, non-root user `helixuser`, and `/health` probe.
+  - [x] `docker-compose.yml` mounting `./data:/app/data` with environment mapping.
+- [x] **Sub-Issue 12: Comprehensive Wiki & Architecture Documentation** ([#17](https://github.com/HELIX-Origin/HELIX-RSS/issues/17))
+  - [x] `wiki/Deployment-and-Hosting.md` (Cloud: Heroku, Render, Fly.io, Railway, Vercel with pricing notices; Local: Ubuntu, Arch, Fedora, macOS, Windows, Raspberry Pi).
+  - [x] `wiki/Architecture-and-Design.md` (Mermaid system architecture, SQLite ER diagram, REST API reference).
+  - [x] `wiki/Development-and-Testing.md` (Vitest, MSW, standards, troubleshooting).
+  - [x] Synchronized navigation (`HOME.md`, `Configuration.md`, `Integrations-and-Security.md`, `_Sidebar.md`).
+- [x] **Sub-Issue 13: Agent Catalog & Documentation Governance** ([#18](https://github.com/HELIX-Origin/HELIX-RSS/issues/18))
+  - [x] Documented resolved issues in `AGENTS.md` (`Current Issues`).
+  - [x] Created dedicated agent specification files under `.agents/agents/`.
+  - [x] Passed all unified checks (`npm run check`) with 100% passing tests (33 test files, 149 tests).
+
+---
+
+## Operating Protocol & Roadmap Governance (Rule 04 Compliance)
+
+1. **Local Roadmap is Global**:
+   - `roadmap.md` is the repo-wide ledger for all plans, milestones, and architectural updates.
+   - It is never scoped down to a single issue; rather, it documents the overall state and history of all plans.
+2. **GitHub Issue Roadmaps are Per-Plan**:
+   - Each distinct plan is initiated by opening its own dedicated parent `[PLAN]` issue (e.g. `[PLAN] Multi-user Discord RSS rebuild` -> #4, `[PLAN] Cloudflare Retirement, Dashboard Clean-up...` -> #13).
+   - The first post of the parent issue contains the roadmap **specifically for that plan**.
+   - Sub-issues are created as dedicated GitHub issues linked to that parent issue to track modular units of work.
+3. **Roadmap Updates via Edit**:
+   - Progress on a plan is recorded by editing the first post of that plan's parent issue (`gh issue edit <parent> --body-file <plan-body.md>`).
+4. **Verification Gate**:
+   - Any milestone marked complete must pass the unified verification gate (`npm run check` with 0 type errors, 0 lint warnings, Prettier compliance, and 100% test pass rate).

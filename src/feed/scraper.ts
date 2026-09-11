@@ -11,6 +11,7 @@ export interface ScrapedItem {
   title: string;
   url: string;
   description: string | null;
+  imageUrl: string | null;
 }
 
 interface Selector {
@@ -109,8 +110,14 @@ export function scrapeItems(content: HtmlElement | null, selectors: ScrapeSelect
         description = descEl ? descEl.text : null;
       }
 
+      let imageUrl: string | null = null;
+      const imgEl = selectAll(container, 'img')[0];
+      if (imgEl?.attributes['src']) {
+        imageUrl = imgEl.attributes['src'];
+      }
+
       if (!title && !url) return null;
-      return { title, url, description };
+      return { title, url, description, imageUrl };
     })
     .filter((x): x is ScrapedItem => x !== null);
 }

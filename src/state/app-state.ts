@@ -2,7 +2,6 @@ import type { Database } from '../db/database.js';
 import {
   rowToDiscordGuild,
   rowToFeed,
-  rowToMonitor,
   rowToOAuthConnection,
   rowToSession,
   rowToUser,
@@ -13,7 +12,6 @@ import {
   type OAuthConnection,
   type OAuthState,
   type Session,
-  type SiteMonitor,
   type User,
   type Webhook,
 } from './types.js';
@@ -38,7 +36,6 @@ export class AppState {
   private oauthStates = new Map<string, OAuthState>();
   private feedsById = new Map<number, Feed>();
   private webhooksById = new Map<number, Webhook>();
-  private monitorsById = new Map<number, SiteMonitor>();
   private discordGuilds = new Map<string, DiscordGuild>();
   private settings = new Map<string, string>();
   private activity: ActivityEntry[] = [];
@@ -85,11 +82,6 @@ export class AppState {
     for (const r of raws.prepare('SELECT * FROM webhooks').all() as Row[]) {
       const w = rowToWebhook(r);
       if (w) this.putWebhook(w);
-    }
-
-    for (const r of raws.prepare('SELECT * FROM site_status').all() as Row[]) {
-      const m = rowToMonitor(r);
-      if (m) this.putMonitor(m);
     }
 
     for (const r of raws.prepare('SELECT * FROM discord_guilds').all() as Row[]) {
@@ -251,39 +243,6 @@ export class AppState {
 
   deleteWebhook(id: number): void {
     this.webhooksById.delete(id);
-  }
-
-  // ---- Status monitors ----
-
-  listMonitors(userId: number): SiteMonitor[] {
-    return [...this.monitorsById.values()]
-      .filter((m) => m.userId === userId)
-      .sort((a, b) => a.name.localeCompare(b.name));
-  }
-
-  allMonitors(): SiteMonitor[] {
-    return [...this.monitorsById.values()];
-  }
-
-  getMonitor(userId: number, id: number): SiteMonitor | null {
-    const m = this.monitorsById.get(id);
-    return m && m.userId === userId ? m : null;
-  }
-
-  putMonitor(monitor: SiteMonitor): void {
-    this.monitorsById.set(monitor.id, monitor);
-  }
-
-  deleteMonitor(id: number): void {
-    this.monitorsById.delete(id);
-  }
-
-  setMonitorStatus(id: number, status: string, lastCheckedAt: string): void {
-    const m = this.monitorsById.get(id);
-    if (m) {
-      m.status = status;
-      m.lastCheckedAt = lastCheckedAt;
-    }
   }
 
   // ---- Discord Guilds ----

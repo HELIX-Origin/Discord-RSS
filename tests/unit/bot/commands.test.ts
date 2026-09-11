@@ -227,68 +227,6 @@ describe('Discord Bot Slash Commands', () => {
     });
   });
 
-  describe('/monitor commands', () => {
-    const guildId = 'guild-monitor-test';
-
-    it('adds and checks a website monitor', async () => {
-      const interactionAdd: DiscordInteraction = {
-        id: 'inter-9',
-        application_id: 'app-1',
-        type: InteractionType.APPLICATION_COMMAND,
-        guild_id: guildId,
-        token: 'tok-9',
-        version: 1,
-        data: {
-          id: 'cmd-monitor',
-          name: 'monitor',
-          type: 1,
-          options: [
-            {
-              name: 'add',
-              type: ApplicationCommandOptionType.SUB_COMMAND,
-              options: [
-                { name: 'name', type: ApplicationCommandOptionType.STRING, value: 'My Site' },
-                { name: 'url', type: ApplicationCommandOptionType.STRING, value: 'https://mysite.com' },
-              ],
-            },
-          ],
-        },
-      };
-
-      const resAdd = await dispatchInteraction(interactionAdd, ctx.deps, rest);
-      expect(resAdd.data?.embeds?.[0]?.title).toContain('Monitor Added');
-
-      vi.spyOn(ctx.deps.status, 'checkMonitor').mockImplementation(async (userId, monId) => {
-        ctx.deps.repo.setMonitorChecked(userId, monId, 'online');
-      });
-
-      const interactionCheck: DiscordInteraction = {
-        id: 'inter-10',
-        application_id: 'app-1',
-        type: InteractionType.APPLICATION_COMMAND,
-        guild_id: guildId,
-        token: 'tok-10',
-        version: 1,
-        data: {
-          id: 'cmd-monitor',
-          name: 'monitor',
-          type: 1,
-          options: [
-            {
-              name: 'check',
-              type: ApplicationCommandOptionType.SUB_COMMAND,
-              options: [{ name: 'id', type: ApplicationCommandOptionType.STRING, value: 'My Site' }],
-            },
-          ],
-        },
-      };
-
-      const resCheck = await dispatchInteraction(interactionCheck, ctx.deps, rest);
-      expect(resCheck.data?.embeds?.[0]?.title).toContain('Check Result: My Site');
-      expect(resCheck.data?.embeds?.[0]?.fields?.[0]?.value).toContain('Online');
-    });
-  });
-
   describe('/stats command', () => {
     it('returns service stats and bot invite link', async () => {
       const interaction: DiscordInteraction = {
@@ -303,6 +241,120 @@ describe('Discord Bot Slash Commands', () => {
       const res = await dispatchInteraction(interaction, ctx.deps, rest);
       expect(res.data?.embeds?.[0]?.title).toContain('HELIX RSS Service Status');
       expect(res.data?.embeds?.[0]?.fields?.some((f) => f.name === '🤖 Bot Invite')).toBe(true);
+    });
+  });
+
+  describe('/about command', () => {
+    it('returns rich embed with architecture, capabilities, and dashboard link', async () => {
+      const interaction: DiscordInteraction = {
+        id: 'inter-about',
+        application_id: 'app-1',
+        type: InteractionType.APPLICATION_COMMAND,
+        token: 'tok-about',
+        version: 1,
+        data: { id: 'cmd-about', name: 'about', type: 1 },
+      };
+
+      const res = await dispatchInteraction(interaction, ctx.deps, rest);
+      expect(res.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
+      const embed = res.data?.embeds?.[0];
+      expect(embed).toBeDefined();
+      expect(embed?.title).toBe('⚡ About HELIX RSS');
+      expect(embed?.description).toContain('self-hosted RSS/Atom feed syndication');
+      expect(embed?.fields?.some((f) => f.name === '📡 Core Capabilities')).toBe(true);
+      expect(embed?.fields?.some((f) => f.name === '⚡ Architecture')).toBe(true);
+      expect(embed?.fields?.some((f) => f.name === '🖥️ Web Dashboard')).toBe(true);
+      expect(embed?.fields?.some((f) => f.name === '🤖 Bot Invite')).toBe(true);
+    });
+  });
+
+  describe('/help command', () => {
+    it('dynamically lists all registered commands without hardcoding', async () => {
+      const interaction: DiscordInteraction = {
+        id: 'inter-help-all',
+        application_id: 'app-1',
+        type: InteractionType.APPLICATION_COMMAND,
+        token: 'tok-help-1',
+        version: 1,
+        data: { id: 'cmd-help', name: 'help', type: 1 },
+      };
+
+      const res = await dispatchInteraction(interaction, ctx.deps, rest);
+      expect(res.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
+      const embed = res.data?.embeds?.[0];
+      expect(embed).toBeDefined();
+      expect(embed?.title).toBe('📖 HELIX RSS Slash Commands');
+      expect(embed?.fields).toBeDefined();
+
+      const fieldNames = embed?.fields?.map((f) => f.name) ?? [];
+      expect(fieldNames).toContain('/feed');
+      expect(fieldNames).not.toContain('/monitor');
+      expect(fieldNames).toContain('/stats');
+      expect(fieldNames).toContain('/about');
+      expect(fieldNames).toContain('/help');
+
+      // Verify subcommands are dynamically listed
+      const feedField = embed?.fields?.find((f) => f.name === '/feed');
+      expect(feedField?.value).toContain('/feed add');
+      expect(feedField?.value).toContain('/feed list');
+    });
+
+    it('provides detailed help for a specific command option', async () => {
+      const interaction: DiscordInteraction = {
+        id: 'inter-help-feed',
+        application_id: 'app-1',
+        type: InteractionType.APPLICATION_COMMAND,
+        token: 'tok-help-2',
+        version: 1,
+        data: {
+          id: 'cmd-help',
+          name: 'help',
+          type: 1,
+          options: [
+            {
+              name: 'command',
+              type: ApplicationCommandOptionType.STRING,
+              value: 'feed',
+            },
+          ],
+        },
+      };
+
+      const res = await dispatchInteraction(interaction, ctx.deps, rest);
+      expect(res.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
+      const embed = res.data?.embeds?.[0];
+      expect(embed?.title).toBe('📖 Command: /feed');
+      expect(embed?.description).toContain('Manage RSS/Atom and scrape feeds');
+      expect(embed?.fields?.some((f) => f.name === '/feed add')).toBe(true);
+    });
+
+    it('returns an error embed when command query does not exist', async () => {
+      const interaction: DiscordInteraction = {
+        id: 'inter-help-unknown',
+        application_id: 'app-1',
+        type: InteractionType.APPLICATION_COMMAND,
+        token: 'tok-help-3',
+        version: 1,
+        data: {
+          id: 'cmd-help',
+          name: 'help',
+          type: 1,
+          options: [
+            {
+              name: 'command',
+              type: ApplicationCommandOptionType.STRING,
+              value: 'nonexistent',
+            },
+          ],
+        },
+      };
+
+      const res = await dispatchInteraction(interaction, ctx.deps, rest);
+      expect(res.type).toBe(InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE);
+      const embed = res.data?.embeds?.[0];
+      expect(embed?.title).toBe('❓ Command Not Found');
+      expect(embed?.description).toContain('nonexistent');
+      expect(embed?.description).toContain('Available commands');
     });
   });
 });

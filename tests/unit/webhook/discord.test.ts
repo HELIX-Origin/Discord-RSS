@@ -34,7 +34,7 @@ describe('sendWebhook', () => {
 });
 
 describe('feedEmbed', () => {
-  it('builds an embed', () => {
+  it('builds an embed with clean title and description', () => {
     const embed = feedEmbed({
       title: 'Title',
       url: 'https://example.com',
@@ -47,5 +47,62 @@ describe('feedEmbed', () => {
     expect(embed.title).toBe('Title');
     expect(embed.url).toBe('https://example.com');
     expect(embed.footer?.text).toBe('Feed');
+  });
+
+  it('attaches primary image when imageUrl is provided', () => {
+    const embed = feedEmbed({
+      title: 'Photo Post',
+      url: 'https://example.com/photo',
+      description: 'A great photo',
+      feedTitle: 'Feed',
+      color: 0x06b6d4,
+      imageUrl: 'https://example.com/hero.jpg',
+    });
+    expect(embed.image).toEqual({ url: 'https://example.com/hero.jpg' });
+  });
+
+  it('extracts primary image from HTML description when imageUrl is not provided', () => {
+    const embed = feedEmbed({
+      title: 'Article with embedded image',
+      url: 'https://example.com/article',
+      description: '<p>Some text</p><img src="https://example.com/cover.png" alt="cover"/>',
+      feedTitle: 'Feed',
+      color: 0x06b6d4,
+    });
+    expect(embed.image).toEqual({ url: 'https://example.com/cover.png' });
+  });
+
+  it('cleans up HTML entities and whitespace in titles', () => {
+    const embed = feedEmbed({
+      title: '&lt;Breaking&gt; Company&#39;s Q3 Revenue Up &amp; Profitable',
+      url: 'https://example.com/news',
+      feedTitle: 'Feed',
+      color: 0x06b6d4,
+    });
+    expect(embed.title).toBe("<Breaking> Company's Q3 Revenue Up & Profitable");
+  });
+
+  it('formats HTML links and raw URLs into easily readable markdown links', () => {
+    const rawDescription = `
+      <p>Check out our <a href="https://example.com/blog/2026/09/update">Read Announcement</a> for details.</p>
+      <p>Or visit the repo: <a href="https://github.com/HELIX-Origin/HELIX-RSS">https://github.com/HELIX-Origin/HELIX-RSS</a>.</p>
+      <p>Also see raw link: https://news.ycombinator.com/item?id=12345 in discussion.</p>
+    `;
+    const embed = feedEmbed({
+      title: 'Link Test',
+      url: 'https://example.com/links',
+      description: rawDescription,
+      feedTitle: 'Feed',
+      color: 0x06b6d4,
+    });
+
+    // Meaningful anchor text preserved as markdown link
+    expect(embed.description).toContain('[Read Announcement](https://example.com/blog/2026/09/update)');
+    // URL-as-anchor formatted to clean label
+    expect(embed.description).toContain(
+      '[github.com/HELIX-Origin/HELIX-RSS](https://github.com/HELIX-Origin/HELIX-RSS)',
+    );
+    // Standalone raw URL formatted to clean readable label
+    expect(embed.description).toContain('[news.ycombinator.com/item](https://news.ycombinator.com/item?id=12345)');
   });
 });

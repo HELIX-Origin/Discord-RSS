@@ -12,7 +12,6 @@ export function registerStatsRoutes(router: Router<AppDeps>): void {
       ...dbStats,
       myFeeds: d.repo.listFeeds(userId).length,
       myWebhooks: d.repo.listWebhooks(userId).length,
-      myMonitors: d.repo.listMonitors(userId).length,
       activity: d.repo.recentActivity(12).map((a) => ({
         ts: a.ts,
         level: a.level,

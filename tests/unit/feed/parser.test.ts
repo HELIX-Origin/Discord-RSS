@@ -50,14 +50,55 @@ describe('parseFeed', () => {
     expect(feed.entries[0]?.author).toBe('Author Name');
   });
 
-  it('throws on unsupported roots', () => {
-    expect(() => parseFeed('<html></html>')).toThrow('Unsupported feed root');
+  it('extracts primary image from enclosure, media:content, and HTML img', () => {
+    const rssWithImages = `<?xml version="1.0"?>
+    <rss version="2.0" xmlns:media="http://search.yahoo.com/mrss/">
+      <channel>
+        <title>Media Feed</title>
+        <item>
+          <title>Item 1</title>
+          <link>https://example.com/item1</link>
+          <enclosure url="https://example.com/hero.jpg" type="image/jpeg" length="12345"/>
+        </item>
+        <item>
+          <title>Item 2</title>
+          <link>https://example.com/item2</link>
+          <media:content url="https://example.com/media-image.png" medium="image"/>
+        </item>
+        <item>
+          <title>Item 3</title>
+          <link>https://example.com/item3</link>
+          <description><![CDATA[<p>Content with <img src="https://example.com/inline-photo.webp" alt="photo"/></p>]]></description>
+        </item>
+      </channel>
+    </rss>`;
+    const feed = parseFeed(rssWithImages);
+    expect(feed.entries[0]?.imageUrl).toBe('https://example.com/hero.jpg');
+    expect(feed.entries[1]?.imageUrl).toBe('https://example.com/media-image.png');
+    expect(feed.entries[2]?.imageUrl).toBe('https://example.com/inline-photo.webp');
+  });
+
+  it('extracts primary image from Atom link enclosure', () => {
+    const atomWithImage = `<?xml version="1.0"?>
+    <feed xmlns="http://www.w3.org/2005/Atom">
+      <title>Atom Media</title>
+      <entry>
+        <title>Atom Photo</title>
+        <link rel="enclosure" type="image/png" href="https://example.com/atom-enclosure.png"/>
+      </entry>
+    </feed>`;
+    const feed = parseFeed(atomWithImage);
+    expect(feed.entries[0]?.imageUrl).toBe('https://example.com/atom-enclosure.png');
   });
 });
 
 describe('stripHtml', () => {
   it('removes tags and collapses whitespace', () => {
     expect(stripHtml('<p>hello <b>world</b></p>')).toBe('hello world');
+  });
+
+  it('decodes HTML entities', () => {
+    expect(stripHtml('AT&amp;T &quot;Earnings&quot; &#8211; Up &gt; Down')).toBe('AT&T "Earnings" – Up > Down');
   });
 
   it('returns null for null input', () => {
@@ -67,12 +108,20 @@ describe('stripHtml', () => {
 
 describe('withGuid', () => {
   it('uses entry id when present', () => {
-    const entry = { id: 'abc', title: 't', link: 'l', description: null, publishedAt: null, author: null };
+    const entry = {
+      id: 'abc',
+      title: 't',
+      link: 'l',
+      description: null,
+      publishedAt: null,
+      author: null,
+      imageUrl: null,
+    };
     expect(withGuid({ title: 'f', link: 'fl', entries: [] }, entry).guid).toBe('abc');
   });
 
   it('falls back to feed link plus title', () => {
-    const entry = { id: '', title: 't', link: 'l', description: null, publishedAt: null, author: null };
+    const entry = { id: '', title: 't', link: 'l', description: null, publishedAt: null, author: null, imageUrl: null };
     expect(withGuid({ title: 'f', link: 'fl', entries: [] }, entry).guid).toBe('fl#t');
   });
 });

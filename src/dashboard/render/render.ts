@@ -8,7 +8,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   const canAccessSettings = isOwner || isAdmin;
   const isHost = canAccessSettings;
   const dbStats = deps.db.stats();
-  const providers = deps.oauth.listProviders();
   const botInviteUrl = deps.config.clientId
     ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=534723950656`
     : null;
@@ -21,16 +20,68 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   <title>HELIX RSS Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('helix-theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (saved === 'light' || (!saved && !prefersDark)) {
+          document.documentElement.classList.add('light-theme');
+        } else {
+          document.documentElement.classList.remove('light-theme');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <style>
-    body { background-color: #0b0f19; color: #f3f4f6; }
-    .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(55, 65, 81, 0.5); }
+    :root {
+      --bg-main: #0b0f19;
+      --bg-glass: rgba(17, 24, 39, 0.7);
+      --border-glass: rgba(55, 65, 81, 0.5);
+      --text-main: #f3f4f6;
+    }
+    html.light-theme {
+      --bg-main: #e8ecf2;
+      --bg-glass: rgba(248, 250, 252, 0.88);
+      --border-glass: rgba(203, 213, 225, 0.9);
+      --text-main: #1e293b;
+    }
+    body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.2s ease, color 0.2s ease; }
+    .glass { background: var(--bg-glass); backdrop-filter: blur(12px); border: 1px solid var(--border-glass); }
     .glow-cyan { text-shadow: 0 0 12px rgba(6, 182, 212, 0.6); }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #111827; }
+    ::-webkit-scrollbar-track { background: var(--bg-main); }
     ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
     .spinner-border { animation: spin 1s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Light Theme dimmed dual-tone utility mappings */
+    html.light-theme ::-webkit-scrollbar-track { background: #e8ecf2; }
+    html.light-theme ::-webkit-scrollbar-thumb { background: #94a3b8; }
+    html.light-theme ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    html.light-theme .text-white { color: #1e293b !important; }
+    html.light-theme .text-gray-400 { color: #475569 !important; }
+    html.light-theme .text-gray-300 { color: #334155 !important; }
+    html.light-theme .text-gray-500 { color: #64748b !important; }
+    html.light-theme .bg-gray-950 { background-color: #dfe4ec !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme .bg-gray-900 { background-color: #f8fafc !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme .bg-gray-900\\/90 { background-color: rgba(248, 250, 252, 0.95) !important; }
+    html.light-theme .bg-gray-800 { background-color: #edf1f7 !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme .bg-gray-800\\/80 { background-color: #edf1f7 !important; }
+    html.light-theme .border-gray-800 { border-color: #cbd5e1 !important; }
+    html.light-theme .border-gray-700 { border-color: #cbd5e1 !important; }
+    html.light-theme .bg-black\\/40 { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
+    html.light-theme input, html.light-theme select, html.light-theme textarea { background-color: #ffffff !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
+    html.light-theme input::placeholder { color: #94a3b8 !important; }
+    html.light-theme .tab-btn { color: #64748b; }
+    html.light-theme .tab-btn:hover { background-color: #dfe4ec !important; color: #0f172a !important; }
+    html.light-theme .tab-btn.text-cyan-300 { color: #0284c7 !important; background-color: rgba(14, 165, 233, 0.15) !important; border-color: rgba(14, 165, 233, 0.4) !important; font-weight: 600; }
+    html.light-theme #db-badge { background-color: rgba(14, 165, 233, 0.12) !important; color: #0369a1 !important; border-color: rgba(14, 165, 233, 0.3) !important; }
+    html.light-theme #user-pill { background-color: #edf1f7 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light-theme #theme-toggle-btn { background-color: #edf1f7 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
+    html.light-theme #theme-toggle-btn:hover { background-color: #dfe4ec !important; color: #0f172a !important; }
+    html.light-theme .shadow-xl, html.light-theme .shadow-2xl { box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important; }
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
@@ -44,11 +95,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <h1 class="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
           HELIX <span class="text-cyan-400">RSS</span>
         </h1>
-        <p class="text-xs text-gray-400">Feed &amp; status monitor for Discord communities</p>
+        <p class="text-xs text-gray-400">Feed syndication for Discord communities</p>
       </div>
     </div>
 
     <div class="flex items-center space-x-3">
+      <button id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Theme" class="inline-flex items-center justify-center h-8 w-8 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
+        <i id="theme-toggle-icon" class="fa-solid fa-moon text-cyan-400"></i>
+      </button>
       ${
         botInviteUrl
           ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
@@ -91,13 +145,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-star w-5"></i> Popular Feeds
         </button>
-        <button onclick="switchTab('monitors')" id="tab-btn-monitors" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-heart-pulse w-5"></i> Status Monitors
-        </button>
         ${renderDevToolsNavItem(isHost)}
-        <button onclick="switchTab('integrations')" id="tab-btn-integrations" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-cloud w-5"></i> Integrations
-        </button>
         ${
           isHost
             ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
@@ -119,7 +167,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     <main class="flex-1 space-y-6 min-w-0">
       <!-- 1. OVERVIEW -->
       <section id="tab-overview" class="tab-content space-y-6">
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="glass p-5 rounded-2xl border border-gray-800">
             <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">My Feeds</span>
             <div class="text-3xl font-extrabold text-cyan-400 mt-2" id="stat-feeds">0</div>
@@ -129,11 +177,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Discord Delivery</span>
             <div class="text-3xl font-extrabold text-[#5865F2] mt-2" id="stat-channels">0</div>
             <span class="text-xs text-gray-500 mt-1 block">Connected channels</span>
-          </div>
-          <div class="glass p-5 rounded-2xl border border-gray-800">
-            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Status Monitors</span>
-            <div class="text-3xl font-extrabold text-indigo-400 mt-2" id="stat-monitors">0</div>
-            <span class="text-xs text-gray-500 mt-1 block">Site uptime checks</span>
           </div>
           <div class="glass p-5 rounded-2xl border border-gray-800">
             <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">SQLite Engine</span>
@@ -290,63 +333,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-      <!-- 4. STATUS MONITORS -->
-      <section id="tab-monitors" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-square-plus text-indigo-400"></i> Add Status Monitor
-            </h2>
-            <p class="text-xs text-gray-400 mt-1">Poll a site URL. Transition notifications are posted to the selected Discord channel when a site goes down or recovers.</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Monitor Name</label>
-              <input type="text" id="monitor-name" placeholder="Main Site" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Site URL</label>
-              <input type="text" id="monitor-url" placeholder="https://example.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Alert Discord Channel</label>
-              <select id="monitor-webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                <option value="">-- Select Discord channel --</option>
-              </select>
-            </div>
-          </div>
-          <div class="flex justify-end">
-            <button onclick="addMonitor()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-indigo-600/20">
-              <i class="fa-solid fa-plus"></i> Add Monitor
-            </button>
-          </div>
-        </div>
 
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-heart-pulse text-indigo-400"></i> Monitored Sites
-          </h2>
-          <div id="monitors-table-body" class="space-y-2">
-            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading monitors...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 6. INTEGRATIONS (OAuth) -->
-      <section id="tab-integrations" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-cloud text-cyan-400"></i> Feed Provider Connections
-          </h2>
-          <p class="text-xs text-gray-400">
-            Connect accounts so feeds behind login walls or Cloudflare-protected domains can be fetched.
-            Previously connected providers are shown below.
-          </p>
-          <div id="connections-body" class="space-y-3">
-            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading connections...</div>
-          </div>
-        </div>
-      </section>
 
       ${
         isHost
@@ -370,53 +357,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           </div>
         </div>
 
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-key text-amber-400"></i> OAuth Provider Credentials
-          </h2>
-          <p class="text-xs text-gray-400">Configure client credentials for each feed provider. These are stored in SQLite and used when connecting accounts.</p>
-          <div id="oauth-config-body" class="space-y-3">
-            ${providers
-              .map(
-                (p) => `
-              <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <span class="font-bold text-white">${p.label}</span>
-                    <p class="text-xs text-gray-400 mt-0.5">${p.description}</p>
-                  </div>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono ${p.configured ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">
-                    ${p.configured ? 'Configured' : 'Not configured'}
-                  </span>
-                </div>
-                <div class="grid grid-cols-1 ${p.provider === 'cloudflare' ? '' : 'md:grid-cols-2'} gap-3">
-                  <div>
-                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Client ID</label>
-                    <input type="text" id="cfg-${p.provider}-client-id" placeholder="Client ID" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
-                  </div>
-                  ${
-                    p.provider !== 'cloudflare'
-                      ? `
-                  <div>
-                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Client Secret</label>
-                    <input type="password" id="cfg-${p.provider}-client-secret" placeholder="Client Secret" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
-                  </div>`
-                      : `<input type="hidden" id="cfg-${p.provider}-client-secret" value="">`
-                  }
-                </div>
-                <div class="flex items-center justify-between">
-                  <label class="inline-flex items-center text-xs text-gray-300 cursor-pointer">
-                    <input type="checkbox" id="cfg-${p.provider}-enabled" class="mr-2 rounded bg-gray-800 border-gray-700 text-amber-500 focus:ring-0"> Enabled
-                  </label>
-                  <button onclick="saveOauthProvider('${p.provider}')" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-xs font-semibold text-white transition flex items-center gap-1.5 shadow-md shadow-amber-600/20">
-                    <i class="fa-solid fa-floppy-disk"></i> Save
-                  </button>
-                </div>
-              </div>`,
-              )
-              .join('')}
-          </div>
-        </div>
 
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <div class="flex items-center justify-between">
@@ -443,7 +383,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 <i class="fa-solid fa-stethoscope text-emerald-400"></i> Member Feed Health &amp; Diagnostics
               </h2>
               <p class="text-xs text-gray-400 mt-0.5">
-                Scan all member feeds across the system to detect missing webhooks, disabled endpoints, Cloudflare blocks, and configuration errors.
+                Scan all member feeds across the system to detect unlinked channels, disabled endpoints, Cloudflare blocks, and configuration errors.
               </p>
             </div>
             <button onclick="fetchFeedDiagnostics()" class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition border border-gray-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
@@ -462,7 +402,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               <div id="diag-issues-count" class="text-xl font-bold text-amber-400 mt-1">-</div>
             </div>
             <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
-              <div class="text-[10px] uppercase font-semibold text-gray-500">Missing Webhooks</div>
+              <div class="text-[10px] uppercase font-semibold text-gray-500">Unlinked Channels</div>
               <div id="diag-missing-webhooks" class="text-xl font-bold text-red-400 mt-1">-</div>
             </div>
             <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
@@ -522,7 +462,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           </div>
           <div>
             <h3 class="text-sm font-bold text-white flex items-center gap-2" id="modal-member-title">Member Feeds</h3>
-            <p class="text-xs text-gray-400" id="modal-member-subtitle">Inspect configuration and webhooks</p>
+            <p class="text-xs text-gray-400" id="modal-member-subtitle">Inspect configuration and channel delivery</p>
           </div>
         </div>
         <button onclick="closeMemberFeedsModal()" class="h-8 w-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition">
@@ -566,58 +506,42 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/auth/me');
         const data = await res.json();
         if (data.authenticated) {
-          document.getElementById('user-email').textContent = data.user.email;
-          renderConnections(data);
+          const userEl = document.getElementById('user-email');
+          if (userEl) userEl.textContent = data.user.email;
         }
       } catch {}
     }
 
-    function renderConnections(data) {
-      const container = document.getElementById('connections-body');
-      const connected = data.connections || [];
-      container.innerHTML = data.oauthProviders.map(p => {
-        const conn = connected.find(c => c.provider === p.provider);
-        const statusClass = conn ? 'bg-green-900/60 text-green-300 border border-green-700' : 'bg-gray-800 text-gray-400 border border-gray-700';
-        return \`
-          <div class="p-4 rounded-xl \${conn ? 'bg-gray-900/90' : 'bg-gray-900'} border border-gray-800 flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-              <i class="fa-solid fa-cloud text-cyan-400 text-xl"></i>
-              <div>
-                <span class="font-bold text-white text-sm">\${p.label}</span>
-                <span class="text-xs text-gray-400 block">\${p.description}</span>
-              </div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono \${statusClass}">\${conn ? 'Connected' : (p.configured ? 'Available' : 'Not configured')}</span>
-              \${conn
-                ? \`<button onclick="disconnect('\${p.provider}')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-unlink mr-1"></i>Disconnect</button>\`
-                : \`<button onclick="connect('\${p.provider}')" \${!p.configured ? 'disabled' : ''} class="px-3 py-1.5 rounded-lg \${p.configured ? 'bg-cyan-600 hover:bg-cyan-500 text-white cursor-pointer' : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'} text-xs font-semibold transition"><i class="fa-solid fa-link mr-1"></i>Connect</button>\`}
-            </div>
-          </div>\`;
-      }).join('');
+    function initTheme() {
+      const isLight = document.documentElement.classList.contains('light-theme');
+      updateThemeIcon(isLight);
+      try {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+          if (!localStorage.getItem('helix-theme')) {
+            if (e.matches) {
+              document.documentElement.classList.remove('light-theme');
+              updateThemeIcon(false);
+            } else {
+              document.documentElement.classList.add('light-theme');
+              updateThemeIcon(true);
+            }
+          }
+        });
+      } catch {}
     }
 
-    async function connect(provider) {
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.toggle('light-theme');
       try {
-        const res = await fetch('/api/oauth/' + provider + '/connect');
-        const data = await res.json();
-        if (data.url) {
-          window.open(data.url, '_blank', 'noopener');
-        } else {
-          alert(data.error || 'Unable to start connection');
-        }
-      } catch (err) {
-        alert('Network error: ' + err.message);
-      }
+        localStorage.setItem('helix-theme', isLight ? 'light' : 'dark');
+      } catch {}
+      updateThemeIcon(isLight);
     }
 
-    async function disconnect(provider) {
-      if (!confirm('Disconnect ' + provider + '?')) return;
-      try {
-        await fetch('/api/oauth/' + provider, { method: 'DELETE' });
-        fetchMe();
-      } catch (err) {
-        alert('Error: ' + err.message);
+    function updateThemeIcon(isLight) {
+      const icon = document.getElementById('theme-toggle-icon');
+      if (icon) {
+        icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-cyan-400';
       }
     }
 
@@ -646,10 +570,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
     function populateDestinationSelects() {
       const feedsSel = document.getElementById('feed-webhook');
-      const monitorsSel = document.getElementById('monitor-webhook');
       const builderSel = document.getElementById('builder-feed-webhook');
       if (feedsSel) feedsSel.innerHTML = buildChannelOptionsHtml(feedsSel.value);
-      if (monitorsSel) monitorsSel.innerHTML = buildChannelOptionsHtml(monitorsSel.value);
       if (builderSel) builderSel.innerHTML = buildChannelOptionsHtml(builderSel.value);
       refreshPresetWebhookOptions();
     }
@@ -807,48 +729,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           </div>
         </div>
       \`).join('');
-    }
-
-    async function fetchMonitors() {
-      const res = await fetch('/api/monitors');
-      const monitors = await res.json();
-      const container = document.getElementById('monitors-table-body');
-      if (!Array.isArray(monitors)) {
-        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in to view and manage monitors.</div>';
-        document.getElementById('stat-monitors').textContent = '0';
-        return;
-      }
-      if (!monitors.length) {
-        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No monitors yet. Add one above.</div>';
-        document.getElementById('stat-monitors').textContent = '0';
-        return;
-      }
-      document.getElementById('stat-monitors').textContent = monitors.length;
-      container.innerHTML = monitors.map(m => \`
-        <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-indigo-500/40 transition">
-          <div class="space-y-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-sm">\${escapeHtmlAttr(m.name)}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded \${statusPillClass(m.status)}">\${escapeHtmlAttr(m.status)}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded \${m.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${m.enabled ? 'Enabled' : 'Disabled'}</span>
-            </div>
-            <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(m.url)}</div>
-            <div class="text-[10px] text-gray-500">Alerts: \${m.webhookId ? 'Discord Channel' : 'No channel linked'} · Last checked: \${m.lastCheckedAt ? new Date(m.lastCheckedAt).toLocaleString() : 'Never'}</div>
-          </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="toggleMonitor(\${m.id}, \${m.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${m.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${m.enabled ? 'Pause' : 'Resume'}</button>
-            <button onclick="deleteItem('monitors', \${m.id}, 'monitor')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </div>
-      \`).join('');
-    }
-
-    function statusPillClass(status) {
-      switch (status) {
-        case 'online': return 'bg-green-950 text-green-300 border border-green-800';
-        case 'down': return 'bg-red-950 text-red-300 border border-red-800';
-        default: return 'bg-gray-800 text-gray-400 border border-gray-700';
-      }
     }
 
     async function fetchStats() {
@@ -1027,7 +907,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     async function fetchAll() {
-      const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchMonitors(), fetchPresets()];
+      const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchPresets()];
       if (document.getElementById('setting-base-url') || document.getElementById('users-table-body')) {
         tasks.push(fetchSettings());
         tasks.push(fetchUsers());
@@ -1058,36 +938,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    async function addMonitor() {
-      const name = document.getElementById('monitor-name').value.trim();
-      const url = document.getElementById('monitor-url').value.trim();
-      const destination = document.getElementById('monitor-webhook').value;
-      if (!name || !url) return alert('Please provide a monitor name and URL.');
-      const dest = parseDestinationPayload(destination);
-      const res = await fetch('/api/monitors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url, ...dest })
-      });
-      if (checkAuthError(res)) return;
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById('monitor-name').value = '';
-        document.getElementById('monitor-url').value = '';
-        fetchAll();
-      } else {
-        alert(data.error || 'Failed to add monitor');
-      }
-    }
-
     async function toggleFeed(id, enabled) {
       const res = await fetch('/api/feeds/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
-      if (checkAuthError(res)) return;
-      fetchAll();
-    }
-
-    async function toggleMonitor(id, enabled) {
-      const res = await fetch('/api/monitors/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
       if (checkAuthError(res)) return;
       fetchAll();
     }
@@ -1105,21 +957,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       fetchAll();
     }
 
-    async function saveOauthProvider(provider) {
-      const clientId = document.getElementById('cfg-' + provider + '-client-id').value.trim();
-      const clientSecret = document.getElementById('cfg-' + provider + '-client-secret').value.trim();
-      const enabled = document.getElementById('cfg-' + provider + '-enabled').checked;
-      const res = await fetch('/api/settings/oauth/' + provider, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId, clientSecret, enabled })
-      });
-      if (checkAuthError(res)) return;
-      const data = await res.json();
-      if (res.ok) alert('Saved ' + provider + ' config.');
-      else alert(data.error || 'Failed to save config');
-      fetchMe();
-    }
+
 
     async function saveSettings() {
       const publicBaseUrl = document.getElementById('setting-base-url').value.trim();
@@ -1189,7 +1027,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       if (!modal || !body) return;
 
       title.textContent = 'Member Feeds: ' + userName;
-      subtitle.textContent = 'User #' + userId + ' · Feeds and webhook diagnostics';
+      subtitle.textContent = 'User #' + userId + ' · Feeds and channel delivery diagnostics';
       body.innerHTML = '<div class="text-gray-400 py-6 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading member feeds...</div>';
       modal.classList.remove('hidden');
 
@@ -1216,11 +1054,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-green-950 text-green-300 border border-green-800">Active</span>'
             : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700">Paused</span>';
 
-          const webhookBadge = f.webhookId === null
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 flex items-center gap-1"><i class="fa-solid fa-link-slash"></i> No Webhook</span>'
-            : f.webhookEnabled
-            ? \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1"><i class="fa-solid fa-link"></i> \${escapeHtmlAttr(f.webhookName || 'Webhook #' + f.webhookId)}</span>\`
-            : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> \${escapeHtmlAttr(f.webhookName || 'Webhook #' + f.webhookId)} (Disabled)</span>\`;
+          const webhookBadge = (!f.channelId && !f.webhookId)
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 flex items-center gap-1"><i class="fa-solid fa-link-slash"></i> No Channel</span>'
+            : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1"><i class="fa-solid fa-link"></i> \${escapeHtmlAttr(f.webhookName || (f.channelId ? '#' + f.channelId : 'Channel linked'))}</span>\`;
 
           const issuesHtml = (f.issues && f.issues.length)
             ? \`<div class="p-3 rounded-lg bg-amber-950/40 border border-amber-800/80 text-amber-300 text-xs space-y-1">
@@ -1298,7 +1134,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
         const issues = data.feedsWithIssues || [];
         if (!issues.length) {
-          issuesBody.innerHTML = \`<div class="p-4 rounded-xl bg-green-950/40 border border-green-800/80 text-green-300 text-xs flex items-center gap-2.5 font-mono"><i class="fa-solid fa-circle-check text-emerald-400 text-base shrink-0"></i><span>All \${data.totalFeeds} member feeds across the system are configured correctly with active webhooks.</span></div>\`;
+          issuesBody.innerHTML = \`<div class="p-4 rounded-xl bg-green-950/40 border border-green-800/80 text-green-300 text-xs flex items-center gap-2.5 font-mono"><i class="fa-solid fa-circle-check text-emerald-400 text-base shrink-0"></i><span>All \${data.totalFeeds} member feeds across the system are configured correctly with active channels.</span></div>\`;
           return;
         }
 
@@ -1434,6 +1270,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
     ${renderDevToolsScript()}
 
+    initTheme();
     fetchAll();
     const urlTab = new URLSearchParams(window.location.search).get('tab');
     if (urlTab) switchTab(urlTab);

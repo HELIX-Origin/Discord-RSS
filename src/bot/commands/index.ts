@@ -6,11 +6,12 @@ import {
   type DiscordInteraction,
   type InteractionResponse,
 } from '../types.js';
+import { aboutCommandDef, handleAboutCommand } from './about.js';
 import { feedCommandDef, handleFeedCommand } from './feed.js';
-import { handleMonitorCommand, monitorCommandDef } from './monitor.js';
+import { handleHelpCommand, helpCommandDef } from './help.js';
 import { handleStatsCommand, statsCommandDef } from './stats.js';
 
-export const allBotCommands: ApplicationCommand[] = [feedCommandDef, monitorCommandDef, statsCommandDef];
+export const allBotCommands: ApplicationCommand[] = [feedCommandDef, statsCommandDef, aboutCommandDef, helpCommandDef];
 
 export async function dispatchInteraction(
   interaction: DiscordInteraction,
@@ -22,10 +23,12 @@ export async function dispatchInteraction(
   switch (commandName) {
     case 'feed':
       return handleFeedCommand(interaction, deps, rest);
-    case 'monitor':
-      return handleMonitorCommand(interaction, deps, rest);
     case 'stats':
       return handleStatsCommand(interaction, deps);
+    case 'about':
+      return handleAboutCommand(interaction, deps);
+    case 'help':
+      return handleHelpCommand(interaction, allBotCommands);
     default:
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

@@ -1,7 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import type { Repository } from '../db/repository.js';
 import type { AppConfig } from '../config.js';
-import { CloudflareProvider } from './cloudflare.js';
 import { DiscordProvider } from './discord.js';
 import type { OAuthProvider, OAuthProviderConfig } from './types.js';
 
@@ -18,7 +17,6 @@ export class OAuthService {
     private readonly repo: Repository,
     private readonly appConfig?: Partial<AppConfig> | null,
   ) {
-    this.register(new CloudflareProvider());
     this.register(new DiscordProvider());
   }
 
@@ -39,8 +37,7 @@ export class OAuthService {
         provider: p.provider,
         label: p.config().label,
         description: p.config().description,
-        configured:
-          p.provider === 'cloudflare' ? Boolean(config?.clientId) : Boolean(config?.clientId && config?.clientSecret),
+        configured: Boolean(config?.clientId && config?.clientSecret),
         enabled: config?.enabled ?? false,
       };
     });
@@ -64,13 +61,6 @@ export class OAuthService {
       }
       if (!clientSecret) {
         clientSecret = this.appConfig?.clientSecret ?? process.env['DISCORD_CLIENT_SECRET']?.trim() ?? '';
-      }
-    } else if (provider === 'cloudflare') {
-      if (!clientId) {
-        clientId = this.appConfig?.cloudflareClientId ?? process.env['CLOUDFLARE_CLIENT_ID']?.trim() ?? '';
-      }
-      if (!clientSecret) {
-        clientSecret = this.appConfig?.cloudflareClientSecret ?? process.env['CLOUDFLARE_CLIENT_SECRET']?.trim() ?? '';
       }
     }
 
@@ -102,8 +92,7 @@ export class OAuthService {
     const p = this.getProvider(provider);
     if (!p) throw new Error(`Unknown OAuth provider: ${provider}`);
     const config = this.getConfig(provider);
-    const isConfigured =
-      provider === 'cloudflare' ? Boolean(config?.clientId) : Boolean(config?.clientId && config?.clientSecret);
+    const isConfigured = Boolean(config?.clientId && config?.clientSecret);
     if (!config?.enabled || !isConfigured) {
       throw new Error(`OAuth provider "${provider}" is not configured`);
     }

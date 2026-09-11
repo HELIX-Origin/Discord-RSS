@@ -21,11 +21,9 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
 
   const guildId = interaction.guild_id;
   let guildFeedsCount = 0;
-  let guildMonitorsCount = 0;
   if (guildId) {
     const user = deps.repo.getOrCreateGuildUser(guildId);
     guildFeedsCount = deps.repo.listFeeds(user.id).length;
-    guildMonitorsCount = deps.repo.listMonitors(user.id).length;
   }
 
   const inviteUrl = deps.config.redirectUrl || 'Not configured';
@@ -42,12 +40,12 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
           fields: [
             {
               name: '📡 This Server',
-              value: `**Feeds:** ${guildFeedsCount}\n**Monitors:** ${guildMonitorsCount}`,
+              value: `**Feeds:** ${guildFeedsCount}`,
               inline: true,
             },
             {
               name: '🌐 Global Totals',
-              value: `**Feeds:** ${stats.feedCount}\n**Monitors:** ${stats.monitorCount}\n**Entries Sent:** ${stats.sentCount}`,
+              value: `**Feeds:** ${stats.feedCount}\n**Entries Sent:** ${stats.sentCount}`,
               inline: true,
             },
             {

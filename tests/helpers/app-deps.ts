@@ -3,7 +3,6 @@ import { Database } from '../../src/db/database.js';
 import { Repository } from '../../src/db/repository.js';
 import { FeedWatcher } from '../../src/feed/watcher.js';
 import { OAuthService } from '../../src/oauth/service.js';
-import { StatusWatcher } from '../../src/status/watcher.js';
 import { createRedisCoordinator, type RedisCoordinator } from '../../src/state/redis.js';
 import type { AppDeps } from '../../src/app.js';
 import { openTestDb, closeTestDb } from './db.js';
@@ -25,7 +24,6 @@ export async function buildAppDeps(options?: {
     port: 0,
     host: '127.0.0.1',
     pollIntervalMs: 3_600_000,
-    statusIntervalMs: 3_600_000,
     ...(options?.config ?? {}),
   };
   const oauth = new OAuthService(repo, config);
@@ -36,7 +34,6 @@ export async function buildAppDeps(options?: {
   }
 
   const feeds = new FeedWatcher(repo, redis, config.logLevel);
-  const status = new StatusWatcher(repo, redis, config.logLevel);
 
   const cleanup = async () => {
     await redis?.close();
@@ -44,7 +41,7 @@ export async function buildAppDeps(options?: {
   };
 
   return {
-    deps: { config, db, repo, oauth, feeds, status, redis },
+    deps: { config, db, repo, oauth, feeds, redis },
     cleanup,
   };
 }
