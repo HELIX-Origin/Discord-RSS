@@ -34,19 +34,31 @@ class RedisCoordinatorImpl implements RedisCoordinator {
   }
 
   static async connect(url: string): Promise<RedisCoordinatorImpl | null> {
-    const client = createClient({ url });
+    const logger = createLogger('redis');
+    const client = createClient({
+      url,
+      socket: {
+        reconnectStrategy: false,
+        connectTimeout: 1000,
+      },
+    });
     client.on('error', () => {
       /* handled inline per operation */
     });
     try {
       await client.connect();
       await client.ping();
-    } catch {
+    } catch (err) {
       try {
-        await client.quit();
+        if (client.isOpen) {
+          await client.quit();
+        }
       } catch {
         /* ignore */
       }
+      logger.info(`Redis unreachable at ${url}; running in standalone (single-instance) mode`, {
+        err: (err as Error).message,
+      });
       return null;
     }
     return new RedisCoordinatorImpl(client as RedisClientType, `drss-${randomId()}`);

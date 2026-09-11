@@ -21,6 +21,8 @@ export interface AppConfig {
   botPort: number;
   clientId: string | null;
   clientSecret: string | null;
+  cloudflareClientId: string | null;
+  cloudflareClientSecret: string | null;
   redirectUrl: string | null;
   callbackUrl: string | null;
 }
@@ -41,6 +43,8 @@ export function defaultConfig(): AppConfig {
   const redisUrl = `redis://${host}:${redisPort}`;
   const clientId = process.env['DISCORD_CLIENT_ID']?.trim() || null;
   const clientSecret = process.env['DISCORD_CLIENT_SECRET']?.trim() || null;
+  const cloudflareClientId = process.env['CLOUDFLARE_CLIENT_ID']?.trim() || null;
+  const cloudflareClientSecret = process.env['CLOUDFLARE_CLIENT_SECRET']?.trim() || null;
   const callbackHost = host === '127.0.0.1' || host === '0.0.0.0' ? 'localhost' : host;
   const botProto = botSslKey && botSslCert ? 'https' : 'http';
 
@@ -77,6 +81,8 @@ export function defaultConfig(): AppConfig {
     botPort,
     clientId,
     clientSecret,
+    cloudflareClientId,
+    cloudflareClientSecret,
     redirectUrl,
     callbackUrl,
   };

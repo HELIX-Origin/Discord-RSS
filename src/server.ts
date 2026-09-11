@@ -37,11 +37,11 @@ export function createHelixRssServer(deps: AppDeps): Server {
   const logger = createLogger('http', deps.config.logLevel);
   registerDevToolsRoutes(router);
 
-  router.add('GET', '/login', (_req, res) => {
-    sendHtml(res, 200, renderLoginHtml(false));
+  router.add('GET', '/login', (_req, res, _ctx, d) => {
+    sendHtml(res, 200, renderLoginHtml(false, d.config.redirectUrl));
   });
-  router.add('GET', '/register', (_req, res) => {
-    sendHtml(res, 200, renderLoginHtml(true));
+  router.add('GET', '/register', (_req, res, _ctx, d) => {
+    sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl));
   });
   router.add('GET', '/', async (req, res, _ctx, d) => {
     const userId = await authedUserId(req, d);

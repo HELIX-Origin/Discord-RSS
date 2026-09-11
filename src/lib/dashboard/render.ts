@@ -51,7 +51,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     <div class="flex items-center space-x-3">
       ${
         botInviteUrl
-          ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
+          ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
         <i class="fa-brands fa-discord mr-1.5 text-sm"></i> Add Bot to Server
       </a>`
           : ''
@@ -67,11 +67,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       <button onclick="logout()" title="Log out" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white transition border border-gray-700">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
       </button>`
-          : `<a href="/login" class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-sm shadow-cyan-500/20">
-        <i class="fa-solid fa-right-to-bracket mr-1.5"></i> Log In
-      </a>
-      <a href="/register" class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
-        <i class="fa-solid fa-user-plus mr-1.5"></i> Register
+          : `<a href="/api/auth/discord" class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
+        <i class="fa-brands fa-discord mr-1.5 text-sm"></i> Log In with Discord
       </a>`
       }
     </div>

@@ -1,4 +1,4 @@
-﻿import type { AppDeps } from '../../app.js';
+import type { AppDeps } from '../../app.js';
 import type { DiscordRestClient } from '../rest.js';
 import {
   InteractionResponseType,
@@ -10,14 +10,12 @@ import { feedCommandDef, handleFeedCommand } from './feed.js';
 import { handleWebhookCommand, webhookCommandDef } from './webhook.js';
 import { handleMonitorCommand, monitorCommandDef } from './monitor.js';
 import { handleStatsCommand, statsCommandDef } from './stats.js';
-import { bindCommandDef, handleBindCommand } from './bind.js';
 
 export const allBotCommands: ApplicationCommand[] = [
   feedCommandDef,
   webhookCommandDef,
   monitorCommandDef,
   statsCommandDef,
-  bindCommandDef,
 ];
 
 export async function dispatchInteraction(
@@ -36,8 +34,6 @@ export async function dispatchInteraction(
       return handleMonitorCommand(interaction, deps, rest);
     case 'stats':
       return handleStatsCommand(interaction, deps);
-    case 'bind':
-      return handleBindCommand(interaction, deps);
     default:
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

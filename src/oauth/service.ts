@@ -39,7 +39,8 @@ export class OAuthService {
         provider: p.provider,
         label: p.config().label,
         description: p.config().description,
-        configured: !!config?.clientId && !!config?.clientSecret,
+        configured:
+          p.provider === 'cloudflare' ? Boolean(config?.clientId) : Boolean(config?.clientId && config?.clientSecret),
         enabled: config?.enabled ?? false,
       };
     });
@@ -64,9 +65,16 @@ export class OAuthService {
       if (!clientSecret) {
         clientSecret = this.appConfig?.clientSecret ?? process.env['DISCORD_CLIENT_SECRET']?.trim() ?? '';
       }
+    } else if (provider === 'cloudflare') {
+      if (!clientId) {
+        clientId = this.appConfig?.cloudflareClientId ?? process.env['CLOUDFLARE_CLIENT_ID']?.trim() ?? '';
+      }
+      if (!clientSecret) {
+        clientSecret = this.appConfig?.cloudflareClientSecret ?? process.env['CLOUDFLARE_CLIENT_SECRET']?.trim() ?? '';
+      }
     }
 
-    const enabled = enabledSetting !== null ? enabledSetting === 'true' : Boolean(clientId && clientSecret);
+    const enabled = enabledSetting !== null ? enabledSetting === 'true' : Boolean(clientId);
 
     return {
       ...base,

@@ -324,7 +324,7 @@ describe('Discord Bot Slash Commands', () => {
     });
   });
 
-  describe('/stats and /bind commands', () => {
+  describe('/stats command', () => {
     it('returns service stats and bot invite link', async () => {
       const interaction: DiscordInteraction = {
         id: 'inter-11',
@@ -338,29 +338,6 @@ describe('Discord Bot Slash Commands', () => {
       const res = await dispatchInteraction(interaction, ctx.deps, rest);
       expect(res.data?.embeds?.[0]?.title).toContain('HELIX RSS Service Status');
       expect(res.data?.embeds?.[0]?.fields?.some((f) => f.name === '🤖 Bot Invite')).toBe(true);
-    });
-
-    it('handles /bind with valid account', async () => {
-      const user = ctx.deps.repo.createUser('botowner@test.com', 'hash123', 'Owner');
-
-      const interaction: DiscordInteraction = {
-        id: 'inter-12',
-        application_id: 'app-1',
-        type: InteractionType.APPLICATION_COMMAND,
-        guild_id: 'guild-binding-test',
-        token: 'tok-12',
-        version: 1,
-        data: {
-          id: 'cmd-bind',
-          name: 'bind',
-          type: 1,
-          options: [{ name: 'email', type: ApplicationCommandOptionType.STRING, value: user.email }],
-        },
-      };
-
-      const res = await dispatchInteraction(interaction, ctx.deps, rest);
-      expect(res.data?.embeds?.[0]?.title).toContain('Account Bound Successfully');
-      expect(res.data?.embeds?.[0]?.description).toContain(user.email);
     });
   });
 });

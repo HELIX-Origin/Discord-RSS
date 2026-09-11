@@ -219,6 +219,9 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       } else if (isAppOwner && user.role !== 'owner') {
         d.repo.setUserRole(user.id, 'owner');
         user = d.repo.getUserById(user.id) ?? user;
+      } else if (isAppAdmin && user.role === 'member') {
+        d.repo.setUserRole(user.id, 'admin');
+        user = d.repo.getUserById(user.id) ?? user;
       }
 
       // Create session for user

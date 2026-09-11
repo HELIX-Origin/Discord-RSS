@@ -32,6 +32,9 @@ coverage/
 .DS_Store
 Thumbs.db
 
+# temporary files used for planning implementations
+cloudflare-payload-example.txt
+
 # Lock files for alternative package managers (npm lock file is committed)
 npm-shrinkwrap.json
 .pnpm-lock.yaml

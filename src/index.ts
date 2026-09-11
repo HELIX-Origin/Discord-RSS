@@ -6,15 +6,23 @@ import { FeedWatcher } from './feed/watcher.js';
 import { OAuthService } from './oauth/service.js';
 import { Scheduler } from './scheduler/scheduler.js';
 import { createDiscordRssServer } from './server.js';
+import { launchRedisServer } from './state/redis-process.js';
 import { createRedisCoordinator } from './state/redis.js';
 import { StatusWatcher } from './status/watcher.js';
 import { createLogger } from './util/logger.js';
+import { clearPorts } from './util/ports.js';
 
 import { DiscordBot } from './bot/bot.js';
 
 export async function main(): Promise<void> {
   const config = defaultConfig();
   const logger = createLogger('app', config.logLevel);
+
+  // 1. Clear ports if currently occupied by lingering processes
+  clearPorts([config.port, config.botPort, config.redisPort], logger);
+
+  // 2. Launch Redis server alongside the service (if not already running)
+  const redisProcess = await launchRedisServer(config.redisPort, config.host, logger);
 
   const db = Database.open(config.dbPath);
   const repo = new Repository(db);
@@ -64,6 +72,7 @@ export async function main(): Promise<void> {
     scheduler.stop();
     bot?.stop();
     void redis?.close();
+    redisProcess?.stop();
     db.close();
     process.exit(1);
   });
@@ -85,12 +94,14 @@ export async function main(): Promise<void> {
     bot?.stop();
     server.close(async () => {
       await redis?.close();
+      redisProcess?.stop();
       db.close();
       logger.info('Shutdown complete');
       process.exit(0);
     });
     setTimeout(() => {
       logger.error('Forced shutdown after timeout');
+      redisProcess?.stop();
       process.exit(1);
     }, 5000).unref();
   };
