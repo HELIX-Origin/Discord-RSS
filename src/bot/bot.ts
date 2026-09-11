@@ -292,22 +292,18 @@ export class DiscordBot {
         }
         for (const m of app.team.members || []) {
           if (m.membership_state === 2) {
-            // ACCEPTED
-            if (m.role === 'admin' || m.role === 'owner' || m.user.id === app.team.owner_user_id) {
-              owners.add(m.user.id);
-            } else {
-              admins.add(m.user.id);
-            }
+            // ACCEPTED: The entire app team is the admin team by default
+            owners.add(m.user.id);
+            admins.add(m.user.id);
           }
         }
       }
 
       this.ownerDiscordIds = owners;
       this.teamAdminDiscordIds = admins;
-      this.logger.info('Detected Discord Application Owners from Portal', {
-        ownerCount: owners.size,
-        adminCount: admins.size,
-        ownerIds: Array.from(owners),
+      this.logger.info('Detected Discord Application Team from Portal', {
+        teamCount: owners.size,
+        teamIds: Array.from(owners),
       });
 
       return {

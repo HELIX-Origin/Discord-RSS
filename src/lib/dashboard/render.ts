@@ -389,17 +389,20 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                     ${p.configured ? 'Configured' : 'Not configured'}
                   </span>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="grid grid-cols-1 ${p.provider === 'cloudflare' ? '' : 'md:grid-cols-2'} gap-3">
                   <div>
                     <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Client ID</label>
                     <input type="text" id="cfg-${p.provider}-client-id" placeholder="Client ID" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
                   </div>
+                  ${
+                    p.provider !== 'cloudflare'
+                      ? `
                   <div>
-                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">
-                      Client Secret ${p.provider === 'cloudflare' ? '<span class="text-gray-500 normal-case font-normal">(Optional for public / code auth)</span>' : ''}
-                    </label>
-                    <input type="password" id="cfg-${p.provider}-client-secret" placeholder="${p.provider === 'cloudflare' ? 'Client Secret (optional)' : 'Client Secret'}" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
-                  </div>
+                    <label class="block text-[10px] font-semibold uppercase text-gray-500 mb-1">Client Secret</label>
+                    <input type="password" id="cfg-${p.provider}-client-secret" placeholder="Client Secret" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-amber-500">
+                  </div>`
+                      : `<input type="hidden" id="cfg-${p.provider}-client-secret" value="">`
+                  }
                 </div>
                 <div class="flex items-center justify-between">
                   <label class="inline-flex items-center text-xs text-gray-300 cursor-pointer">
@@ -419,21 +422,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-base font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-users-gear text-purple-400"></i> User Permissions &amp; Roles
+                <i class="fa-solid fa-users text-cyan-400"></i> Registered Users &amp; Discord App Team
               </h2>
               <p class="text-xs text-gray-400 mt-0.5">
-                ${
-                  isOwner
-                    ? 'Manage registered users and assign administrator permissions. Administrators can configure service settings and API credentials.'
-                    : 'View registered users and roles. Only the Owner can promote or demote administrators.'
-                }
+                Team permissions are managed via the Discord Developer Portal. All members of your Discord Application Team automatically have administrative access.
               </p>
             </div>
-            ${
-              isOwner
-                ? '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-800"><i class="fa-solid fa-crown mr-1.5 text-amber-400"></i>Owner Controls</span>'
-                : '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-950/80 text-purple-300 border border-purple-800"><i class="fa-solid fa-shield-halved mr-1.5 text-purple-400"></i>Admin (Read-Only)</span>'
-            }
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-people-group mr-1.5 text-cyan-400"></i>Discord App Team</span>
           </div>
           <div id="users-table-body" class="space-y-2">
             <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading user list...</div>
@@ -1150,10 +1145,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         }
         const isOwnerUser = ${isOwner ? 'true' : 'false'};
         container.innerHTML = users.map(u => {
-          const roleBadge = u.role === 'owner'
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-crown text-amber-400"></i> Owner</span>'
-            : u.role === 'admin'
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-shield-halved text-purple-400"></i> Admin</span>'
+          const isTeamMember = u.role === 'owner' || u.role === 'admin';
+          const roleBadge = isTeamMember
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-crown text-amber-400"></i> App Team</span>'
             : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-1 shrink-0"><i class="fa-solid fa-user text-gray-400"></i> Member</span>';
 
           const healthBadge = (u.feedsWithIssuesCount > 0)
@@ -1161,17 +1155,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             : (u.feedCount > 0)
             ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-circle-check text-emerald-400"></i> Healthy</span>'
             : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-500 border border-gray-700 flex items-center gap-1 shrink-0">No feeds</span>';
-
-          let actionHtml = '';
-          if (isOwnerUser) {
-            if (u.role === 'member' || u.role === 'user') {
-              actionHtml = \`<button onclick="updateUserRole(\${u.id}, 'admin')" class="px-3 py-1.5 rounded-lg bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-xs border border-purple-700 transition font-semibold flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-shield-halved"></i> Promote to Admin</button>\`;
-            } else if (u.role === 'admin') {
-              actionHtml = \`<button onclick="updateUserRole(\${u.id}, 'member')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white text-xs border border-gray-700 transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-arrow-down"></i> Demote to Member</button>\`;
-            } else {
-              actionHtml = '<span class="text-[11px] text-gray-500 italic shrink-0">Primary Host</span>';
-            }
-          }
 
           const safeUserName = escapeHtmlAttr(u.displayName || u.email).replace(/'/g, "\\\\'");
 
@@ -1190,33 +1173,11 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 <button onclick="inspectUserFeeds(\${u.id}, '\${safeUserName}')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-cyan-950/80 text-cyan-300 hover:text-cyan-200 text-xs border border-gray-700 hover:border-cyan-700 transition font-semibold flex items-center gap-1.5 shrink-0">
                   <i class="fa-solid fa-stethoscope text-cyan-400"></i> Inspect Feeds
                 </button>
-                \${actionHtml}
               </div>
             </div>\`;
         }).join('');
       } catch (err) {
         container.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load users.</div>';
-      }
-    }
-
-    async function updateUserRole(userId, newRole) {
-      if (!confirm('Are you sure you want to change user #' + userId + ' role to ' + newRole + '?')) return;
-      try {
-        const res = await fetch('/api/settings/users/' + userId + '/role', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: newRole })
-        });
-        if (checkAuthError(res)) return;
-        const data = await res.json();
-        if (res.ok) {
-          alert('User role updated successfully.');
-          fetchUsers();
-        } else {
-          alert(data.error || 'Failed to update user role');
-        }
-      } catch (err) {
-        alert('Network error: ' + err.message);
       }
     }
 

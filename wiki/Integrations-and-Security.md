@@ -14,15 +14,17 @@ HELIX RSS has transitioned exclusively to **Discord OAuth authentication**:
 
 ---
 
-## 👑 Role-Based Access Control (RBAC)
+---
 
-The service enforces a three-tier permission hierarchy:
+## 👑 Discord Application Team & Access Control
 
-| Role       | Badge     | Permissions                                                                                                                                                                                                                               |
-| ---------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Owner**  | 👑 Gold   | Complete administrative control. Can access Dev Tools, trigger SQLite vacuum/optimizations, edit OAuth credentials, and promote or demote other users between `admin` and `member`. Automatically assigned to Discord Application Owners. |
-| **Admin**  | 🛡️ Purple | Can configure service integrations, add global feeds, and inspect system diagnostics. Cannot promote other users or modify Owner permissions.                                                                                             |
-| **Member** | 👤 Gray   | Standard access. Can manage their personal feeds, webhooks, monitors, and connected Discord accounts. Cannot access system settings or dev tools.                                                                                         |
+With Discord OAuth login, access control is tied directly to your **Discord Application Team**:
+
+- **Discord App Team is the Admin Team by Default**: In Discord's Developer Portal, team members share access to the application without granular sub-permission splits. Consequently, all accepted members of your Discord Application Team (and the Application Owner) automatically receive full administrative privileges upon logging in with Discord.
+- **No Manual Admin Roles**: The separate, manually assignable "admin" role within the service has been removed. You no longer need to manually promote or demote users in SQLite.
+- **Two Simple Access Levels**:
+  - **App Team (Admin)**: Full administrative access. Can access Dev Tools, trigger SQLite maintenance, configure OAuth credentials, inspect system diagnostics, and review member feeds.
+  - **Member**: Standard community member access. Can create and manage their personal feeds, webhooks, monitors, and connected accounts. Cannot access system settings or dev tools.
 
 ---
 
@@ -30,21 +32,19 @@ The service enforces a three-tier permission hierarchy:
 
 HELIX RSS integrates with Cloudflare to fetch feeds behind **Cloudflare Zero Trust / Cloudflare Access** and allow sites to bypass Cloudflare security checks (WAF, Bot Fight Mode, Rate Limiting, Browser Integrity Check) for the feed crawler.
 
-### 1. Cloudflare OAuth Setup (Public Client / Code Flow)
+### 1. Cloudflare OAuth Setup (Code-Based Auth)
 
-Cloudflare supports standard OAuth 2.0 Authorization Code grant:
+Cloudflare OAuth is configured for **code-based authentication** (public client / authorization code grant without a client secret):
 
 1. In the Cloudflare Dashboard, navigate to **Manage Account** > **OAuth clients** > **Create client**.
 2. **Client Configuration**:
-   - **Client Type**: Public / SPA / Native client (uses `token_endpoint_auth_method: "none"`).
+   - **Client Type**: Public / SPA / Native client (`token_endpoint_auth_method: "none"`).
    - **Redirect URI**: `https://<YOUR_DOMAIN>/api/oauth/cloudflare/callback` (or `http://localhost:3434/api/oauth/cloudflare/callback` for local testing).
-   - **Client Secret**: When configuring public / code-only authorization, Cloudflare only issues a **Client ID** (no client secret). HELIX RSS natively supports this mode without demanding a secret.
+   - **Client ID**: Copy the generated Client ID. Cloudflare does not generate or require a client secret for code-based public clients.
    - **Scopes**: Cloudflare requires **dot-delimited** scopes (e.g. `zone.read`, `zone.rulesets.write`, `offline_access`). Note that legacy colon-delimited formats (`zone:read`) are rejected by Cloudflare's OAuth server. If no scope is explicitly passed, Cloudflare applies the scopes configured on the client.
 3. In `.env`, provide:
    ```env
    CLOUDFLARE_CLIENT_ID=your_cloudflare_client_id
-   # CLOUDFLARE_CLIENT_SECRET is optional for public / code-based OAuth
-   CLOUDFLARE_CLIENT_SECRET=
    ```
 4. On the **Integrations** tab in the HELIX RSS dashboard, click the **Connect** button next to Cloudflare. Complete authorization in Cloudflare; your access token is automatically stored in SQLite.
 

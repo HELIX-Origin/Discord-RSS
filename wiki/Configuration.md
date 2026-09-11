@@ -43,10 +43,9 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 
 ### Cloudflare Access OAuth (Optional)
 
-| Variable                   | Default   | Description                                                                                                   |
-| -------------------------- | --------- | ------------------------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_CLIENT_ID`     | _(empty)_ | **Optional**. OAuth Client ID for authenticating with Cloudflare Access to monitor protected feeds and sites. |
-| `CLOUDFLARE_CLIENT_SECRET` | _(empty)_ | **Optional**. OAuth Client Secret for Cloudflare Access token exchanges. Can be omitted when using public / code-based OAuth authentication. |
+| Variable               | Default   | Description                                                                                                                                                 |
+| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_CLIENT_ID` | _(empty)_ | **Optional**. OAuth Client ID for authenticating with Cloudflare Access. Uses code-based public client authentication (no client secret used or needed). |
 
 ### Native SSL / HTTPS (Optional)
 

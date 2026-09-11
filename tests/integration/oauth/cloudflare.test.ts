@@ -36,7 +36,6 @@ describe('Cloudflare OAuth flow', () => {
     await client.post('/api/auth/register', { email: 'oauth@example.com', password: 'password123' });
     const res = await client.post('/api/settings/oauth/cloudflare', {
       clientId: 'test-client',
-      clientSecret: 'test-secret',
       enabled: true,
     });
     expect(res.status).toBe(200);
@@ -105,20 +104,19 @@ describe('Cloudflare OAuth flow', () => {
     // Non-host user attempting to update OAuth credentials
     const oauthRes = await nonHostClient.post('/api/settings/oauth/cloudflare', {
       clientId: 'hacked',
-      clientSecret: 'hacked',
       enabled: false,
     });
     expect(oauthRes.status).toBe(403);
   });
 
-  it('supports secret-less OAuth code exchange when clientSecret is empty or omitted', async () => {
+  it('exchanges authorization code for access token using client_id only (code-based auth)', async () => {
     let capturedBody: string | null = null;
     mswServer.use(
       http.post(CLOUDFLARE_TOKEN_URL, async ({ request }) => {
         capturedBody = await request.text();
         return HttpResponse.json(
           {
-            access_token: 'mock-access-token-no-secret',
+            access_token: 'mock-access-token-code-auth',
             expires_in: 3600,
             scope: 'zone:read',
           },
@@ -127,10 +125,9 @@ describe('Cloudflare OAuth flow', () => {
       }),
     );
 
-    // Reconfigure Cloudflare with clientId only (no clientSecret)
+    // Reconfigure Cloudflare with clientId only (code-based auth)
     const updateRes = await client.post('/api/settings/oauth/cloudflare', {
       clientId: 'public-client-id',
-      clientSecret: '',
       enabled: true,
     });
     expect(updateRes.status).toBe(200);

@@ -47,16 +47,12 @@ export class CloudflareProvider implements OAuthProvider {
   }
 
   async exchangeCode(code: string, redirectUri: string, config: OAuthProviderConfig): Promise<OAuthTokenResponse> {
-    const params: Record<string, string> = {
+    const body = new URLSearchParams({
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri,
       client_id: config.clientId,
-    };
-    if (config.clientSecret?.trim()) {
-      params['client_secret'] = config.clientSecret.trim();
-    }
-    const body = new URLSearchParams(params);
+    });
 
     const res = await fetch(config.tokenUrl, {
       method: 'POST',

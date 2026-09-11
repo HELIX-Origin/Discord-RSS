@@ -175,21 +175,27 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       }
 
       // Detect if this Discord user is the application owner / developer portal team admin
-      let isAppOwner = false;
-      let isAppAdmin = false;
+      let isAppTeam = false;
       if (d.bot) {
         if (d.bot.getOwnerDiscordIds().length === 0) {
           await d.bot.detectApplicationOwners();
         }
-        isAppOwner = d.bot.isOwnerDiscordId(profile.id);
-        isAppAdmin = d.bot.isOwnerOrAdminDiscordId(profile.id);
+        isAppTeam = d.bot.isOwnerDiscordId(profile.id) || d.bot.isOwnerOrAdminDiscordId(profile.id);
       } else if (d.config.botToken) {
         try {
           const { DiscordRestClient } = await import('../../bot/rest.js');
           const restClient = new DiscordRestClient(d.config.botToken);
           const appInfo = await restClient.getCurrentApplication();
           if (appInfo.owner?.id === profile.id || appInfo.team?.owner_user_id === profile.id) {
-            isAppOwner = true;
+            isAppTeam = true;
+          }
+          if (appInfo.team?.members) {
+            for (const m of appInfo.team.members) {
+              if (m.membership_state === 2 && m.user.id === profile.id) {
+                isAppTeam = true;
+                break;
+              }
+            }
           }
         } catch (err) {
           void err;
@@ -214,13 +220,10 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       // If user still does not exist, create new account
       if (!user) {
         const isFirstUser = allUsers.length === 0;
-        const role = isAppOwner ? 'owner' : isAppAdmin ? 'admin' : isFirstUser ? 'owner' : 'member';
+        const role = isAppTeam ? 'owner' : isFirstUser ? 'owner' : 'member';
         user = d.repo.createUser(profile.email, '', profile.displayName, role);
-      } else if (isAppOwner && user.role !== 'owner') {
+      } else if (isAppTeam && user.role !== 'owner') {
         d.repo.setUserRole(user.id, 'owner');
-        user = d.repo.getUserById(user.id) ?? user;
-      } else if (isAppAdmin && user.role === 'member') {
-        d.repo.setUserRole(user.id, 'admin');
         user = d.repo.getUserById(user.id) ?? user;
       }
 

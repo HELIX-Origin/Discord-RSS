@@ -1,7 +1,7 @@
 import type { AppDeps } from '../../app.js';
 import { readBodyJson, sendError, sendJson } from '../../http/helpers.js';
 import type { Router } from '../../http/router.js';
-import { requireAdminOrOwner, requireOwner } from './shared.js';
+import { requireAdminOrOwner } from './shared.js';
 
 export function registerSettingsRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/settings', async (req, res, _ctx, d) => {
@@ -126,40 +126,14 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     });
   });
 
-  router.add('PATCH', '/api/settings/users/:id/role', async (req, res, ctx, d) => {
-    const ownerId = await requireOwner(req, res, d);
-    if (ownerId === null) return;
-
-    const targetUserId = Number(ctx.params['id']);
-    if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
-      sendError(res, 400, 'Invalid user ID');
-      return;
-    }
-
-    const body = (await readBodyJson(req)) as { role?: string };
-    const targetRole = body.role === 'user' ? 'member' : body.role;
-    if (targetRole !== 'admin' && targetRole !== 'member') {
-      sendError(res, 400, 'Role must be either "admin" or "member"');
-      return;
-    }
-
-    const targetUser = d.repo.getUserById(targetUserId);
-    if (!targetUser) {
-      sendError(res, 404, 'User not found');
-      return;
-    }
-    if (targetUser.role === 'owner') {
-      sendError(res, 400, 'Cannot change the role of the Owner account');
-      return;
-    }
-
-    try {
-      d.repo.setUserRole(targetUserId, targetRole);
-      d.repo.logActivity(ownerId, 'info', 'settings', `User #${targetUserId} role updated to "${targetRole}" by Owner`);
-      sendJson(res, 200, { ok: true, userId: targetUserId, role: targetRole });
-    } catch (err) {
-      sendError(res, 400, err instanceof Error ? err.message : 'Failed to update user role');
-    }
+  router.add('PATCH', '/api/settings/users/:id/role', async (req, res, _ctx, d) => {
+    const adminId = await requireAdminOrOwner(req, res, d);
+    if (adminId === null) return;
+    sendError(
+      res,
+      400,
+      'Manual role assignment is not supported. Application team permissions are managed directly in the Discord Developer Portal.',
+    );
   });
 
   // ---- Member Feed Health & Diagnostics ----
