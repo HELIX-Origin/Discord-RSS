@@ -1,8 +1,8 @@
 import type { AppDeps } from '../../app.js';
 import { analyzeUrl, analyzeScrapeUrl } from '../../feed/builder.js';
 import type { ScrapeSelectors } from '../../feed/scraper.js';
-import { readBodyJson, sendError, sendJson } from '../../http/helpers.js';
-import type { Router } from '../../http/router.js';
+import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
+import type { Router } from '../http/router.js';
 import { requireUser } from './shared.js';
 
 export function registerBuilderRoutes(router: Router<AppDeps>): void {

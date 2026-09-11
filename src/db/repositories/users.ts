@@ -1,4 +1,4 @@
-import type { Database } from '../../db/database.js';
+import type { Database } from '../database.js';
 import { AppState } from '../../state/app-state.js';
 import { nowIso, type DiscordGuild, type Session, type User, type UserRole } from '../../state/types.js';
 

@@ -1,6 +1,6 @@
 import type { AppDeps } from '../../app.js';
-import { isOwnerUser, isAdminOrOwner } from '../../lib/routes/shared.js';
-import { renderDevToolsNavItem, renderDevToolsSection, renderDevToolsScript } from '../../http/dev-tools.js';
+import { isOwnerUser, isAdminOrOwner } from '../routes/shared.js';
+import { renderDevToolsNavItem, renderDevToolsSection, renderDevToolsScript } from '../http/dev-tools.js';
 
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
   const isOwner = isOwnerUser(userId, deps);

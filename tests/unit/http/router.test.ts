@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Router } from '../../../src/http/router.js';
+import { Router } from '../../../src/dashboard/http/router.js';
 
 describe('Router', () => {
   it('matches static routes', () => {

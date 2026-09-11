@@ -1,5 +1,5 @@
 import type { Server } from 'node:http';
-import { createDiscordRssServer } from '../../src/server.js';
+import { createDiscordRssServer } from '../../src/dashboard/server.js';
 import type { AppDeps } from '../../src/app.js';
 
 export interface TestAppServer {

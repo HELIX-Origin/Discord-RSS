@@ -55,10 +55,9 @@ export async function main(): Promise<void> {
   // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)
   await bot.start();
 
-  logger.info('HELIX RSS started with Discord Bot as primary process', {
+  logger.info('HELIX RSS started with unified server', {
     host: config.host,
-    botPort: config.botPort,
-    sitePort: config.port,
+    port: config.botPort,
     dbPath: config.dbPath,
     botTokenConfigured: Boolean(config.botToken),
   });

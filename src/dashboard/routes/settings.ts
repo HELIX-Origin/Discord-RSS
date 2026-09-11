@@ -1,6 +1,6 @@
 import type { AppDeps } from '../../app.js';
-import { readBodyJson, sendError, sendJson } from '../../http/helpers.js';
-import type { Router } from '../../http/router.js';
+import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
+import type { Router } from '../http/router.js';
 import { requireAdminOrOwner } from './shared.js';
 
 export function registerSettingsRoutes(router: Router<AppDeps>): void {

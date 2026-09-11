@@ -46,6 +46,11 @@ export class Database {
     } catch {
       // Column may already exist
     }
+    try {
+      this.db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'member';");
+    } catch {
+      // Column may already exist
+    }
     // Fix oauth_states user_id nullability if created under legacy schema
     try {
       const info = this.db.prepare('PRAGMA table_info(oauth_states)').all() as Array<{

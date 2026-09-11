@@ -8,8 +8,8 @@ import {
   sendError,
   sendJson,
   setSessionCookie,
-} from '../../http/helpers.js';
-import type { Router } from '../../http/router.js';
+} from '../http/helpers.js';
+import type { Router } from '../http/router.js';
 import { DiscordProvider } from '../../oauth/discord.js';
 import { createLogger } from '../../util/logger.js';
 import { authedUserId, getDiscordCallbackUri, getSessionToken, SESSION_MAX_AGE_SECONDS } from './shared.js';
@@ -253,8 +253,8 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       const message = err instanceof Error ? err.message : 'Authentication failed';
       const logger = createLogger('auth', d.config.logLevel);
       logger.error('Discord OAuth callback failed', { err: message });
-      res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(renderAuthErrorPage(message));
+      res.writeHead(302, { Location: `/login?error=${encodeURIComponent(message)}` });
+      res.end();
     }
   });
 }

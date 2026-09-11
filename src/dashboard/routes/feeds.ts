@@ -1,7 +1,7 @@
 import type { AppDeps } from '../../app.js';
 import { FEED_PRESETS } from '../../feed/presets.js';
-import { readBodyJson, sendError, sendJson } from '../../http/helpers.js';
-import type { Router } from '../../http/router.js';
+import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
+import type { Router } from '../http/router.js';
 import { isValidHttpUrl, requireUser } from './shared.js';
 
 export function registerFeedsRoutes(router: Router<AppDeps>): void {

@@ -1,9 +1,9 @@
-import type { AppDeps } from '../app.js';
+import type { AppDeps } from '../../app.js';
 import type { Router } from './router.js';
 import { readBodyJson, sendError, sendJson } from './helpers.js';
-import { isAdminOrOwner, isOwnerUser, requireAdminOrOwner } from '../lib/routes/shared.js';
-import { allBotCommands } from '../bot/commands/index.js';
-import { sendWebhook } from '../webhook/discord.js';
+import { isAdminOrOwner, isOwnerUser, requireAdminOrOwner } from '../routes/shared.js';
+import { allBotCommands } from '../../bot/commands/index.js';
+import { sendWebhook } from '../../webhook/discord.js';
 
 export { isAdminOrOwner, isOwnerUser };
 

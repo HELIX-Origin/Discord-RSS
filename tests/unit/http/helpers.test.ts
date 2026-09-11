@@ -9,7 +9,7 @@ import {
   parseCookies,
   readBodyJson,
   setSessionCookie,
-} from '../../../src/http/helpers.js';
+} from '../../../src/dashboard/http/helpers.js';
 
 function makeReq(
   body: string,

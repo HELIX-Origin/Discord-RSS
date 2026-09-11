@@ -1,14 +1,12 @@
-import http from 'node:http';
-import https from 'node:https';
-import { existsSync, readFileSync } from 'node:fs';
-import { randomBytes } from 'node:crypto';
+import type http from 'node:http';
+import type https from 'node:https';
 import type { AppDeps } from '../app.js';
 import { createLogger, type Logger } from '../util/logger.js';
 import { allBotCommands, dispatchInteraction } from './commands/index.js';
 import { DiscordGatewayClient } from './gateway.js';
 import { DiscordRestClient } from './rest.js';
 import { InteractionResponseType, type DiscordInteraction } from './types.js';
-import { createHelixRssServer } from '../server.js';
+import { createHelixRssServer } from '../dashboard/server.js';
 
 export interface DiscordBotOptions {
   token: string;
@@ -27,7 +25,6 @@ export class DiscordBot {
   readonly rest: DiscordRestClient;
   private readonly gateway: DiscordGatewayClient;
   private server: http.Server | https.Server | null = null;
-  private siteServer: http.Server | https.Server | null = null;
   private isStarted = false;
   private ownerDiscordIds = new Set<string>();
   private teamAdminDiscordIds = new Set<string>();
@@ -43,6 +40,7 @@ export class DiscordBot {
       logger: this.logger,
       onInteraction: (interaction) => this.handleInteraction(interaction),
     });
+    this.deps.bot = this;
   }
 
   async start(): Promise<void> {
@@ -81,185 +79,14 @@ export class DiscordBot {
       this.logger.warn('DISCORD_TOKEN not set; running bot in local web-only mode without Discord Gateway connection.');
     }
 
-    // 3. Start local HTTP/HTTPS endpoint on DISCORD_PORT (e.g. 3131)
+    // 3. Start unified HTTP/HTTPS server on bot port (e.g. 3131)
     if (this.options.port !== undefined && this.options.port >= 0) {
       const port = this.options.port;
       const host = this.options.host ?? '127.0.0.1';
-      const keyConfig = this.options.sslKey ?? this.deps.config.botSslKey;
-      const certConfig = this.options.sslCert ?? this.deps.config.botSslCert;
-      let tlsOptions: { key: string; cert: string } | null = null;
-      if (keyConfig && certConfig) {
-        try {
-          const key = existsSync(keyConfig) ? readFileSync(keyConfig, 'utf8') : keyConfig;
-          const cert = existsSync(certConfig) ? readFileSync(certConfig, 'utf8') : certConfig;
-          tlsOptions = { key, cert };
-        } catch {
-          tlsOptions = null;
-        }
-      }
+      const server = createHelixRssServer(this.deps);
+      this.server = server;
 
-      const requestHandler = async (req: http.IncomingMessage, res: http.ServerResponse) => {
-        const proto = tlsOptions ? 'https' : 'http';
-        const url = new URL(req.url ?? '/', `${proto}://${req.headers.host ?? `${host}:${port}`}`);
-
-        // Health endpoint
-        if (req.method === 'GET' && url.pathname === '/health') {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ status: 'ok', service: 'helix-rss-bot', proto, uptime: process.uptime() }));
-          return;
-        }
-
-        // Root path: redirect browser requests to Site dashboard, return JSON for bots/APIs
-        if (req.method === 'GET' && url.pathname === '/') {
-          const acceptHeader = req.headers['accept'] ?? '';
-          if (acceptHeader.includes('text/html')) {
-            const sitePort = this.deps.config.port;
-            const siteProto =
-              (this.deps.config.sslKey && this.deps.config.sslCert) ||
-              this.deps.config.publicBaseUrl?.startsWith('https')
-                ? 'https'
-                : 'http';
-            const reqHost = req.headers.host?.split(':')[0];
-            const siteHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
-            const siteBase = this.deps.config.publicBaseUrl
-              ? this.deps.config.publicBaseUrl.replace(/\/+$/, '')
-              : `${siteProto}://${siteHost}:${sitePort}`;
-            res.writeHead(302, { Location: `${siteBase}/` });
-            res.end();
-            return;
-          }
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ status: 'ok', service: 'helix-rss-bot', proto, uptime: process.uptime() }));
-          return;
-        }
-
-        // Bot invite redirect
-        if (
-          req.method === 'GET' &&
-          (url.pathname === '/invite' || url.pathname === '/bot/invite' || url.pathname === '/api/bot/invite')
-        ) {
-          if (this.options.redirectUrl) {
-            res.writeHead(302, { Location: this.options.redirectUrl });
-            res.end();
-            return;
-          }
-          res.writeHead(404, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Bot invite URL is not configured' }));
-          return;
-        }
-
-        // Discord Login Initiation on Bot Port
-        if (
-          req.method === 'GET' &&
-          (url.pathname === '/api/auth/discord' || url.pathname === '/api/auth/login/discord')
-        ) {
-          const p = this.deps.oauth.getProvider('discord');
-          const config = this.deps.oauth.getConfig('discord');
-          if (!p || !config || !config.enabled || !config.clientId || !config.clientSecret) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(
-              JSON.stringify({
-                error:
-                  'Discord OAuth is not configured. Please set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET environment variables.',
-              }),
-            );
-            return;
-          }
-
-          const reqHost = req.headers.host?.split(':')[0];
-          const botHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
-          const callbackUri =
-            process.env['DISCORD_CALLBACK_URL']?.trim() || `${proto}://${botHost}:${port}/api/auth/callback/discord`;
-
-          const state = randomBytes(16).toString('hex');
-          this.deps.repo.saveOAuthState(state, null, 'discord');
-          this.deps.repo.cleanupExpiredOAuthStates(10 * 60 * 1000);
-
-          const authUrl = p.buildAuthorizeUrl(callbackUri, state, config);
-          res.writeHead(302, { Location: authUrl });
-          res.end();
-          return;
-        }
-
-        // Discord OAuth Callback Handler on Bot Port: redirects code to site sub-process
-        if (
-          req.method === 'GET' &&
-          (url.pathname === '/api/auth/callback/discord' || url.pathname === '/api/oauth/discord/callback')
-        ) {
-          if (url.searchParams.has('code') || url.searchParams.has('error')) {
-            const sitePort = this.deps.config.port;
-            const siteProto =
-              (this.deps.config.sslKey && this.deps.config.sslCert) ||
-              this.deps.config.publicBaseUrl?.startsWith('https')
-                ? 'https'
-                : 'http';
-            const reqHost = (req.headers.host || '').split(':')[0];
-            const siteHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
-            const siteBase = this.deps.config.publicBaseUrl
-              ? this.deps.config.publicBaseUrl.replace(/\/+$/, '')
-              : `${siteProto}://${siteHost}:${sitePort}`;
-            res.writeHead(302, {
-              Location: `${siteBase}/api/auth/callback/discord?${url.searchParams.toString()}`,
-            });
-            res.end();
-            return;
-          }
-
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-          res.end(`<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Discord Authorization · HELIX RSS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body class="bg-gray-950 text-white min-h-screen flex items-center justify-center font-sans">
-  <div class="bg-gray-900 border border-gray-800 rounded-2xl p-8 max-w-md text-center shadow-xl space-y-4">
-    <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 text-2xl mb-2">
-      <i class="fa-brands fa-discord"></i>
-    </div>
-    <h1 class="text-xl font-bold">Discord Authorization Completed</h1>
-    <p class="text-sm text-gray-400">HELIX RSS Discord Bot authorization callback received successfully. You can now return to Discord or close this tab.</p>
-  </div>
-</body>
-</html>`);
-          return;
-        }
-
-        // Discord Webhook Interactions
-        if (req.method === 'POST' && (url.pathname === '/' || url.pathname === '/interactions')) {
-          let body = '';
-          req.on('data', (chunk) => {
-            body += chunk;
-          });
-          req.on('end', async () => {
-            try {
-              const interaction = JSON.parse(body) as DiscordInteraction;
-              if (interaction.type === 1) {
-                // PING -> PONG
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ type: 1 }));
-                return;
-              }
-              const response = await dispatchInteraction(interaction, this.deps, this.rest);
-              res.writeHead(200, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify(response));
-            } catch (err) {
-              res.writeHead(500, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: (err as Error).message }));
-            }
-          });
-          return;
-        }
-
-        res.writeHead(404, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Not found' }));
-      };
-
-      this.server = tlsOptions ? https.createServer(tlsOptions, requestHandler) : http.createServer(requestHandler);
-
-      this.server.on('error', (err: NodeJS.ErrnoException) => {
+      server.on('error', (err: NodeJS.ErrnoException) => {
         if (err.code === 'EADDRINUSE') {
           this.logger.error(`Discord Bot port ${port} on ${host} is already in use.`);
         } else {
@@ -267,62 +94,29 @@ export class DiscordBot {
         }
       });
 
-      await new Promise<void>((resolve) => {
-        this.server?.listen(port, host, () => {
-          this.logger.info('Discord Bot primary server listening', {
+      await new Promise<void>((resolve, reject) => {
+        const onListening = () => {
+          server.removeListener('error', onError);
+          const address = server.address();
+          if (typeof address === 'object' && address) {
+            this.deps.config.port = address.port;
+            this.deps.config.botPort = address.port;
+          }
+          this.logger.info('HELIX RSS unified server listening', {
             host,
-            port,
-            proto: tlsOptions ? 'https' : 'http',
+            port: this.deps.config.port,
           });
           resolve();
-        });
-      });
-    }
-
-    // 4. Start Site Sub-process
-    if (this.deps && this.options.startSite !== false && !this.siteServer) {
-      this.siteServer = createHelixRssServer(this.deps);
-      await new Promise<void>((resolve, reject) => {
-        const basePort = this.options.port !== undefined && this.options.port > 0 ? this.options.port + 1 : 0;
-        let attemptPort = this.deps.config.port || basePort;
-        const maxAttempts = 10;
-        let attempts = 0;
-
-        const tryListen = () => {
-          attempts++;
-          const onError = (err: NodeJS.ErrnoException) => {
-            this.siteServer?.removeListener('listening', onListening);
-            if (err.code === 'EADDRINUSE' && attempts < maxAttempts) {
-              attemptPort++;
-              this.logger.warn(`Site port in use, incrementing to ${attemptPort}...`);
-              tryListen();
-            } else {
-              this.logger.error('Failed to start site sub-process', { err: err.message });
-              reject(err);
-            }
-          };
-
-          const onListening = () => {
-            this.siteServer?.removeListener('error', onError);
-            const address = this.siteServer?.address();
-            if (typeof address === 'object' && address) {
-              this.deps.config.port = address.port;
-            } else {
-              this.deps.config.port = attemptPort;
-            }
-            this.logger.info('HELIX RSS site sub-process started', {
-              host: this.deps.config.host,
-              port: this.deps.config.port,
-            });
-            resolve();
-          };
-
-          this.siteServer?.once('error', onError);
-          this.siteServer?.once('listening', onListening);
-          this.siteServer?.listen(attemptPort, this.deps.config.host);
         };
 
-        tryListen();
+        const onError = (err: NodeJS.ErrnoException) => {
+          server.removeListener('listening', onListening);
+          reject(err);
+        };
+
+        server.once('error', onError);
+        server.once('listening', onListening);
+        server.listen(port, host);
       });
     }
   }
@@ -473,10 +267,6 @@ export class DiscordBot {
     if (this.server) {
       this.server.close();
       this.server = null;
-    }
-    if (this.siteServer) {
-      this.siteServer.close();
-      this.siteServer = null;
     }
     this.logger.info('Discord Bot stopped');
   }

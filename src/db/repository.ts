@@ -1,11 +1,11 @@
 import type { Database } from './database.js';
 import { AppState } from '../state/app-state.js';
-import { UserRepository } from '../lib/repository/users.js';
-import { OAuthRepository } from '../lib/repository/oauth.js';
-import { FeedRepository } from '../lib/repository/feeds.js';
-import { WebhookRepository } from '../lib/repository/webhooks.js';
-import { MonitorRepository } from '../lib/repository/monitors.js';
-import { SettingsRepository } from '../lib/repository/settings.js';
+import { UserRepository } from './repositories/users.js';
+import { OAuthRepository } from './repositories/oauth.js';
+import { FeedRepository } from './repositories/feeds.js';
+import { WebhookRepository } from './repositories/webhooks.js';
+import { MonitorRepository } from './repositories/monitors.js';
+import { SettingsRepository } from './repositories/settings.js';
 import type {
   ActivityEntry,
   Feed,

@@ -1,6 +1,6 @@
 import https from 'node:https';
 import { describe, expect, it, vi } from 'vitest';
-import { loadTlsCredentials, createHelixRssServer } from '../../../src/server.js';
+import { loadTlsCredentials, createHelixRssServer } from '../../../src/dashboard/server.js';
 import { buildAppDeps } from '../../helpers/app-deps.js';
 
 describe('loadTlsCredentials', () => {

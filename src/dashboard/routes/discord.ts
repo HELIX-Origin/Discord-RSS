@@ -1,6 +1,6 @@
 import type { AppDeps } from '../../app.js';
-import { sendError, sendJson } from '../../http/helpers.js';
-import type { Router } from '../../http/router.js';
+import { sendError, sendJson } from '../http/helpers.js';
+import type { Router } from '../http/router.js';
 import { requireUser } from './shared.js';
 
 export function registerDiscordRoutes(router: Router<AppDeps>): void {

@@ -38,7 +38,7 @@ export function defaultConfig(): AppConfig {
   const logLevel = parseLogLevel(process.env['LOG_LEVEL']);
   const botToken = process.env['DISCORD_TOKEN']?.trim() || null;
   const botPort = parsePort(process.env['DISCORD_PORT'], 3131);
-  const port = botPort + 1;
+  const port = parsePort(process.env['PORT'] ?? process.env['DISCORD_PORT'], botPort);
   const redisPort = parsePort(process.env['REDIS_PORT'], 3535);
   const redisUrl = `redis://${host}:${redisPort}`;
   const clientId = process.env['DISCORD_CLIENT_ID']?.trim() || null;
