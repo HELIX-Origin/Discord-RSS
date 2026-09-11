@@ -37,7 +37,7 @@ export class DiscordProvider implements OAuthProvider {
       clientSecret: '',
       authorizeUrl: 'https://discord.com/oauth2/authorize',
       tokenUrl: 'https://discord.com/api/v10/oauth2/token',
-      scope: 'identify email',
+      scope: 'identify email guilds',
       enabled: false,
     };
   }
@@ -112,5 +112,41 @@ export class DiscordProvider implements OAuthProvider {
       displayName,
       email,
     };
+  }
+
+  async fetchUserGuilds(accessToken: string): Promise<DiscordUserGuild[]> {
+    const res = await fetch('https://discord.com/api/v10/users/@me/guilds', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'user-agent': 'DiscordRSS/0.1',
+      },
+    });
+
+    if (!res.ok) {
+      return [];
+    }
+
+    return (await res.json()) as DiscordUserGuild[];
+  }
+}
+
+export interface DiscordUserGuild {
+  id: string;
+  name: string;
+  icon: string | null;
+  owner: boolean;
+  permissions: string;
+}
+
+export function hasManageChannelsPermission(guild: { owner?: boolean; permissions?: string | number }): boolean {
+  if (guild.owner) return true;
+  if (!guild.permissions) return false;
+  try {
+    const perms = BigInt(guild.permissions);
+    const ADMINISTRATOR = 1n << 3n;
+    const MANAGE_CHANNELS = 1n << 4n;
+    return (perms & ADMINISTRATOR) !== 0n || (perms & MANAGE_CHANNELS) !== 0n;
+  } catch {
+    return false;
   }
 }

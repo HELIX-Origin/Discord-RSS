@@ -35,6 +35,17 @@ export class Scheduler {
     };
   }
 
+  reschedule(id: string, newIntervalMs: number): void {
+    const job = this.jobs.get(id);
+    if (!job) return;
+    job.intervalMs = newIntervalMs;
+    if (job.timer) {
+      clearInterval(job.timer);
+      job.timer = setInterval(() => void this.run(id), newIntervalMs);
+      job.timer.unref?.();
+    }
+  }
+
   start(): void {
     if (this.started) return;
     this.started = true;

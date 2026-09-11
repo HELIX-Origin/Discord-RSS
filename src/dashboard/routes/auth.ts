@@ -10,7 +10,7 @@ import {
   setSessionCookie,
 } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
-import { DiscordProvider } from '../../oauth/discord.js';
+import { DiscordProvider, hasManageChannelsPermission } from '../../oauth/discord.js';
 import { createLogger } from '../../util/logger.js';
 import { authedUserId, getDiscordCallbackUri, getSessionToken, SESSION_MAX_AGE_SECONDS } from './shared.js';
 
@@ -166,9 +166,12 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
         email: `${tokens.accountId}@discord.helix`,
       };
 
+      let managedGuildIds: string[] = [];
       if (p instanceof DiscordProvider) {
         try {
           profile = await p.fetchUserProfile(tokens.accessToken);
+          const guilds = await p.fetchUserGuilds(tokens.accessToken);
+          managedGuildIds = guilds.filter((g) => hasManageChannelsPermission(g)).map((g) => g.id);
         } catch {
           /* use token-derived fallback profile */
         }
@@ -217,15 +220,31 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
         user = d.repo.getByEmail(profile.email);
       }
 
+      const isFirstUser = allUsers.length === 0;
+      const isAllowed =
+        isAppTeam || isFirstUser || user?.role === 'owner' || user?.role === 'admin' || managedGuildIds.length > 0;
+
+      if (!isAllowed) {
+        res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end(
+          renderAuthErrorPage(
+            'Access Denied: You must be a server owner or have Manage Channels permissions in a Discord server to access HELIX RSS.',
+          ),
+        );
+        return;
+      }
+
       // If user still does not exist, create new account
       if (!user) {
-        const isFirstUser = allUsers.length === 0;
         const role = isAppTeam ? 'owner' : isFirstUser ? 'owner' : 'member';
         user = d.repo.createUser(profile.email, '', profile.displayName, role);
       } else if (isAppTeam && user.role !== 'owner') {
         d.repo.setUserRole(user.id, 'owner');
         user = d.repo.getUserById(user.id) ?? user;
       }
+
+      // Persist managed guild IDs for the user
+      d.repo.setUserSetting(user.id, 'managed_guild_ids', JSON.stringify(managedGuildIds));
 
       // Create session for user
       const sessionToken = randomBytes(32).toString('hex');

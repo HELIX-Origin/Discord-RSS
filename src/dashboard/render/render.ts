@@ -1,8 +1,42 @@
 import type { AppDeps } from '../../app.js';
-import { isOwnerUser, isAdminOrOwner } from '../routes/shared.js';
+import { isOwnerUser, isAdminOrOwner, canUserAccessDashboard } from '../routes/shared.js';
 import { renderDevToolsNavItem, renderDevToolsSection, renderDevToolsScript } from '../http/dev-tools.js';
 
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
+  if (userId !== null && !canUserAccessDashboard(userId, deps)) {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Access Denied · HELIX RSS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#0b0f19] text-white min-h-screen flex items-center justify-center font-sans p-4">
+  <div class="bg-gray-900/80 border border-gray-800 rounded-2xl p-8 max-w-md text-center shadow-2xl backdrop-blur space-y-4">
+    <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-2xl mb-2">
+      <i class="fa-solid fa-lock"></i>
+    </div>
+    <h1 class="text-xl font-bold">Manage Channels Permission Required</h1>
+    <p class="text-sm text-gray-400">
+      Access to the HELIX RSS dashboard is restricted to server owners and administrators with the <strong>Manage Channels</strong> permission in Discord.
+    </p>
+    <div class="pt-2 flex justify-center gap-3">
+      <button onclick="logout()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold transition border border-gray-700">
+        <i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Log Out
+      </button>
+    </div>
+  </div>
+  <script>
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+  </script>
+</body>
+</html>`;
+  }
+
   const isOwner = isOwnerUser(userId, deps);
   const isAdmin = !isOwner && isAdminOrOwner(userId, deps);
   const canAccessSettings = isOwner || isAdmin;
@@ -116,7 +150,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       ${
         userId !== null
           ? `<span id="user-pill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
-        <i class="fa-solid fa-user mr-1.5 text-cyan-400"></i> <span id="user-email">Loading...</span>
+        <i class="fa-solid fa-user mr-1.5 text-cyan-400"></i> <span id="user-name">Loading...</span>
       </span>
       <button onclick="logout()" title="Log out" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white transition border border-gray-700">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -229,6 +263,36 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           <div class="flex justify-end">
             <button onclick="addFeed()" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-cyan-600/20">
               <i class="fa-solid fa-plus"></i> Add Feed
+            </button>
+          </div>
+        </div>
+
+        <!-- Feed Posting Interval (Per-User Setting) -->
+        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-regular fa-clock text-cyan-400"></i> Feed Posting Interval
+              </h2>
+              <p class="text-xs text-gray-400 mt-0.5">Frequency for checking your feeds and delivering new posts to Discord channels.</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-400">Active interval:</span>
+              <span id="user-interval-badge" class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">1 hour</span>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1" id="user-interval-buttons">
+            <button type="button" onclick="setUserPollInterval(60000)" id="btn-user-60000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+              <i class="fa-solid fa-bolt text-xs text-cyan-400"></i> 1 minute
+            </button>
+            <button type="button" onclick="setUserPollInterval(600000)" id="btn-user-600000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+              <i class="fa-regular fa-clock text-xs text-cyan-400"></i> 10 minutes
+            </button>
+            <button type="button" onclick="setUserPollInterval(1800000)" id="btn-user-1800000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+              <i class="fa-regular fa-clock text-xs text-cyan-400"></i> 30 minutes
+            </button>
+            <button type="button" onclick="setUserPollInterval(3600000)" id="btn-user-3600000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+              <i class="fa-regular fa-clock text-xs text-cyan-400"></i> 1 hour
             </button>
           </div>
         </div>
@@ -353,6 +417,27 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               <span class="font-bold text-cyan-400">Public Base URL</span>
               <p class="text-xs text-gray-400">Where this dashboard is reachable (used for OAuth redirect URIs).</p>
               <input type="text" id="setting-base-url" placeholder="http://localhost:3131" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+            </div>
+            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-cyan-400">Feed Posting Interval</span>
+                <span id="current-interval-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">1 hour</span>
+              </div>
+              <p class="text-xs text-gray-400">Select how frequently the service checks feeds and delivers new posts to Discord.</p>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1" id="poll-interval-buttons">
+                <button type="button" onclick="selectPollInterval(60000)" id="btn-interval-60000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+                  <i class="fa-solid fa-bolt text-[10px] mr-1 text-cyan-400"></i>1 min
+                </button>
+                <button type="button" onclick="selectPollInterval(600000)" id="btn-interval-600000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+                  <i class="fa-regular fa-clock text-[10px] mr-1 text-cyan-400"></i>10 min
+                </button>
+                <button type="button" onclick="selectPollInterval(1800000)" id="btn-interval-1800000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+                  <i class="fa-regular fa-clock text-[10px] mr-1 text-cyan-400"></i>30 min
+                </button>
+                <button type="button" onclick="selectPollInterval(3600000)" id="btn-interval-3600000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
+                  <i class="fa-regular fa-clock text-[10px] mr-1 text-cyan-400"></i>1 hour
+                </button>
+              </div>
             </div>
           </div>
           <div class="flex justify-end">
@@ -511,8 +596,64 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/auth/me');
         const data = await res.json();
         if (data.authenticated) {
-          const userEl = document.getElementById('user-email');
-          if (userEl) userEl.textContent = data.user.email;
+          const userEl = document.getElementById('user-name') || document.getElementById('user-email');
+          if (userEl) userEl.textContent = data.user.displayName || data.user.username || 'Discord User';
+        }
+      } catch {}
+    }
+
+    let userPollIntervalMs = 3600000;
+    const intervalLabels = {
+      60000: '1 minute',
+      600000: '10 minutes',
+      1800000: '30 minutes',
+      3600000: '1 hour'
+    };
+
+    function updateIntervalButtons(ms) {
+      userPollIntervalMs = ms;
+      const intervals = [60000, 600000, 1800000, 3600000];
+      intervals.forEach(val => {
+        const btn = document.getElementById('btn-user-' + val);
+        if (btn) {
+          if (val === ms) {
+            btn.className = 'interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-cyan-600 text-white border-cyan-500 shadow-sm';
+          } else {
+            btn.className = 'interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700';
+          }
+        }
+      });
+      const badge = document.getElementById('user-interval-badge');
+      if (badge && intervalLabels[ms]) {
+        badge.textContent = intervalLabels[ms];
+      }
+    }
+
+    async function setUserPollInterval(ms) {
+      updateIntervalButtons(ms);
+      try {
+        const res = await fetch('/api/feeds/interval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pollIntervalMs: ms })
+        });
+        if (checkAuthError(res)) return;
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(data.error || 'Failed to update posting interval');
+        }
+      } catch (err) {
+        alert('Failed to update interval: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    async function fetchUserPollInterval() {
+      try {
+        const res = await fetch('/api/feeds/interval');
+        if (res.status === 401 || res.status === 403) return;
+        const data = await res.json();
+        if (data.pollIntervalMs) {
+          updateIntervalButtons(data.pollIntervalMs);
         }
       } catch {}
     }
@@ -753,6 +894,33 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       } catch {}
     }
 
+    let selectedPollIntervalMs = 3600000;
+
+    function selectPollInterval(ms) {
+      selectedPollIntervalMs = ms;
+      const intervals = [60000, 600000, 1800000, 3600000];
+      const labels = {
+        60000: '1 minute',
+        600000: '10 minutes',
+        1800000: '30 minutes',
+        3600000: '1 hour'
+      };
+      intervals.forEach(val => {
+        const btn = document.getElementById('btn-interval-' + val);
+        if (btn) {
+          if (val === ms) {
+            btn.className = 'interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-cyan-600 text-white border-cyan-500 shadow-sm';
+          } else {
+            btn.className = 'interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700';
+          }
+        }
+      });
+      const badge = document.getElementById('current-interval-badge');
+      if (badge && labels[ms]) {
+        badge.textContent = labels[ms];
+      }
+    }
+
     async function fetchSettings() {
       const baseUrlInput = document.getElementById('setting-base-url');
       if (!baseUrlInput) return;
@@ -761,6 +929,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         if (res.status === 401 || res.status === 403) return;
         const data = await res.json();
         baseUrlInput.value = data.publicBaseUrl || '';
+        if (data.pollIntervalMs) {
+          selectPollInterval(data.pollIntervalMs);
+        }
         (data.oauthProviders || []).forEach(p => {
           // Credentials intentionally not echoed back; only show enabled state
           const enabledEl = document.getElementById('cfg-' + p.provider + '-enabled');
@@ -908,7 +1079,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     async function fetchAll() {
-      const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchPresets()];
+      const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchPresets(), fetchUserPollInterval()];
       if (document.getElementById('setting-base-url') || document.getElementById('users-table-body')) {
         tasks.push(fetchSettings());
         tasks.push(fetchUsers());
@@ -991,10 +1162,15 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicBaseUrl })
+        body: JSON.stringify({ publicBaseUrl, pollIntervalMs: selectedPollIntervalMs })
       });
       if (checkAuthError(res)) return;
-      alert('Settings saved.');
+      if (res.ok) {
+        alert('Settings saved.');
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || 'Failed to save settings.');
+      }
     }
 
     async function fetchUsers() {
@@ -1021,17 +1197,16 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-circle-check text-emerald-400"></i> Healthy</span>'
             : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-500 border border-gray-700 flex items-center gap-1 shrink-0">No feeds</span>';
 
-          const safeUserName = escapeHtmlAttr(u.displayName || u.email).replace(/'/g, "\\\\'");
+          const safeUserName = escapeHtmlAttr(u.displayName || 'Discord User').replace(/'/g, "\\\\'");
 
           return \`
             <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-gray-700 transition">
               <div class="space-y-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(u.displayName || u.email)}</span>
+                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(u.displayName || 'Discord User')}</span>
                   \${roleBadge}
                   \${healthBadge}
                 </div>
-                <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(u.email)}</div>
                 <div class="text-[10px] text-gray-500 font-mono">User ID: #\${u.id} · Feeds: \${u.feedCount} · Joined: \${new Date(u.createdAt).toLocaleDateString()}</div>
               </div>
               <div class="flex items-center gap-2 flex-wrap shrink-0">
@@ -1156,7 +1331,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const selectEl = document.getElementById('diag-test-feed-select');
         if (selectEl && data.allFeeds) {
           selectEl.innerHTML = '<option value="">-- Quick select a feed (' + data.allFeeds.length + ' total) --</option>' +
-            data.allFeeds.map(f => \`<option value="\${escapeHtmlAttr(f.url)}">\${escapeHtmlAttr(f.name)} (\${escapeHtmlAttr(f.userEmail)})</option>\`).join('');
+            data.allFeeds.map(f => \`<option value="\${escapeHtmlAttr(f.url)}">\${escapeHtmlAttr(f.name)} (\${escapeHtmlAttr(f.userDisplayName || 'User')})</option>\`).join('');
         }
 
         const issues = data.feedsWithIssues || [];
@@ -1173,7 +1348,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-bold text-white text-sm">\${escapeHtmlAttr(item.feedName)}</span>
                   <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 uppercase">\${escapeHtmlAttr(item.feedType)}</span>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/70 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-user mr-1 text-[9px]"></i>\${escapeHtmlAttr(item.userDisplayName || item.userEmail)}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/70 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-user mr-1 text-[9px]"></i>\${escapeHtmlAttr(item.userDisplayName || 'Member')}</span>
                 </div>
                 <button onclick="testSpecificFeed('\${safeUrl}')" class="px-3 py-1.5 rounded-lg bg-emerald-800/70 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
                   <i class="fa-solid fa-stethoscope"></i> Test in Inspector

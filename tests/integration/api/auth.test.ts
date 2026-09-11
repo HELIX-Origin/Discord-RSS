@@ -138,5 +138,41 @@ describe('Auth API', () => {
     expect(memberUser).toBeTruthy();
     expect(memberUser?.displayName).toBe('Second Member');
     expect(memberUser?.role).toBe('member');
+
+    // Third user has no Manage Channels permissions in any guild and is denied access
+    const state3 = 'test-discord-oauth-state-789';
+    ctx.deps.repo.saveOAuthState(state3, null, 'discord');
+    mswServer.use(
+      http.get('https://discord.com/api/v10/users/@me', () => {
+        return HttpResponse.json({
+          id: '111111111111111111',
+          username: 'nopermsuser',
+          discriminator: '0',
+          global_name: 'No Perms User',
+          email: 'noperms@example.com',
+        });
+      }),
+      http.get('https://discord.com/api/v10/users/@me/guilds', () => {
+        return HttpResponse.json([
+          {
+            id: '999999999999999999',
+            name: 'Regular Member Server',
+            icon: null,
+            owner: false,
+            permissions: '0',
+          },
+        ]);
+      }),
+    );
+
+    const callbackRes3 = await fetch(
+      `${client['baseUrl']}/api/auth/callback/discord?code=mock-code-3&state=${state3}`,
+      {
+        redirect: 'manual',
+      },
+    );
+    expect(callbackRes3.status).toBe(403);
+    const bodyText = await callbackRes3.text();
+    expect(bodyText).toContain('Manage Channels permissions');
   });
 });

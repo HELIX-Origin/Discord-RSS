@@ -167,7 +167,7 @@ async function handleAdd(
   }
 
   try {
-    const feed = deps.repo.addFeed(userId, name, url, targetChannelId, feedType, null);
+    const feed = deps.repo.addFeed(userId, name, url, targetChannelId, feedType, null, guildId);
     deps.repo.logActivity(userId, 'info', 'bot', `Added feed "${name}" via Discord bot`);
 
     return {

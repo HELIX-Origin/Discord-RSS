@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS feeds (
   name TEXT NOT NULL,
   url TEXT NOT NULL,
   channel_id TEXT,
+  guild_id TEXT,
   enabled INTEGER NOT NULL DEFAULT 1,
   feed_type TEXT NOT NULL DEFAULT 'rss',
   scrape_item TEXT,

@@ -39,6 +39,7 @@ export class DiscordBot {
       token: options.token,
       logger: this.logger,
       onInteraction: (interaction) => this.handleInteraction(interaction),
+      onGuildDelete: (guildId) => this.handleGuildDelete(guildId),
     });
     this.deps.bot = this;
   }
@@ -151,6 +152,22 @@ export class DiscordBot {
       } catch {
         /* ignore fallback failure */
       }
+    }
+  }
+
+  async handleGuildDelete(guildId: string): Promise<void> {
+    this.logger.info('Handling GUILD_DELETE: Bot removed from guild or guild deleted', { guildId });
+    try {
+      const result = this.deps.repo.deleteGuildData(guildId);
+      this.logger.info(`Cleaned up guild ${guildId} data`, {
+        feedsDeleted: result.feedsDeleted,
+        guildsDeleted: result.guildsDeleted,
+      });
+    } catch (err) {
+      this.logger.error('Failed to clean up guild data after GUILD_DELETE', {
+        guildId,
+        err: (err as Error).message,
+      });
     }
   }
 

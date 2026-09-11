@@ -123,6 +123,14 @@ export class AppState {
     this.usersByEmail.set(user.email, user);
   }
 
+  deleteUser(id: number): void {
+    const user = this.usersById.get(id);
+    if (user) {
+      this.usersByEmail.delete(user.email);
+      this.usersById.delete(id);
+    }
+  }
+
   // ---- Sessions ----
 
   getSessionByToken(token: string): Session | null {
@@ -205,6 +213,7 @@ export class AppState {
 
   deleteFeed(id: number): void {
     this.feedsById.delete(id);
+    this.sentByFeed.delete(id);
   }
 
   isEntrySent(feedId: number, entryId: string): boolean {

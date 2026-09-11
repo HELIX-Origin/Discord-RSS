@@ -1,11 +1,11 @@
 import type { AppDeps } from '../../app.js';
 import { sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
-import { requireUser } from './shared.js';
+import { requireDashboardUser } from './shared.js';
 
 export function registerStatsRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/stats', async (req, res, _ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireDashboardUser(req, res, d);
     if (userId === null) return;
     const dbStats = d.db.stats();
     sendJson(res, 200, {

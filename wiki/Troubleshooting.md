@@ -71,7 +71,7 @@ Ensure the bot has `View Channel` and `Send Messages` (and `Embed Links`) permis
 
 ### 429 Too Many Requests
 
-Discord is rate-limiting message delivery. HELIX RSS automatically enforces hourly rate-limiting per feed and backs off using the `Retry-After` header. If rate limits persist, adjust `POLL_INTERVAL_MS` in `.env`.
+Discord is rate-limiting message delivery. HELIX RSS automatically enforces rate-limiting per feed according to your configured interval and backs off using the `Retry-After` header. If rate limits persist, select a longer posting interval (e.g. 30 minutes or 1 hour) in the dashboard Feeds tab.
 
 ---
 

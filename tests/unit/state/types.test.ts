@@ -70,6 +70,7 @@ describe('row mappers', () => {
       name: 'f',
       url: 'u',
       channelId: null,
+      guildId: null,
       enabled: 1,
       feedType: 'scrape',
       scrape: { item: 'li', title: 'h2', link: 'a', description: 'p' },

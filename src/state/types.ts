@@ -41,6 +41,7 @@ export interface Feed {
   name: string;
   url: string;
   channelId: string | null;
+  guildId?: string | null;
   enabled: number;
   feedType: 'rss' | 'scrape';
   scrape: { item: string; title: string; link: string; description?: string } | null;
@@ -123,12 +124,14 @@ export const rowToFeed = (r: Row | undefined): Feed | null => {
   const scrapeDescription =
     r.scrape_description === null || r.scrape_description === undefined ? null : String(r.scrape_description);
   const channelId = r.channel_id !== null && r.channel_id !== undefined ? String(r.channel_id) : null;
+  const guildId = r.guild_id !== null && r.guild_id !== undefined ? String(r.guild_id) : null;
   return {
     id: Number(r.id),
     userId: Number(r.user_id),
     name: String(r.name),
     url: String(r.url),
     channelId,
+    guildId,
     enabled: Number(r.enabled),
     feedType: r.feed_type === 'scrape' ? 'scrape' : 'rss',
     scrape:

@@ -1,10 +1,11 @@
-﻿import { GatewayOpcode, type DiscordInteraction } from './types.js';
+import { GatewayOpcode, type DiscordInteraction } from './types.js';
 import type { Logger } from '../util/logger.js';
 
 export interface GatewayClientOptions {
   token: string;
   logger: Logger;
   onInteraction: (interaction: DiscordInteraction) => Promise<void>;
+  onGuildDelete?: (guildId: string) => Promise<void> | void;
 }
 
 export class DiscordGatewayClient {
@@ -145,6 +146,17 @@ export class DiscordGatewayClient {
           err: (err as Error).message,
         });
       });
+    } else if (event === 'GUILD_DELETE') {
+      const guildData = data as { id: string; unavailable?: boolean };
+      // unavailable indicates a temporary outage; if falsy/missing, bot was removed or server deleted
+      if (!guildData.unavailable) {
+        Promise.resolve(this.options.onGuildDelete?.(guildData.id)).catch((err) => {
+          this.options.logger.error('Error handling GUILD_DELETE', {
+            guildId: guildData.id,
+            err: (err as Error).message,
+          });
+        });
+      }
     }
   }
 

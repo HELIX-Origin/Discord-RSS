@@ -44,15 +44,30 @@ export class FeedWatcher {
     }
   }
 
+  private getFeedPollIntervalMs(userId: number): number {
+    const userSaved = this.repo.getUserSetting(userId, 'poll_interval_ms');
+    if (userSaved) {
+      const n = Number(userSaved);
+      if (Number.isInteger(n) && n > 0) return n;
+    }
+    const globalSaved = this.repo.getSetting('poll_interval_ms');
+    if (globalSaved) {
+      const n = Number(globalSaved);
+      if (Number.isInteger(n) && n > 0) return n;
+    }
+    return 3_600_000;
+  }
+
   private async pollFeedLocked(userId: number, feed: Feed, force = false): Promise<void> {
-    const ONE_HOUR_MS = 60 * 60 * 1000;
+    const minElapsed = this.getFeedPollIntervalMs(userId);
     if (!force && feed.lastCheckedAt) {
       const lastCheck = new Date(feed.lastCheckedAt).getTime();
-      if (!Number.isNaN(lastCheck) && Date.now() - lastCheck < ONE_HOUR_MS) {
-        this.logger.debug('Skipping feed poll; feed was polled within the last hour', {
+      if (!Number.isNaN(lastCheck) && Date.now() - lastCheck < minElapsed) {
+        this.logger.debug('Skipping feed poll; feed was polled within the configured interval', {
           feedId: feed.id,
           feedName: feed.name,
           lastCheckedAt: feed.lastCheckedAt,
+          minElapsed,
         });
         return;
       }

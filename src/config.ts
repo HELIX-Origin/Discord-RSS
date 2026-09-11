@@ -73,7 +73,7 @@ export function defaultConfig(): AppConfig {
     host,
     port,
     dbPath: resolve(dataDir, 'helix-rss.db'),
-    pollIntervalMs: parsePositiveInt(process.env['POLL_INTERVAL_MS'], 60_000),
+    pollIntervalMs: 3_600_000,
     requestTimeoutMs: parsePositiveInt(process.env['REQUEST_TIMEOUT_MS'], 15_000),
     publicBaseUrl,
     sslKey,

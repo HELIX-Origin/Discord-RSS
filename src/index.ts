@@ -27,9 +27,16 @@ export async function main(): Promise<void> {
   const redis = await createRedisCoordinator(config.redisUrl);
   const feeds = new FeedWatcher(repo, redis, config.logLevel);
 
-  // 3. Create Discord Bot as primary application process
+  // 3. Start background polling scheduler
+  const scheduler = new Scheduler(config.logLevel);
+  const savedInterval = repo.getSetting('poll_interval_ms');
+  const initialInterval = savedInterval ? Number(savedInterval) : config.pollIntervalMs;
+  scheduler.schedule('feed-poll', initialInterval, () => feeds.pollAllFeeds());
+  scheduler.start();
+
+  // 4. Create Discord Bot as primary application process
   const bot = new DiscordBot(
-    { config, db, repo, oauth, feeds, redis },
+    { config, db, repo, oauth, feeds, redis, scheduler },
     {
       token: config.botToken || '',
       clientId: config.clientId,
@@ -42,11 +49,6 @@ export async function main(): Promise<void> {
     },
   );
   feeds.setBot(bot);
-
-  // 4. Start background polling schedules
-  const scheduler = new Scheduler(config.logLevel);
-  scheduler.schedule('feed-poll', config.pollIntervalMs, () => feeds.pollAllFeeds());
-  scheduler.start();
 
   // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)
   await bot.start();

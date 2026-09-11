@@ -7,18 +7,34 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/settings', async (req, res, _ctx, d) => {
     const userId = await requireAdminOrOwner(req, res, d);
     if (userId === null) return;
+    const savedPollInterval = d.repo.getSetting('poll_interval_ms');
+    const pollIntervalMs = savedPollInterval ? Number(savedPollInterval) : d.config.pollIntervalMs;
     sendJson(res, 200, {
       oauthProviders: d.oauth.listProviders(),
       publicBaseUrl: d.repo.getSetting('public_base_url'),
+      pollIntervalMs: Number.isInteger(pollIntervalMs) && pollIntervalMs > 0 ? pollIntervalMs : 3_600_000,
     });
   });
 
   router.add('POST', '/api/settings', async (req, res, _ctx, d) => {
     const userId = await requireAdminOrOwner(req, res, d);
     if (userId === null) return;
-    const body = (await readBodyJson(req)) as { publicBaseUrl?: string };
+    const body = (await readBodyJson(req)) as { publicBaseUrl?: string; pollIntervalMs?: number };
     if (body.publicBaseUrl !== undefined) {
       d.repo.setSetting('public_base_url', body.publicBaseUrl);
+    }
+    if (body.pollIntervalMs !== undefined) {
+      const allowed = [60_000, 600_000, 1_800_000, 3_600_000];
+      if (!allowed.includes(body.pollIntervalMs)) {
+        sendError(
+          res,
+          400,
+          'Invalid poll interval. Allowed intervals are: 1m (60000), 10m (600000), 30m (1800000), 1h (3600000)',
+        );
+        return;
+      }
+      d.repo.setSetting('poll_interval_ms', String(body.pollIntervalMs));
+      d.scheduler?.reschedule('feed-poll', body.pollIntervalMs);
     }
     sendJson(res, 200, { ok: true });
   });

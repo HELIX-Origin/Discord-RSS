@@ -41,6 +41,18 @@ export class Database {
     }
 
     try {
+      this.db.exec('ALTER TABLE feeds ADD COLUMN guild_id TEXT;');
+    } catch {
+      // Column may already exist
+    }
+
+    try {
+      this.db.exec('CREATE INDEX IF NOT EXISTS idx_feeds_guild ON feeds(guild_id);');
+    } catch {
+      // Index may already exist
+    }
+
+    try {
       this.db.exec("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'member';");
     } catch {
       // Column may already exist

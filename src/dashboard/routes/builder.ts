@@ -3,11 +3,11 @@ import { analyzeUrl, analyzeScrapeUrl } from '../../feed/builder.js';
 import type { ScrapeSelectors } from '../../feed/scraper.js';
 import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
-import { requireUser } from './shared.js';
+import { requireDashboardUser } from './shared.js';
 
 export function registerBuilderRoutes(router: Router<AppDeps>): void {
   router.add('POST', '/api/builder/analyze', async (req, res, _ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireDashboardUser(req, res, d);
     if (userId === null) return;
     const body = (await readBodyJson(req)) as { url?: string };
     const url = body.url?.trim();
@@ -22,7 +22,7 @@ export function registerBuilderRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('POST', '/api/builder/scrape-test', async (req, res, _ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireDashboardUser(req, res, d);
     if (userId === null) return;
     const body = (await readBodyJson(req)) as { url?: string; selectors?: ScrapeSelectors };
     const url = body.url?.trim();

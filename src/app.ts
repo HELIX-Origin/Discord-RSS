@@ -6,6 +6,7 @@ import type { FeedWatcher } from './feed/watcher.js';
 import type { RedisCoordinator } from './state/redis.js';
 
 import type { DiscordBot } from './bot/bot.js';
+import type { Scheduler } from './scheduler/scheduler.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -15,4 +16,5 @@ export interface AppDeps {
   feeds: FeedWatcher;
   redis: RedisCoordinator | null;
   bot?: DiscordBot | null;
+  scheduler?: Scheduler | null;
 }

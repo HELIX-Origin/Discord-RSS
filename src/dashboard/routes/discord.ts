@@ -1,11 +1,11 @@
 import type { AppDeps } from '../../app.js';
 import { sendError, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
-import { requireUser } from './shared.js';
+import { canUserManageGuild, requireDashboardUser } from './shared.js';
 
 export function registerDiscordRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/discord/channels', async (req, res, _ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireDashboardUser(req, res, d);
     if (userId === null) return;
 
     const botInviteUrl = d.config.clientId
@@ -22,7 +22,8 @@ export function registerDiscordRoutes(router: Router<AppDeps>): void {
     }
 
     try {
-      const guilds = await d.bot.getGuildsWithChannels();
+      const allGuilds = await d.bot.getGuildsWithChannels();
+      const guilds = allGuilds.filter((g) => canUserManageGuild(userId, g.id, d));
       sendJson(res, 200, {
         botEnabled: true,
         botInviteUrl,

@@ -22,6 +22,14 @@ export class SettingsRepository {
     this.state.setSetting(key, value);
   }
 
+  getUserSetting(userId: number, key: string): string | null {
+    return this.getSetting(`user:${userId}:${key}`);
+  }
+
+  setUserSetting(userId: number, key: string, value: string): void {
+    this.setSetting(`user:${userId}:${key}`, value);
+  }
+
   logActivity(userId: number | null, level: string, source: string, message: string): void {
     const entry: ActivityEntry = { ts: nowIso(), userId, level, source, message };
     this.db.raw

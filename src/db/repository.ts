@@ -144,8 +144,9 @@ export class Repository {
     channelId: string | null,
     feedType: 'rss' | 'scrape',
     scrape: Feed['scrape'],
+    guildId?: string | null,
   ): Feed {
-    return this.feeds.addFeed(userId, name, url, channelId, feedType, scrape);
+    return this.feeds.addFeed(userId, name, url, channelId, feedType, scrape, guildId);
   }
 
   updateFeed(
@@ -155,10 +156,69 @@ export class Repository {
       name?: string;
       url?: string;
       channelId?: string | null;
+      guildId?: string | null;
       enabled?: number;
     },
   ): Feed | null {
     return this.feeds.updateFeed(userId, id, fields);
+  }
+
+  deleteGuildData(guildId: string): { feedsDeleted: number; guildsDeleted: number } {
+    const feedsToDelete = this.state.allFeeds().filter((f) => f.guildId === guildId);
+
+    const dedicatedGuildUser = this.state.getUserByEmail(`guild-${guildId}@discord.rss`);
+    if (dedicatedGuildUser) {
+      const userFeeds = this.state.listFeeds(dedicatedGuildUser.id);
+      for (const uf of userFeeds) {
+        if (!feedsToDelete.some((f) => f.id === uf.id)) {
+          feedsToDelete.push(uf);
+        }
+      }
+    }
+
+    let feedsDeleted = 0;
+    for (const feed of feedsToDelete) {
+      this.db.raw.prepare('DELETE FROM sent_entries WHERE feed_id = ?').run(feed.id);
+      this.db.raw.prepare('DELETE FROM feeds WHERE id = ?').run(feed.id);
+      this.state.deleteFeed(feed.id);
+      feedsDeleted++;
+    }
+
+    const dbFeedsRes = this.db.raw.prepare('DELETE FROM feeds WHERE guild_id = ?').run(guildId);
+    feedsDeleted = Math.max(feedsDeleted, Number(dbFeedsRes.changes));
+
+    const guildRes = this.db.raw.prepare('DELETE FROM discord_guilds WHERE guild_id = ?').run(guildId);
+    const guildsDeleted = Number(guildRes.changes);
+    this.state.deleteDiscordGuild(guildId);
+
+    if (dedicatedGuildUser) {
+      this.db.raw.prepare('DELETE FROM users WHERE id = ?').run(dedicatedGuildUser.id);
+      this.state.deleteUser(dedicatedGuildUser.id);
+    }
+
+    for (const user of this.state.listUsers()) {
+      const raw = this.getUserSetting(user.id, 'managed_guild_ids');
+      if (raw) {
+        try {
+          const ids = JSON.parse(raw) as string[];
+          if (Array.isArray(ids) && ids.includes(guildId)) {
+            const updated = ids.filter((id) => id !== guildId);
+            this.setUserSetting(user.id, 'managed_guild_ids', JSON.stringify(updated));
+          }
+        } catch {
+          // ignore parse errors
+        }
+      }
+    }
+
+    this.logActivity(
+      null,
+      'info',
+      'bot',
+      `Deleted all data for guild ${guildId} (${feedsDeleted} feeds, ${guildsDeleted} guild records) due to bot removal.`,
+    );
+
+    return { feedsDeleted, guildsDeleted };
   }
 
   setFeedChecked(userId: number, id: number, lastEntryId: string | null): void {
@@ -189,6 +249,14 @@ export class Repository {
 
   setSetting(key: string, value: string): void {
     this.settings.setSetting(key, value);
+  }
+
+  getUserSetting(userId: number, key: string): string | null {
+    return this.settings.getUserSetting(userId, key);
+  }
+
+  setUserSetting(userId: number, key: string, value: string): void {
+    this.settings.setUserSetting(userId, key, value);
   }
 
   logActivity(userId: number | null, level: string, source: string, message: string): void {

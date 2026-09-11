@@ -7,6 +7,8 @@ import { createRedisCoordinator, type RedisCoordinator } from '../../src/state/r
 import type { AppDeps } from '../../src/app.js';
 import { openTestDb, closeTestDb } from './db.js';
 
+export type { AppDeps };
+
 export interface BuiltAppDeps {
   deps: AppDeps;
   cleanup: () => Promise<void>;

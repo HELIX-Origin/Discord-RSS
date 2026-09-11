@@ -32,6 +32,17 @@ export const defaultHandlers = [
       },
     });
   }),
+  http.get('https://discord.com/api/v10/users/@me/guilds', () => {
+    return HttpResponse.json([
+      {
+        id: '111222333444555666',
+        name: 'Test Server',
+        icon: null,
+        owner: true,
+        permissions: '2147483647',
+      },
+    ]);
+  }),
 ];
 
 export const mswServer = setupServer(...defaultHandlers);

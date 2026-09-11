@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { DiscordGatewayClient } from '../../../src/bot/gateway.js';
 import { createLogger } from '../../../src/util/logger.js';
 import { GatewayOpcode, InteractionType, type DiscordInteraction } from '../../../src/bot/types.js';
@@ -115,6 +115,54 @@ describe('DiscordGatewayClient', () => {
 
     expect(onInteraction).toHaveBeenCalledWith(interactionPayload);
 
+    client.stop();
+  });
+
+  it('dispatches GUILD_DELETE events to onGuildDelete callback when not unavailable', async () => {
+    const onInteraction = vi.fn().mockResolvedValue(undefined);
+    const onGuildDelete = vi.fn().mockResolvedValue(undefined);
+    const client = new DiscordGatewayClient({
+      token: 'test-token',
+      logger: createLogger('test', 'error'),
+      onInteraction,
+      onGuildDelete,
+    });
+
+    client.connect();
+    const ws = MockWebSocket.instances[0]!;
+
+    ws.emitMessage({
+      op: GatewayOpcode.DISPATCH,
+      t: 'GUILD_DELETE',
+      s: 2,
+      d: { id: 'guild-999', unavailable: false },
+    });
+
+    expect(onGuildDelete).toHaveBeenCalledWith('guild-999');
+    client.stop();
+  });
+
+  it('ignores GUILD_DELETE when unavailable is true (server outage)', async () => {
+    const onInteraction = vi.fn().mockResolvedValue(undefined);
+    const onGuildDelete = vi.fn().mockResolvedValue(undefined);
+    const client = new DiscordGatewayClient({
+      token: 'test-token',
+      logger: createLogger('test', 'error'),
+      onInteraction,
+      onGuildDelete,
+    });
+
+    client.connect();
+    const ws = MockWebSocket.instances[0]!;
+
+    ws.emitMessage({
+      op: GatewayOpcode.DISPATCH,
+      t: 'GUILD_DELETE',
+      s: 3,
+      d: { id: 'guild-999', unavailable: true },
+    });
+
+    expect(onGuildDelete).not.toHaveBeenCalled();
     client.stop();
   });
 });
