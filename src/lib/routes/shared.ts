@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AppDeps } from '../../app.js';
-import { COOKIE_NAME, getRequestBaseUrl, parseCookies, sendError } from '../../http/helpers.js';
+import { COOKIE_NAME, getRequestBaseUrl, getRequestProtocol, parseCookies, sendError } from '../../http/helpers.js';
 
 export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 3600;
 
@@ -104,7 +104,44 @@ export async function requireOwner(req: IncomingMessage, res: ServerResponse, de
 
 export const requireHost = requireAdminOrOwner;
 
+export function getDiscordCallbackUri(deps: AppDeps, req?: IncomingMessage): string {
+  if (process.env['DISCORD_CALLBACK_URL']?.trim()) {
+    return process.env['DISCORD_CALLBACK_URL']!.trim();
+  }
+  if (deps.config.callbackUrl && deps.config.callbackUrl.includes(`:${deps.config.botPort}/`)) {
+    return deps.config.callbackUrl;
+  }
+
+  const botPort = deps.config.botPort || 3131;
+  const botProto =
+    deps.config.botSslKey && deps.config.botSslCert
+      ? 'https'
+      : req
+        ? getRequestProtocol(req)
+        : deps.config.publicBaseUrl?.startsWith('https')
+          ? 'https'
+          : 'http';
+
+  let host = deps.config.host === '0.0.0.0' ? '127.0.0.1' : deps.config.host;
+  if (req?.headers.host) {
+    const rawHost = req.headers.host.split(':')[0];
+    if (rawHost) host = rawHost;
+  } else if (deps.config.publicBaseUrl) {
+    try {
+      const u = new URL(deps.config.publicBaseUrl);
+      host = u.hostname;
+    } catch {
+      /* fallback to host */
+    }
+  }
+
+  return `${botProto}://${host}:${botPort}/api/auth/callback/discord`;
+}
+
 export function redirectUriForProvider(deps: AppDeps, provider: string, req?: IncomingMessage): string {
+  if (provider === 'discord') {
+    return getDiscordCallbackUri(deps, req);
+  }
   const base =
     deps.repo.getSetting('public_base_url') ??
     deps.config.publicBaseUrl ??

@@ -103,13 +103,14 @@ export class DiscordBot {
           req.method === 'GET' &&
           (url.pathname === '/api/auth/callback/discord' || url.pathname === '/api/oauth/discord/callback')
         ) {
-          if (url.searchParams.has('code')) {
+          if (url.searchParams.has('code') || url.searchParams.has('error')) {
             const mainProto =
               this.deps.config.publicBaseUrl?.startsWith('https') ||
               (this.deps.config.sslKey && this.deps.config.sslCert)
                 ? 'https'
                 : 'http';
-            const mainHost = this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host;
+            const reqHost = (req.headers.host || '').split(':')[0];
+            const mainHost = reqHost || (this.deps.config.host === '0.0.0.0' ? '127.0.0.1' : this.deps.config.host);
             const mainPort = this.deps.config.port;
             const baseUrl = this.deps.config.publicBaseUrl
               ? this.deps.config.publicBaseUrl.replace(/\/+$/, '')

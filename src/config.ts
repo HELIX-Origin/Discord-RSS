@@ -55,12 +55,24 @@ export function defaultConfig(): AppConfig {
       ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&permissions=8&integration_type=0&scope=bot+applications.commands`
       : null);
 
-  // DISCORD_CALLBACK_URL is the OAuth Callback URL auto-derived from host/port or publicBaseUrl
-  const callbackUrl =
-    process.env['DISCORD_CALLBACK_URL']?.trim() ||
-    (publicBaseUrl
-      ? `${publicBaseUrl.replace(/\/+$/, '')}/api/auth/callback/discord`
-      : `${botProto}://${callbackHost}:${botPort}/api/auth/callback/discord`);
+  // DISCORD_CALLBACK_URL is the OAuth Callback URL auto-derived from host/port or publicBaseUrl, always using botPort
+  let callbackUrl: string;
+  if (process.env['DISCORD_CALLBACK_URL']?.trim()) {
+    callbackUrl = process.env['DISCORD_CALLBACK_URL']!.trim();
+  } else if (publicBaseUrl) {
+    try {
+      const u = new URL(publicBaseUrl);
+      u.port = String(botPort);
+      u.pathname = '/api/auth/callback/discord';
+      u.search = '';
+      u.hash = '';
+      callbackUrl = u.toString();
+    } catch {
+      callbackUrl = `${botProto}://${callbackHost}:${botPort}/api/auth/callback/discord`;
+    }
+  } else {
+    callbackUrl = `${botProto}://${callbackHost}:${botPort}/api/auth/callback/discord`;
+  }
 
   return {
     host,

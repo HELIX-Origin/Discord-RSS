@@ -9,7 +9,9 @@ HELIX RSS includes a built-in, native Discord Bot that connects directly to the 
 1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**.
 2. Name your application (e.g., `HELIX RSS`) and save.
 3. Under **General Information**, copy your **Application ID** and set `DISCORD_CLIENT_ID=<id>` in `.env`.
-4. Under **OAuth2** -> **General**, reset and copy your **Client Secret**, then set `DISCORD_CLIENT_SECRET=<secret>` in `.env`.
+4. Under **OAuth2** -> **General**:
+   - Reset and copy your **Client Secret**, then set `DISCORD_CLIENT_SECRET=<secret>` in `.env`.
+   - Under **Redirects**, click **Add Redirect** and add `http://localhost:3131/api/auth/callback/discord` (and optionally `http://127.0.0.1:3131/api/auth/callback/discord`). Discord OAuth callbacks route to the actual Discord bot port (`DISCORD_PORT`, default `3131`), which seamlessly authenticates users for the web dashboard.
 5. Under the **Bot** tab:
    - Click **Reset Token** and copy the bot token. Set `DISCORD_TOKEN=<token>` in `.env`.
    - Enable **Server Members Intent** and **Message Content Intent** if using extended member lookup.

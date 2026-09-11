@@ -11,7 +11,8 @@ import {
 } from '../../http/helpers.js';
 import type { Router } from '../../http/router.js';
 import { DiscordProvider } from '../../oauth/discord.js';
-import { authedUserId, getSessionToken, SESSION_MAX_AGE_SECONDS } from './shared.js';
+import { createLogger } from '../../util/logger.js';
+import { authedUserId, getDiscordCallbackUri, getSessionToken, SESSION_MAX_AGE_SECONDS } from './shared.js';
 
 export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void {
   const auth = new AuthService(deps.repo);
@@ -85,8 +86,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       return;
     }
 
-    const baseUrl = getRequestBaseUrl(req, d.config.publicBaseUrl, `${d.config.host}:${d.config.port}`);
-    const redirectUri = d.config.callbackUrl || `${baseUrl}/api/auth/callback/discord`;
+    const redirectUri = getDiscordCallbackUri(d, req);
 
     const state = randomBytes(16).toString('hex');
     d.repo.saveOAuthState(state, null, 'discord');
@@ -156,7 +156,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
         throw new Error('Discord OAuth provider is not configured.');
       }
 
-      const redirectUri = d.config.callbackUrl || `${baseUrl}/api/auth/callback/discord`;
+      const redirectUri = getDiscordCallbackUri(d, req);
       const tokens = await p.exchangeCode(code, redirectUri, config);
 
       let profile = {
@@ -251,6 +251,8 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       res.end();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
+      const logger = createLogger('auth', d.config.logLevel);
+      logger.error('Discord OAuth callback failed', { err: message });
       res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end(renderAuthErrorPage(message));
     }
