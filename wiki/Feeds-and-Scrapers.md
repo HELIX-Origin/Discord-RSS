@@ -25,9 +25,9 @@ HELIX RSS provides native parsing for standard RSS and Atom feeds, as well as a 
 
 ---
 
-## 🕷️ Webpage Scraper & Feed Builder
+## 🕷️ Webpage Scraper
 
-For websites without an RSS feed (e.g. documentation updates, store restocks, status pages), HELIX RSS includes a built-in scraper that extracts structured feed items from raw HTML.
+For websites without an RSS feed (e.g. documentation updates, store restocks, status pages), HELIX RSS includes a built-in scraper that extracts structured feed items from raw HTML using CSS selectors configured on the Feeds tab.
 
 ### CSS Selector Mapping
 
@@ -35,14 +35,6 @@ For websites without an RSS feed (e.g. documentation updates, store restocks, st
 - **Title Selector**: CSS selector for the headline within each item (e.g., `h2.title`, `a.header-link`).
 - **Link Selector**: CSS selector for the item link (e.g., `a[href]`). Absolute and relative URLs (`/posts/1`) are resolved automatically.
 - **Description / Content Selector**: Optional CSS selector for teaser text or summary.
-
-### Visual Feed Builder
-
-The **Feed Builder** tab allows you to test any public webpage URL in real time:
-
-1. Enter the target website URL.
-2. Click **Inspect Page**.
-3. HELIX RSS tests HTML structure, extracts matching sample items, and verifies your selectors before saving.
 
 ---
 

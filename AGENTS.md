@@ -5,7 +5,7 @@ This document is the central entry point and operating manual for all AI agents,
 ## Project
 
 **HELIX RSS** is a self-hosted, multi-user RSS/Atom-to-Discord service built in TypeScript ESM.
-- **Runtime dependencies**: None (uses native Node.js `http`, `node:sqlite`, and web standard APIs; optional `redis` for cross-instance coordination).
+- **Runtime dependencies**: Minimal (uses native Node.js `http`, `node:sqlite`, and web standard APIs; in-memory `ioredis-mock` for coordination without external redis binaries).
 - **Architecture**: In-memory write-through repository layer (`AppState`), native SQLite persistence, integrated dashboard UI with Light/Dark themes, Discord OAuth authentication, and direct message embed delivery to Discord channels.
 
 ---

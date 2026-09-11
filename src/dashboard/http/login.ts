@@ -130,8 +130,12 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
     </p>
   </div>
 
-  <footer class="w-full text-center py-4 text-xs text-gray-600">
-    HELIX RSS &copy; 2026
+  <footer class="w-full text-center py-4 text-xs text-gray-600 space-x-3">
+    <span>HELIX RSS &copy; 2026</span>
+    <span>&middot;</span>
+    <a href="/privacy" class="hover:text-gray-400 transition">Privacy Policy</a>
+    <span>&middot;</span>
+    <a href="/tos" class="hover:text-gray-400 transition">Terms of Service</a>
   </footer>
 
   <script>

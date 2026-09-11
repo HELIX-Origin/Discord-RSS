@@ -24,16 +24,3 @@ services:
       retries: 3
       start_period: 10s
 
-  # Optional Redis service for cross-instance deduplication coordination
-  # Uncomment if running multiple coordinated instances:
-  # redis:
-  #   image: redis:7-alpine
-  #   container_name: helix-redis
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3535:6379"
-  #   volumes:
-  #     - redis-data:/data
-
-# volumes:
-#   redis-data:

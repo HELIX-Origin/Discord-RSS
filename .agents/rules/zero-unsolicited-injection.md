@@ -14,7 +14,7 @@ The previous native-only dependency restriction is **rescinded**. Discord RSS is
 
 ## Approved Runtime Dependencies
 
-- `redis@^5` — optional cross-instance coordination (dedupe + poll locks) behind `DISCORD_RSS_REDIS_URL`; degrades gracefully when unset.
+- `ioredis-mock` — in-memory coordination (dedupe + poll locks) eliminating need for external redis binary.
 - `playwright` — permitted only for Cloudflare challenge resolution on scrape/feed fetching.
 
 ## Approved Dev Dependencies

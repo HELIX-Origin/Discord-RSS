@@ -5,10 +5,13 @@ import type { LogLevel } from './util/logger.js';
 export interface AppConfig {
   host: string;
   port: number;
+  internalUrl: string;
+  customUrl: string | null;
+  cloudHostUrl: string | null;
+  publicBaseUrl: string | null;
   dbPath: string;
   pollIntervalMs: number;
   requestTimeoutMs: number;
-  publicBaseUrl: string | null;
   sslKey: string | null;
   sslCert: string | null;
   botSslKey: string | null;
@@ -22,19 +25,61 @@ export interface AppConfig {
   clientSecret: string | null;
   redirectUrl: string | null;
   callbackUrl: string | null;
+  pingUrl: string | null;
+  pingIntervalMs: number;
+  httpsProxyPort: number | null;
 }
 
 export function defaultConfig(): AppConfig {
-  const host = process.env['INTERNAL_URL']?.trim() ?? '127.0.0.1';
+  const rawInternal = process.env['INTERNAL_URL']?.trim();
+  let envHost: string | undefined;
+  let envPort: number | undefined;
+  if (rawInternal) {
+    if (rawInternal.startsWith('http://') || rawInternal.startsWith('https://')) {
+      try {
+        const u = new URL(rawInternal);
+        envHost = u.hostname;
+        if (u.port) envPort = Number(u.port);
+      } catch {
+        envHost = rawInternal;
+      }
+    } else {
+      envHost = rawInternal;
+    }
+  }
+
+  const host = envHost ?? process.env['HOST']?.trim() ?? '127.0.0.1';
   const dataDir = process.env['SQLITE_DATA'] ?? resolve(process.cwd(), 'data');
-  const publicBaseUrl = process.env['PUBLIC_URL']?.trim() || null;
+
+  // Cloud host-provided dynamic URLs
+  const cloudHostUrl =
+    process.env['RENDER_EXTERNAL_URL']?.trim() ||
+    (process.env['RAILWAY_STATIC_URL']
+      ? `https://${process.env['RAILWAY_STATIC_URL'].trim().replace(/^https?:\/\//, '')}`
+      : null) ||
+    (process.env['RAILWAY_PUBLIC_DOMAIN']
+      ? `https://${process.env['RAILWAY_PUBLIC_DOMAIN'].trim().replace(/^https?:\/\//, '')}`
+      : null) ||
+    (process.env['FLY_APP_NAME'] ? `https://${process.env['FLY_APP_NAME'].trim()}.fly.dev` : null) ||
+    null;
+
+  // Custom URL takes priority over cloud-provided dynamic host URLs and PUBLIC_URL
+  const rawCustom = process.env['CUSTOM_URL']?.trim();
+  const customUrl = rawCustom
+    ? rawCustom.startsWith('http://') || rawCustom.startsWith('https://')
+      ? rawCustom.replace(/\/+$/, '')
+      : `https://${rawCustom.replace(/\/+$/, '')}`
+    : null;
+
+  const publicBaseUrl =
+    customUrl || process.env['PUBLIC_URL']?.trim()?.replace(/\/+$/, '') || cloudHostUrl?.replace(/\/+$/, '') || null;
   const sslKey = process.env['SITE_SSL_KEY']?.trim() || null;
   const sslCert = process.env['SITE_SSL_CERT']?.trim() || null;
   const botSslKey = process.env['DISCORD_SSL_KEY']?.trim() || sslKey;
   const botSslCert = process.env['DISCORD_SSL_CERT']?.trim() || sslCert;
   const logLevel = parseLogLevel(process.env['LOG_LEVEL']);
   const botToken = process.env['DISCORD_TOKEN']?.trim() || null;
-  const botPort = parsePort(process.env['DISCORD_PORT'], 3131);
+  const botPort = parsePort(process.env['DISCORD_PORT'] ?? (envPort ? String(envPort) : undefined), 3131);
   const port = parsePort(process.env['PORT'] ?? process.env['DISCORD_PORT'], botPort);
   const redisPort = parsePort(process.env['REDIS_PORT'], 3535);
   const redisUrl = `redis://${host}:${redisPort}`;
@@ -42,6 +87,10 @@ export function defaultConfig(): AppConfig {
   const clientSecret = process.env['DISCORD_CLIENT_SECRET']?.trim() || null;
   const callbackHost = host === '127.0.0.1' || host === '0.0.0.0' ? 'localhost' : host;
   const botProto = botSslKey && botSslCert ? 'https' : 'http';
+
+  // Internal URL is derived from the host and the port
+  const internalPingHost = host === '0.0.0.0' ? '127.0.0.1' : host;
+  const internalUrl = `${botProto}://${internalPingHost}:${botPort}`;
 
   // DISCORD_REDIRECT_URL is the Bot Invite / Authorization URL
   const redirectUrl =
@@ -69,13 +118,56 @@ export function defaultConfig(): AppConfig {
     callbackUrl = `${botProto}://${callbackHost}:${botPort}/api/auth/callback/discord`;
   }
 
+  const internalHealthUrl = `${internalUrl}/health`;
+
+  const rawPingUrl = process.env['PING_URL']?.trim() || process.env['KEEP_ALIVE_URL']?.trim();
+  let pingUrl: string | null;
+  if (rawPingUrl) {
+    const trimmed = rawPingUrl.toLowerCase();
+    if (trimmed === 'none' || trimmed === 'disabled' || trimmed === 'off' || trimmed === 'false') {
+      pingUrl = null;
+    } else if (rawPingUrl.startsWith('/')) {
+      pingUrl = `${internalUrl}${rawPingUrl}`;
+    } else {
+      let resolved = rawPingUrl
+        .replace(/\$\{?INTERNAL_URL\}?/g, internalPingHost)
+        .replace(/\$\{?DISCORD_PORT\}?/g, String(botPort));
+      if (!resolved.startsWith('http://') && !resolved.startsWith('https://')) {
+        if (resolved === internalPingHost || resolved === host) {
+          resolved = `${botProto}://${internalPingHost}:${botPort}/health`;
+        } else if (resolved.includes(':') || resolved.includes('/')) {
+          resolved = `${botProto}://${resolved}`;
+        }
+      }
+      pingUrl = resolved;
+    }
+  } else {
+    const renderExternal = process.env['RENDER_EXTERNAL_URL']?.trim();
+    pingUrl = renderExternal ? `${renderExternal.replace(/\/+$/, '')}/health` : internalHealthUrl;
+  }
+  const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
+
+  const rawHttpsPort = process.env['HTTPS_PORT'] ?? process.env['HTTPS_PROXY_PORT'];
+  let httpsProxyPort: number | null = 3443;
+  if (rawHttpsPort !== undefined && rawHttpsPort.trim() !== '') {
+    const trimmed = rawHttpsPort.trim().toLowerCase();
+    if (trimmed === 'none' || trimmed === 'disabled' || trimmed === 'off' || trimmed === 'false' || trimmed === '0') {
+      httpsProxyPort = null;
+    } else {
+      httpsProxyPort = parsePort(rawHttpsPort.trim(), 3443);
+    }
+  }
+
   return {
     host,
     port,
+    internalUrl,
+    customUrl,
+    cloudHostUrl,
+    publicBaseUrl,
     dbPath: resolve(dataDir, 'helix-rss.db'),
     pollIntervalMs: 3_600_000,
     requestTimeoutMs: parsePositiveInt(process.env['REQUEST_TIMEOUT_MS'], 15_000),
-    publicBaseUrl,
     sslKey,
     sslCert,
     botSslKey,
@@ -89,6 +181,9 @@ export function defaultConfig(): AppConfig {
     clientSecret,
     redirectUrl,
     callbackUrl,
+    pingUrl,
+    pingIntervalMs,
+    httpsProxyPort,
   };
 }
 

@@ -11,7 +11,9 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
     const pollIntervalMs = savedPollInterval ? Number(savedPollInterval) : d.config.pollIntervalMs;
     sendJson(res, 200, {
       oauthProviders: d.oauth.listProviders(),
-      publicBaseUrl: d.repo.getSetting('public_base_url'),
+      publicBaseUrl: d.repo.getSetting('public_base_url') ?? d.config.publicBaseUrl,
+      customUrl: d.config.customUrl,
+      cloudHostUrl: d.config.cloudHostUrl,
       pollIntervalMs: Number.isInteger(pollIntervalMs) && pollIntervalMs > 0 ? pollIntervalMs : 3_600_000,
     });
   });
@@ -346,7 +348,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
         }
       } else {
         recommendations.push(
-          'This URL does not appear to be standard RSS/Atom XML. Use the Feed Builder to scrape it.',
+          'This URL does not appear to be standard RSS/Atom XML. Verify the RSS feed URL or use a custom webpage scraper feed.',
         );
       }
 

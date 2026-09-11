@@ -13,7 +13,8 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | `INTERNAL_URL` | `127.0.0.1` | The internal bind address used by the Discord bot and web dashboard. Set to `0.0.0.0` to expose on your local network (LAN), or leave as `127.0.0.1` for local-only or reverse-proxy setups.                                    |
 | `DISCORD_PORT` | `3131`      | The primary HTTP/HTTPS port for the Discord bot service, interaction endpoints, and OAuth flows. The web dashboard runs as a managed sub-process incremented from this port (e.g. `3132`).                                         |
 | `REDIS_PORT`   | `3535`      | The port for the Redis coordinator. Redis automatically binds to `INTERNAL_URL`.                                                                                                                                                      |
-| `PUBLIC_URL`   | _(empty)_   | **Optional**. The public domain where HELIX RSS is hosted (e.g., `https://rss.example.com`). When provided, public-facing links, Discord bot invite links, and OAuth redirect URIs will use this URL instead of the internal address. |
+| `CUSTOM_URL`   | _(empty)_   | **Recommended for Cloud Hosting**. Binds your custom domain (e.g., `https://rss.example.com`) to dynamic cloud host domains (Render, Railway, Fly.io). Overrides dynamic host URLs so Discord OAuth callbacks, invite links, and bot embeds stay stable. |
+| `PUBLIC_URL`   | _(empty)_   | **Optional**. Fallback alias for `CUSTOM_URL`. When provided, public-facing links, Discord bot invite links, and OAuth redirect URIs will use this URL instead of the internal address.                                             |
 
 ### Feed Polling & Timeouts
 
@@ -40,18 +41,27 @@ Feed posting intervals are managed directly per-user via the dashboard **Feeds**
 | `DISCORD_CLIENT_SECRET` | _(empty)_        | **Required for Web Login**. Your Discord Application Client Secret found in the Developer Portal under **OAuth2**. Used to authenticate users via Discord.                     |
 | `DISCORD_REDIRECT_URL`  | _(auto-derived)_ | The Bot Invite & Authorization URL. Format: `https://discord.com/oauth2/authorize?client_id=<your_client_id>&permissions=8&integration_type=0&scope=bot+applications.commands` |
 
-### Native SSL / HTTPS (Optional)
+### Native SSL & HTTPS Proxy (Optional)
 
-| Variable        | Default   | Description                                                                       |
-| --------------- | --------- | --------------------------------------------------------------------------------- |
-| `SITE_SSL_KEY`  | _(empty)_ | File path to a PEM-formatted private key or raw PEM string for native HTTPS.      |
-| `SITE_SSL_CERT` | _(empty)_ | File path to a PEM-formatted certificate file or raw PEM string for native HTTPS. |
+| Variable              | Default   | Description                                                                                             |
+| --------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| `SITE_SSL_KEY`        | _(empty)_ | File path to a PEM-formatted private key or raw PEM string for native HTTPS.                            |
+| `SITE_SSL_CERT`       | _(empty)_ | File path to a PEM-formatted certificate file or raw PEM string for native HTTPS.                       |
+| `HTTPS_PORT`          | `3443`    | Port for the built-in HTTPS proxy. If no SSL certs are configured, generates an in-memory self-signed TLS cert on boot. |
+| `ENABLE_HTTPS_PROXY`  | `false`   | Set to `true` to force-enable the HTTPS proxy when `HTTPS_PORT` is not set explicitly.                  |
+
+### Keep-Alive Network Ping (Optional)
+
+| Variable           | Default          | Description                                                                                                                                                                                            |
+| ------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PING_URL`         | _(auto-derived)_ | Health endpoint to ping periodically to prevent cloud spindown / throttling. Automatically derived from `INTERNAL_URL` (host) and `DISCORD_PORT` (e.g. `http://${INTERNAL_URL}:${DISCORD_PORT}/health`). Override with an external URL or set to `disabled` to turn off. |
+| `PING_INTERVAL_MS` | `600000`         | Interval in milliseconds between keep-alive pings (default 10 minutes).                                                                                                                                |
 
 ---
 
-## 🛡️ Preflight Port Clearing & Redis Lifecycle
+## 🛡️ Preflight Port Clearing & In-Memory Coordination
 
 To eliminate port-in-use errors (`EADDRINUSE`) when restarting or updating:
 
-1. **Preflight Port Sweep**: On boot, HELIX RSS scans `DISCORD_PORT` (3131), the site port (e.g. 3132), and `REDIS_PORT` (3535). If an inactive or orphaned process is lingering on these ports from a prior session, it is cleanly terminated before binding.
-2. **Embedded Redis Lifecycle**: If `redis-server` is installed on your host, HELIX RSS will automatically launch it on `REDIS_PORT` (3535) and gracefully terminate it when the service stops. If Redis is not installed, the application seamlessly operates in standalone SQLite mode with zero delay.
+1. **Preflight Port Sweep**: On boot, HELIX RSS scans `DISCORD_PORT` (3131) and port aliases. If an inactive or orphaned process is lingering on these ports from a prior session, it is cleanly terminated before binding.
+2. **In-Memory Redis Coordination**: Powered by `ioredis-mock`, eliminating any requirement for an external `redis-server` binary. The application boots instantly anywhere with standard `npm install` and `npm start`.

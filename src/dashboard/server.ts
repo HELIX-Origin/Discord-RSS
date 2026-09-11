@@ -7,10 +7,10 @@ import { Router } from './http/router.js';
 import { renderDashboardHtml } from './render/render.js';
 import { registerDevToolsRoutes } from './http/dev-tools.js';
 import { renderLoginHtml } from './http/login.js';
+import { renderLegalHtml } from './http/legal.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerOAuthRoutes } from './routes/oauth.js';
 import { registerFeedsRoutes } from './routes/feeds.js';
-import { registerBuilderRoutes } from './routes/builder.js';
 import { registerDiscordRoutes } from './routes/discord.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerStatsRoutes } from './routes/stats.js';
@@ -66,6 +66,14 @@ export function createHelixRssServer(deps: AppDeps): Server {
   });
   router.add('GET', '/register', (_req, res, _ctx, d) => {
     sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl));
+  });
+
+  // Policy & Legal pages
+  router.add('GET', '/privacy', (_req, res) => {
+    sendHtml(res, 200, renderLegalHtml('Privacy Policy', 'PRIVACY.md'));
+  });
+  router.add('GET', '/tos', (_req, res) => {
+    sendHtml(res, 200, renderLegalHtml('Terms of Service', 'TOS.md'));
   });
 
   // Bot invite redirects
@@ -154,7 +162,6 @@ export function createHelixRssServer(deps: AppDeps): Server {
   registerAuthRoutes(router, deps);
   registerOAuthRoutes(router);
   registerFeedsRoutes(router);
-  registerBuilderRoutes(router);
   registerDiscordRoutes(router);
   registerSettingsRoutes(router);
   registerStatsRoutes(router);

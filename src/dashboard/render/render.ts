@@ -173,9 +173,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <button onclick="switchTab('feeds')" id="tab-btn-feeds" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-rss w-5"></i> Feeds
         </button>
-        <button onclick="switchTab('builder')" id="tab-btn-builder" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-wand-magic-sparkles w-5"></i> Feed Builder
-        </button>
         <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-star w-5"></i> Popular Feeds
         </button>
@@ -194,6 +191,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <div class="flex justify-between"><span>Parser:</span><span class="text-emerald-400 font-semibold">RSS · Atom</span></div>
         <div class="flex justify-between"><span>Database:</span><span class="text-emerald-400 font-mono">SQLite (node:sqlite)</span></div>
         <div class="flex justify-between"><span>Auth:</span><span class="text-indigo-400 font-mono">Discord OAuth</span></div>
+      </div>
+      <div class="pt-3 border-t border-gray-800 text-[11px] text-gray-500 flex justify-between px-1">
+        <a href="/privacy" class="hover:text-cyan-400 transition">Privacy</a>
+        <span>&middot;</span>
+        <a href="/tos" class="hover:text-cyan-400 transition">Terms</a>
+        <span>&middot;</span>
+        <a href="https://github.com/HELIX-Origin/HELIX-RSS" target="_blank" rel="noreferrer" class="hover:text-cyan-400 transition">GitHub</a>
       </div>
     </nav>
 
@@ -317,75 +321,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-      <!-- 2.5 FEED BUILDER -->
-      <section id="tab-builder" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i> Analyze a Site
-            </h2>
-            <p class="text-xs text-gray-400 mt-1">Enter any page URL. If the site publishes an RSS/Atom feed we will find it automatically. If not, you can build a feed by scraping the page with selectors.</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Page URL</label>
-              <input type="text" id="builder-url" placeholder="https://example.com/forum/" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
-            </div>
-          </div>
-          <div class="flex justify-end">
-            <button onclick="analyzeBuilderUrl()" class="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-violet-600/20">
-              <i class="fa-solid fa-magnifying-glass"></i> Analyze
-            </button>
-          </div>
-          <div id="builder-result" class="hidden space-y-4"></div>
-        </div>
 
-        <div class="glass p-6 rounded-2xl border border-gray-800 hidden" id="builder-scrape-panel">
-          <h2 class="text-base font-bold text-white flex items-center gap-2 mb-1">
-            <i class="fa-solid fa-scissors text-violet-400"></i> Build a Scrape Feed
-          </h2>
-          <p class="text-xs text-gray-400 mb-4">No feed found, or want a custom view of the page? Use CSS selectors to pick repeating items. Test first, then save as a feed.</p>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Feed Name</label>
-              <input type="text" id="builder-feed-name" placeholder="Latest forum posts" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destination Discord Channel</label>
-              <select id="builder-feed-channel" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500">
-                <option value="">-- Select Discord channel --</option>
-              </select>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Item Selector</label>
-              <input type="text" id="builder-sel-item" placeholder="article.post-item" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Title Selector</label>
-              <input type="text" id="builder-sel-title" placeholder="h2 a" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Link Selector</label>
-              <input type="text" id="builder-sel-link" placeholder="a" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Description Selector (opt)</label>
-              <input type="text" id="builder-sel-desc" placeholder="p.summary" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
-            </div>
-          </div>
-          <div class="flex justify-between items-center pt-2">
-            <button onclick="testBuilderSelectors()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition border border-gray-700 flex items-center gap-1.5">
-              <i class="fa-solid fa-play"></i> Test Selectors
-            </button>
-            <button onclick="saveBuilderFeed()" class="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-violet-600/20">
-              <i class="fa-solid fa-floppy-disk"></i> Save Scrape Feed
-            </button>
-          </div>
-          <div id="builder-test-result" class="hidden space-y-3 pt-2"></div>
-        </div>
-      </section>
 
       <!-- 3. POPULAR FEEDS -->
       <section id="tab-popular" class="tab-content hidden space-y-6">
@@ -715,9 +651,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
     function populateDestinationSelects() {
       const feedsSel = document.getElementById('feed-channel');
-      const builderSel = document.getElementById('builder-feed-channel');
       if (feedsSel) feedsSel.innerHTML = buildChannelOptionsHtml(feedsSel.value);
-      if (builderSel) builderSel.innerHTML = buildChannelOptionsHtml(builderSel.value);
       refreshPresetChannelOptions();
     }
 
@@ -940,143 +874,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       } catch {}
     }
 
-    async function builderSelectors() {
-      return {
-        itemSelector: document.getElementById('builder-sel-item').value.trim(),
-        titleSelector: document.getElementById('builder-sel-title').value.trim(),
-        linkSelector: document.getElementById('builder-sel-link').value.trim(),
-        descriptionSelector: document.getElementById('builder-sel-desc').value.trim() || undefined
-      };
-    }
 
-    function escapeHtmlAttr(s) {
-      return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-
-    async function analyzeBuilderUrl() {
-      const url = document.getElementById('builder-url').value.trim();
-      const resultBox = document.getElementById('builder-result');
-      const scrapePanel = document.getElementById('builder-scrape-panel');
-      scrapedItems = [];
-      if (!url) return alert('Enter a page URL first.');
-      resultBox.classList.remove('hidden');
-      resultBox.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Analyzing...</div>';
-      try {
-        const res = await fetch('/api/builder/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        const data = await res.json();
-        scrapePanel.classList.add('hidden');
-        if (!res.ok) {
-          resultBox.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-sm"><i class="fa-solid fa-circle-exclamation mr-2"></i>' + escapeHtmlAttr(data.error || 'Analysis failed') + '</div>';
-          return;
-        }
-        // Keep the analyzed URL for save
-        builderUrlField = url;
-        if (data.isFeedXml) {
-          resultBox.innerHTML = '<div class="p-4 rounded-xl bg-green-950/60 border border-green-800 text-green-300 text-sm flex items-center gap-2"><i class="fa-solid fa-circle-check"></i>This URL <b>is already a feed</b> — just add it on the Feeds tab.</div>';
-          return;
-        }
-        const feedLinks = data.discoveredFeeds || [];
-        let html = '';
-        html += '<div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">';
-        if (feedLinks.length) {
-          html += '<div class="flex items-center gap-2 text-sm text-green-300"><i class="fa-solid fa-circle-check"></i>Feed(s) auto-discovered on this page:</div>';
-          html += feedLinks.map(u => '<div class="flex items-center justify-between gap-3 p-2 rounded-lg bg-black/40 border border-gray-800">' +
-            '<span class="text-xs font-mono text-gray-300 truncate">' + escapeHtmlAttr(u) + '</span>' +
-            '<button onclick="addDiscoveredFeed(' + escapeHtmlAttr(u).replace(/'/g, "\\\\'") + ')" class="px-3 py-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-xs font-semibold text-white transition shrink-0"><i class="fa-solid fa-plus mr-1"></i>Add</button></div>')
-            .join('');
-        } else {
-          html += '<div class="flex items-center gap-2 text-sm text-amber-300"><i class="fa-solid fa-circle-info"></i>No RSS/Atom feed was found on this page.</div>';
-        }
-        html += '</div>';
-        resultBox.innerHTML = html;
-        if (!feedLinks.length) scrapePanel.classList.remove('hidden');
-      } catch (err) {
-        resultBox.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-sm">Network error: ' + escapeHtmlAttr(err.message) + '</div>';
-      }
-    }
-
-    async function addDiscoveredFeed(url) {
-      const name = prompt('Feed name:', url.split('/').pop() || 'Feed');
-      if (!name) return;
-      const destination = document.getElementById('feed-channel') ? document.getElementById('feed-channel').value : '';
-      const dest = parseDestinationPayload(destination);
-      const res = await fetch('/api/feeds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url, feedType: 'rss', ...dest })
-      });
-      const data = await res.json();
-      if (res.ok) { alert('Feed added.'); fetchAll(); switchTab('feeds'); }
-      else alert(data.error || 'Failed to add feed');
-    }
-
-    let builderUrlField = '';
-    let scrapedItems = [];
-
-    async function testBuilderSelectors() {
-      const url = builderUrlField || document.getElementById('builder-url').value.trim();
-      const sel = builderSelectors();
-      const outBox = document.getElementById('builder-test-result');
-      if (!url) return alert('Analyze a URL first.');
-      if (!sel.itemSelector || !sel.titleSelector || !sel.linkSelector) return alert('Item, title, and link selectors are required.');
-      outBox.classList.remove('hidden');
-      outBox.innerHTML = '<div class="text-gray-500 py-3 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Scraping page...</div>';
-      try {
-        const res = await fetch('/api/builder/scrape-test', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url, selectors: sel })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          outBox.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-sm"><i class="fa-solid fa-circle-exclamation mr-2"></i>' + escapeHtmlAttr(data.error || 'Test failed') + '</div>';
-          return;
-        }
-        scrapedItems = data.sample.entries;
-        if (!scrapedItems.length) {
-          outBox.innerHTML = '<div class="p-4 rounded-xl bg-amber-950/60 border border-amber-800 text-amber-300 text-sm">No items matched these selectors. Try a different Item Selector.</div>';
-          return;
-        }
-        outBox.innerHTML = '<div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-2">' +
-          '<div class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Sample of ' + scrapedItems.length + ' items</div>' +
-          scrapedItems.map((it, i) => '<div class="p-2.5 rounded-lg bg-black/40 border border-gray-800">' +
-            '<div class="text-sm text-white font-semibold">' + escapeHtmlAttr(it.title) + '</div>' +
-            '<div class="text-[11px] text-gray-500 font-mono truncate">' + escapeHtmlAttr(it.url) + '</div>' +
-            (it.description ? '<div class="text-xs text-gray-400 mt-1 line-clamp-2">' + escapeHtmlAttr(it.description) + '</div>' : '') +
-          '</div>').join('') + '</div>';
-      } catch (err) {
-        outBox.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-sm">Network error: ' + escapeHtmlAttr(err.message) + '</div>';
-      }
-    }
-
-    async function saveBuilderFeed() {
-      const url = builderUrlField || document.getElementById('builder-url').value.trim();
-      const sel = builderSelectors();
-      const destination = document.getElementById('builder-feed-channel').value;
-      const nameEl = document.getElementById('builder-feed-name');
-      const feedName = nameEl.value.trim() || url.split('/').pop() || 'Scrape Feed';
-      if (!url || !sel.itemSelector || !sel.titleSelector || !sel.linkSelector) return alert('Analyze a URL and set all selectors first.');
-      const dest = parseDestinationPayload(destination);
-      const res = await fetch('/api/feeds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: feedName,
-          url,
-          feedType: 'scrape',
-          scrape: { item: sel.itemSelector, title: sel.titleSelector, link: sel.linkSelector, description: sel.descriptionSelector },
-          ...dest
-        })
-      });
-      if (checkAuthError(res)) return;
-      const data = await res.json();
-      if (res.ok) { alert('Scrape feed saved.'); fetchAll(); switchTab('feeds'); }
-      else alert(data.error || 'Failed to save scrape feed');
-    }
 
     async function fetchAll() {
       const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchPresets(), fetchUserPollInterval()];

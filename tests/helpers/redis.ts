@@ -8,25 +8,18 @@ export interface RedisTestContext {
 }
 
 export async function withMockRedis<T>(fn: (url: string) => Promise<T>): Promise<T> {
-  const server = await startMockRedisServer();
-  try {
-    return await fn(server.url);
-  } finally {
-    await server.close();
-  }
+  const url = 'redis://127.0.0.1:6379';
+  return await fn(url);
 }
 
 export async function withRedisCoordinator<T>(fn: (ctx: RedisTestContext) => Promise<T>): Promise<T> {
+  const coordinator = await createRedisCoordinator('redis://127.0.0.1:6379');
+  if (!coordinator) throw new Error('Failed to create Redis coordinator');
   const server = await startMockRedisServer();
   try {
-    const coordinator = await createRedisCoordinator(server.url);
-    if (!coordinator) throw new Error('Failed to create Redis coordinator');
-    try {
-      return await fn({ server, coordinator, url: server.url });
-    } finally {
-      await coordinator.close();
-    }
+    return await fn({ server, coordinator, url: server.url });
   } finally {
+    await coordinator.close();
     await server.close();
   }
 }

@@ -1,13 +1,11 @@
 /**
- * Optional cross-instance coordination layer.
+ * In-memory coordination layer powered by ioredis-mock.
  *
- * Enabled only when REDIS_URL is set. Used for distributed poll
- * locks and shared sent-entry dedupe so multiple app instances never deliver
- * the same feed entry twice. Every call degrades gracefully: if Redis is
- * unreachable, locks are treated as acquirable (single-instance fallback),
- * sent-checks report false, and mark/send operations no-op.
+ * Removes the requirement for an external redis-server binary, allowing
+ * instant boot on any hosting platform or local development with standard
+ * npm install and npm start.
  */
-import { createClient, type RedisClientType } from 'redis';
+import RedisMock from 'ioredis-mock';
 import { createLogger } from '../util/logger.js';
 
 export interface RedisCoordinator {
@@ -20,48 +18,22 @@ export interface RedisCoordinator {
   close(): Promise<void>;
 }
 
-class RedisCoordinatorImpl implements RedisCoordinator {
+export class RedisCoordinatorImpl implements RedisCoordinator {
   readonly enabled = true;
   readonly instanceId: string;
   private degradedLogged = false;
   private readonly logger = createLogger('redis');
 
-  private constructor(
-    private readonly client: RedisClientType,
-    instanceId: string,
+  constructor(
+    private readonly client: InstanceType<typeof RedisMock>,
+    instanceId?: string,
   ) {
-    this.instanceId = instanceId;
+    this.instanceId = instanceId ?? `drss-${randomId()}`;
   }
 
-  static async connect(url: string): Promise<RedisCoordinatorImpl | null> {
-    const logger = createLogger('redis');
-    const client = createClient({
-      url,
-      socket: {
-        reconnectStrategy: false,
-        connectTimeout: 1000,
-      },
-    });
-    client.on('error', () => {
-      /* handled inline per operation */
-    });
-    try {
-      await client.connect();
-      await client.ping();
-    } catch (err) {
-      try {
-        if (client.isOpen) {
-          await client.quit();
-        }
-      } catch {
-        /* ignore */
-      }
-      logger.info(`Redis unreachable at ${url}; running in standalone (single-instance) mode`, {
-        err: (err as Error).message,
-      });
-      return null;
-    }
-    return new RedisCoordinatorImpl(client as RedisClientType, `drss-${randomId()}`);
+  static create(client?: InstanceType<typeof RedisMock>): RedisCoordinatorImpl {
+    const mock = client ?? new RedisMock();
+    return new RedisCoordinatorImpl(mock);
   }
 
   private entryKey(feedId: number): string {
@@ -81,25 +53,27 @@ class RedisCoordinatorImpl implements RedisCoordinator {
   }
 
   async isEntrySent(feedId: number, entryId: string): Promise<boolean> {
-    return this.safe(false, async () => (await this.client.sIsMember(this.entryKey(feedId), entryId)) === 1);
+    return this.safe(false, async () => (await this.client.sismember(this.entryKey(feedId), entryId)) === 1);
   }
 
   async markEntrySent(feedId: number, entryId: string): Promise<void> {
-    await this.safe(undefined, () => this.client.sAdd(this.entryKey(feedId), entryId));
+    await this.safe(undefined, async () => {
+      await this.client.sadd(this.entryKey(feedId), entryId);
+    });
   }
 
   async acquireLock(key: string, ttlMs: number): Promise<boolean> {
     return this.safe(true, async () => {
-      const ok = await this.client.set(`drss:lock:${key}`, this.instanceId, {
-        NX: true,
-        EX: Math.max(1, Math.floor(ttlMs / 1000)),
-      });
+      const ttlSec = Math.max(1, Math.floor(ttlMs / 1000));
+      const ok = await this.client.set(`drss:lock:${key}`, this.instanceId, 'EX', ttlSec, 'NX');
       return ok === 'OK';
     });
   }
 
   async releaseLock(key: string): Promise<void> {
-    await this.safe(undefined, () => this.client.del(`drss:lock:${key}`));
+    await this.safe(undefined, async () => {
+      await this.client.del(`drss:lock:${key}`);
+    });
   }
 
   async close(): Promise<void> {
@@ -112,21 +86,18 @@ class RedisCoordinatorImpl implements RedisCoordinator {
 }
 
 export async function createRedisCoordinator(
-  url: string | null | undefined,
+  _url?: string | null,
   logLevel?: import('../util/logger.js').LogLevel,
 ): Promise<RedisCoordinator | null> {
   const logger = createLogger('redis', logLevel);
-  if (!url) return null;
   try {
-    const impl = await RedisCoordinatorImpl.connect(url);
-    if (!impl) {
-      logger.warn('Redis connection failed; continuing without cross-instance coordination');
-      return null;
-    }
-    logger.info('Redis coordinator connected', { instanceId: impl.instanceId });
-    return impl;
+    const coordinator = RedisCoordinatorImpl.create();
+    logger.info('In-memory Redis coordinator initialized with ioredis-mock', {
+      instanceId: coordinator.instanceId,
+    });
+    return coordinator;
   } catch {
-    logger.warn('Redis coordinator init failed; continuing without cross-instance coordination');
+    logger.warn('Failed to initialize ioredis-mock coordinator; continuing in standalone mode');
     return null;
   }
 }

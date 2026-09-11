@@ -150,7 +150,6 @@ erDiagram
 - **Light and Dark Themes**: Fully responsive UI styled with CSS variables and Tailwind. Auto-detects OS theme preference via `matchMedia('(prefers-color-scheme: dark)')` and provides an instant toggle in the navigation bar.
 - **Glassmorphic Aesthetic**: Translucent cards with backdrop filters and border illumination.
 - **Direct Discord Channel Picker**: Dynamically discovers all channels available to the bot across the user's servers.
-- **Feed Builder**: Inspects arbitrary URLs, locates auto-discovery RSS/Atom `<link>` tags, and extracts repeating HTML elements via CSS selectors.
 
 ---
 
@@ -171,8 +170,6 @@ erDiagram
 | `DELETE` | `/api/feeds/:id` | Delete a feed | Yes |
 | `POST` | `/api/feeds/:id/poll` | Trigger an immediate manual poll | Yes |
 | `GET` | `/api/presets` | List popular feed templates | Yes |
-| `POST` | `/api/builder/analyze` | Scan a URL for feeds or scrape targets | Yes |
-| `POST` | `/api/builder/test` | Test CSS selectors against a scrape target | Yes |
 | `GET` | `/api/discord/channels` | List Discord servers and channels | Yes |
 | `GET` | `/api/settings` | Service settings (Base URL) | Admin / Owner |
 | `POST` | `/api/settings` | Update service public base URL | Admin / Owner |

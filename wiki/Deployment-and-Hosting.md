@@ -154,10 +154,18 @@ render services create web \
 #### Option B: via Render Dashboard
 1. In the Render Dashboard, click **New +** -> **Web Service**.
 2. Connect your Git repository.
-3. Select **Docker** as the runtime.
+3. Select **Docker** or **Node** as the runtime.
 4. Under **Advanced** -> **Disks**, add a disk named `helix-data` mounted at `/app/data` with 1GB capacity.
 5. Add your Discord environment variables (`DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`).
 6. Click **Create Web Service**.
+
+#### Option C: 1-Click Blueprint (`render.yaml`)
+1. Click the **Deploy to Render** button in `README.md`.
+2. Render automatically imports `render.yaml` with the configured service, disk, and health checks.
+3. Enter your Discord credentials and deploy.
+
+> [!TIP]
+> **Prevent Inactivity Sleep**: On Render Free tier, web services sleep after 15 minutes of inactivity. Set `PING_URL=https://<your-service>.onrender.com/health` in your Render environment variables to enable the built-in keep-alive network ping, keeping your bot continuously online.
 
 ---
 

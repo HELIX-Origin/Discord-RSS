@@ -30,7 +30,7 @@ npm start
 
 ### 3. Open the Dashboard
 
-Navigate to <http://127.0.0.1:3131> (or the site sub-process at <http://127.0.0.1:3132>) in your web browser.
+Navigate to <http://127.0.0.1:3131> in your web browser.
 
 - Click **"Log In with Discord"** to authenticate.
 - If you are the owner or team member of the Discord Application, the system automatically detects your Discord User ID from the Discord API and grants you full **Owner** access!
@@ -47,7 +47,7 @@ Navigate to <http://127.0.0.1:3131> (or the site sub-process at <http://127.0.0.
 | [Deployment & Hosting](Deployment-and-Hosting) | Cloud deployment (Fly.io, Railway, Render, Heroku, Vercel) and local bare-metal hosting. |
 | [Development & Testing](Development-and-Testing) | Development workflow, Vitest test suites, ESLint, Prettier, and verification gates. |
 | [Discord Bot](Discord-Bot) | Developer Portal setup, permissions, owner detection, and slash commands. |
-| [Feeds & Web Scraper](Feeds-and-Scrapers) | RSS/Atom feeds, custom CSS webpage scrapers, feed builder, and presets. |
+| [Feeds & Web Scraper](Feeds-and-Scrapers) | RSS/Atom feeds, custom CSS webpage scrapers, and presets. |
 | [Integrations & Security](Integrations-and-Security) | Discord OAuth authentication, RBAC permissions, and native SSL/HTTPS. |
 | [Troubleshooting](Troubleshooting) | Port conflict resolution, Redis diagnostics, Discord gateway, and SQLite. |
 
