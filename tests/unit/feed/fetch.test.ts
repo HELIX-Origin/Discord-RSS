@@ -77,6 +77,6 @@ describe('helpers', () => {
     const result = {
       text: '<?xml version="1.0"?><rss></rss>',
     } as Awaited<ReturnType<typeof fetchRaw>>;
-    expect(await isFeedXml(result)).toBe(true);
+    expect(isFeedXml(result)).toBe(true);
   });
 });

@@ -1,7 +1,7 @@
 {
-  "name": "discord-rss",
+  "name": "helix-rss",
   "version": "0.1.0",
-  "description": "Self-hosted RSS/Atom-to-Discord service for Discord communities. Built entirely in TypeScript ESM with zero runtime dependencies (native http, node:sqlite, built-in web dashboard and API). Posts directly to Discord webhooks.",
+  "description": "Self-hosted RSS/Atom-to-Discord service for Discord communities. Built entirely in TypeScript ESM with zero runtime dependencies (native http, node:sqlite, built-in web dashboard, Discord bot, and API). Posts directly to Discord webhooks.",
   "type": "module",
   "main": "dist/index.js",
   "engines": {
@@ -9,9 +9,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node --env-file-if-exists=.env dist/index.js",
+    "start": "npm run build && node --env-file-if-exists=.env dist/index.js",
     "dev": "tsc --watch",
-    "pretest": "npm run build",
+    "dev:run": "node --env-file-if-exists=.env --watch dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
@@ -32,5 +32,8 @@
   },
   "dependencies": {
     "redis": "^5.12.1"
+  },
+  "allowScripts": {
+    "msw@2.15.0": true
   }
 }

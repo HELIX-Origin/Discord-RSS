@@ -1,11 +1,11 @@
 import type { AppDeps } from '../../app.js';
 import { readBodyJson, sendError, sendJson } from '../../http/helpers.js';
 import type { Router } from '../../http/router.js';
-import { requireUser } from './shared.js';
+import { requireAdminOrOwner, requireOwner } from './shared.js';
 
 export function registerSettingsRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/settings', async (req, res, _ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireAdminOrOwner(req, res, d);
     if (userId === null) return;
     sendJson(res, 200, {
       oauthProviders: d.oauth.listProviders(),
@@ -14,7 +14,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('POST', '/api/settings', async (req, res, _ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireAdminOrOwner(req, res, d);
     if (userId === null) return;
     const body = (await readBodyJson(req)) as { publicBaseUrl?: string };
     if (body.publicBaseUrl !== undefined) {
@@ -24,7 +24,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('POST', '/api/settings/oauth/:provider', async (req, res, ctx, d) => {
-    const userId = await requireUser(req, res, d);
+    const userId = await requireAdminOrOwner(req, res, d);
     if (userId === null) return;
     const body = (await readBodyJson(req)) as { clientId?: string; clientSecret?: string; enabled?: boolean };
     try {
@@ -36,6 +36,406 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       sendJson(res, 200, { ok: true });
     } catch (err) {
       sendError(res, 400, err instanceof Error ? err.message : 'Failed to save OAuth config');
+    }
+  });
+
+  // ---- User & Member Management ----
+  router.add('GET', '/api/settings/users', async (req, res, _ctx, d) => {
+    const userId = await requireAdminOrOwner(req, res, d);
+    if (userId === null) return;
+
+    const allFeeds = d.repo.listFeedsForAllUsers();
+    const users = d.repo.listUsers().map((u) => {
+      const userFeeds = allFeeds.filter((f) => f.userId === u.id);
+      const userWebhooks = d.repo.listWebhooks(u.id);
+      const webhookIds = new Set(userWebhooks.map((w) => w.id));
+      const feedsWithIssuesCount = userFeeds.filter(
+        (f) => f.webhookId === null || !webhookIds.has(f.webhookId) || f.enabled === 0 || f.lastCheckedAt === null,
+      ).length;
+
+      return {
+        id: u.id,
+        email: u.email,
+        displayName: u.displayName,
+        role: u.role,
+        feedCount: userFeeds.length,
+        webhookCount: userWebhooks.length,
+        feedsWithIssuesCount,
+        createdAt: u.createdAt,
+      };
+    });
+    sendJson(res, 200, users);
+  });
+
+  router.add('GET', '/api/settings/users/:id/feeds', async (req, res, ctx, d) => {
+    const adminId = await requireAdminOrOwner(req, res, d);
+    if (adminId === null) return;
+    const targetUserId = Number(ctx.params['id']);
+    if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+      sendError(res, 400, 'Invalid user ID');
+      return;
+    }
+    const targetUser = d.repo.getUserById(targetUserId);
+    if (!targetUser) {
+      sendError(res, 404, 'User not found');
+      return;
+    }
+    const feeds = d.repo.listFeeds(targetUserId);
+    const webhooks = d.repo.listWebhooks(targetUserId);
+    const webhookMap = new Map(webhooks.map((w) => [w.id, w]));
+
+    const feedDiagnostics = feeds.map((f) => {
+      const webhook = f.webhookId !== null ? webhookMap.get(f.webhookId) : null;
+      const issues: string[] = [];
+      if (f.webhookId === null) {
+        issues.push('Missing Discord webhook (entries will not be posted)');
+      } else if (!webhook) {
+        issues.push('Linked webhook does not exist');
+      } else if (!webhook.enabled) {
+        issues.push(`Linked webhook "${webhook.name}" is disabled`);
+      }
+      if (!f.enabled) {
+        issues.push('Feed is currently paused');
+      }
+      if (f.enabled && !f.lastCheckedAt) {
+        issues.push('Feed has never been checked');
+      }
+
+      return {
+        ...f,
+        webhookName: webhook?.name ?? null,
+        webhookEnabled: webhook?.enabled ?? null,
+        issues,
+      };
+    });
+
+    sendJson(res, 200, {
+      user: {
+        id: targetUser.id,
+        email: targetUser.email,
+        displayName: targetUser.displayName,
+        role: targetUser.role,
+      },
+      feeds: feedDiagnostics,
+      webhooks: webhooks.map((w) => ({
+        id: w.id,
+        name: w.name,
+        enabled: Boolean(w.enabled),
+        createdAt: w.createdAt,
+      })),
+    });
+  });
+
+  router.add('PATCH', '/api/settings/users/:id/role', async (req, res, ctx, d) => {
+    const ownerId = await requireOwner(req, res, d);
+    if (ownerId === null) return;
+
+    const targetUserId = Number(ctx.params['id']);
+    if (!Number.isInteger(targetUserId) || targetUserId <= 0) {
+      sendError(res, 400, 'Invalid user ID');
+      return;
+    }
+
+    const body = (await readBodyJson(req)) as { role?: string };
+    const targetRole = body.role === 'user' ? 'member' : body.role;
+    if (targetRole !== 'admin' && targetRole !== 'member') {
+      sendError(res, 400, 'Role must be either "admin" or "member"');
+      return;
+    }
+
+    const targetUser = d.repo.getUserById(targetUserId);
+    if (!targetUser) {
+      sendError(res, 404, 'User not found');
+      return;
+    }
+    if (targetUser.role === 'owner') {
+      sendError(res, 400, 'Cannot change the role of the Owner account');
+      return;
+    }
+
+    try {
+      d.repo.setUserRole(targetUserId, targetRole);
+      d.repo.logActivity(ownerId, 'info', 'settings', `User #${targetUserId} role updated to "${targetRole}" by Owner`);
+      sendJson(res, 200, { ok: true, userId: targetUserId, role: targetRole });
+    } catch (err) {
+      sendError(res, 400, err instanceof Error ? err.message : 'Failed to update user role');
+    }
+  });
+
+  // ---- Member Feed Health & Diagnostics ----
+  router.add('GET', '/api/settings/diagnostics/feeds', async (req, res, _ctx, d) => {
+    const adminId = await requireAdminOrOwner(req, res, d);
+    if (adminId === null) return;
+
+    const allFeeds = d.repo.listFeedsForAllUsers();
+    const users = d.repo.listUsers();
+    const userMap = new Map(users.map((u) => [u.id, u]));
+
+    const { isValidHttpUrl } = await import('./shared.js');
+
+    const issues: Array<{
+      feedId: number;
+      feedName: string;
+      feedUrl: string;
+      feedType: 'rss' | 'scrape';
+      userId: number;
+      userEmail: string;
+      userDisplayName: string;
+      webhookId: number | null;
+      webhookName: string | null;
+      enabled: boolean;
+      lastCheckedAt: string | null;
+      problems: Array<{
+        type: string;
+        severity: 'error' | 'warning' | 'info';
+        title: string;
+        description: string;
+        recommendation: string;
+      }>;
+    }> = [];
+
+    let missingWebhookCount = 0;
+    let disabledFeedCount = 0;
+    let staleCount = 0;
+
+    for (const feed of allFeeds) {
+      const feedProblems: (typeof issues)[0]['problems'] = [];
+      const user = userMap.get(feed.userId);
+      const userEmail = user ? user.email : `User #${feed.userId}`;
+      const userDisplayName = user ? user.displayName : `User #${feed.userId}`;
+
+      let webhookName: string | null = null;
+      if (feed.webhookId === null) {
+        missingWebhookCount += 1;
+        feedProblems.push({
+          type: 'missing_webhook',
+          severity: 'error',
+          title: 'No Webhook Linked',
+          description: 'This feed has no Discord webhook linked. New feed entries will not be delivered anywhere.',
+          recommendation: 'Link an active Discord webhook to this feed so entries can be posted.',
+        });
+      } else {
+        const webhook = d.repo.getWebhook(feed.userId, feed.webhookId);
+        if (!webhook) {
+          feedProblems.push({
+            type: 'orphaned_webhook',
+            severity: 'error',
+            title: 'Linked Webhook Missing',
+            description: `Referenced webhook ID #${feed.webhookId} does not exist.`,
+            recommendation: 'Select a valid webhook for this feed in the Feeds management tab.',
+          });
+        } else {
+          webhookName = webhook.name;
+          if (!webhook.enabled) {
+            feedProblems.push({
+              type: 'disabled_webhook',
+              severity: 'warning',
+              title: 'Linked Webhook Disabled',
+              description: `Linked webhook "${webhook.name}" is currently disabled.`,
+              recommendation: 'Enable the webhook on the Webhooks tab to resume deliveries.',
+            });
+          }
+        }
+      }
+
+      if (!feed.enabled) {
+        disabledFeedCount += 1;
+        feedProblems.push({
+          type: 'disabled_feed',
+          severity: 'info',
+          title: 'Feed is Paused',
+          description: 'This feed is currently disabled / paused and is skipped during scheduled polling.',
+          recommendation: 'Resume the feed when the member is ready to receive updates.',
+        });
+      }
+
+      if (!isValidHttpUrl(feed.url)) {
+        feedProblems.push({
+          type: 'invalid_url',
+          severity: 'error',
+          title: 'Invalid Feed URL',
+          description: 'The feed URL is not a valid HTTP or HTTPS address.',
+          recommendation: 'Verify the protocol and domain name format of the feed URL.',
+        });
+      } else if (feed.enabled && !feed.lastCheckedAt) {
+        staleCount += 1;
+        feedProblems.push({
+          type: 'never_polled',
+          severity: 'warning',
+          title: 'Never Polled',
+          description: 'This feed has not yet been polled by the background scheduler.',
+          recommendation: 'Trigger a manual poll or verify the background polling interval.',
+        });
+      }
+
+      if (feedProblems.length > 0) {
+        issues.push({
+          feedId: feed.id,
+          feedName: feed.name,
+          feedUrl: feed.url,
+          feedType: feed.feedType,
+          userId: feed.userId,
+          userEmail,
+          userDisplayName,
+          webhookId: feed.webhookId,
+          webhookName,
+          enabled: Boolean(feed.enabled),
+          lastCheckedAt: feed.lastCheckedAt,
+          problems: feedProblems,
+        });
+      }
+    }
+
+    sendJson(res, 200, {
+      totalFeeds: allFeeds.length,
+      issuesCount: issues.length,
+      healthyFeedsCount: allFeeds.length - issues.length,
+      stats: {
+        missingWebhookCount,
+        disabledFeedCount,
+        staleCount,
+      },
+      feedsWithIssues: issues,
+      allFeeds: allFeeds.map((f) => ({
+        id: f.id,
+        name: f.name,
+        url: f.url,
+        feedType: f.feedType,
+        userId: f.userId,
+        userEmail: userMap.get(f.userId)?.email ?? `User #${f.userId}`,
+        enabled: Boolean(f.enabled),
+        webhookId: f.webhookId,
+        lastCheckedAt: f.lastCheckedAt,
+      })),
+    });
+  });
+
+  router.add('POST', '/api/settings/diagnostics/feed-check', async (req, res, _ctx, d) => {
+    const adminId = await requireAdminOrOwner(req, res, d);
+    if (adminId === null) return;
+
+    const body = (await readBodyJson(req)) as {
+      url?: string;
+      feedType?: 'rss' | 'scrape';
+      scrape?: { item?: string; title?: string; link?: string; description?: string };
+    };
+
+    const url = body.url?.trim();
+    if (!url) {
+      sendError(res, 400, 'Feed URL is required');
+      return;
+    }
+
+    const { fetchRaw, isFeedXml } = await import('../../feed/fetch.js');
+    const { parseFeed } = await import('../../feed/parser.js');
+    const { parseHtml } = await import('../../feed/html.js');
+    const { scrapeItems } = await import('../../feed/scraper.js');
+
+    const recommendations: string[] = [];
+
+    try {
+      const fetchRes = await fetchRaw(url, { timeoutMs: d.config.requestTimeoutMs });
+
+      let entriesCount = 0;
+      let feedTitle = '';
+      let latestEntry: { title?: string; link?: string; publishedAt?: string } | null = null;
+      let parseError: string | null = null;
+
+      if (fetchRes.challenged) {
+        recommendations.push(
+          'Cloudflare Anti-Bot Challenge detected. The user should connect their Cloudflare account in Integrations.',
+        );
+      }
+
+      if (fetchRes.status !== 200) {
+        recommendations.push(`HTTP Server returned status ${fetchRes.status}. Check if the endpoint is online.`);
+      }
+
+      const isXml = isFeedXml(fetchRes);
+
+      if (body.feedType === 'scrape' && body.scrape?.item) {
+        try {
+          const parsedHtml = parseHtml(fetchRes.text);
+          const scraped = scrapeItems(parsedHtml, {
+            itemSelector: body.scrape.item,
+            titleSelector: body.scrape.title || 'a',
+            linkSelector: body.scrape.link || 'a',
+            descriptionSelector: body.scrape.description,
+          });
+          entriesCount = scraped.length;
+          if (scraped[0]) {
+            latestEntry = {
+              title: scraped[0].title,
+              link: scraped[0].url,
+              publishedAt: undefined,
+            };
+          }
+          if (entriesCount === 0) {
+            recommendations.push('Scrape selectors did not match any items in the HTML document.');
+          } else {
+            recommendations.push(`Scraper matched ${entriesCount} items successfully.`);
+          }
+        } catch (err) {
+          parseError = err instanceof Error ? err.message : String(err);
+          recommendations.push(`HTML Scraper parsing failed: ${parseError}`);
+        }
+      } else if (isXml) {
+        try {
+          const parsed = parseFeed(fetchRes.text);
+          entriesCount = parsed.entries.length;
+          feedTitle = parsed.title;
+          if (parsed.entries[0]) {
+            latestEntry = {
+              title: parsed.entries[0].title,
+              link: parsed.entries[0].link,
+              publishedAt: parsed.entries[0].publishedAt ?? undefined,
+            };
+          }
+          if (entriesCount === 0) {
+            recommendations.push('Feed XML was parsed, but contains 0 items or articles.');
+          } else {
+            recommendations.push(`Feed parsed successfully (${entriesCount} articles available).`);
+          }
+        } catch (err) {
+          parseError = err instanceof Error ? err.message : String(err);
+          recommendations.push(`Feed XML parsing failed: ${parseError}`);
+        }
+      } else {
+        recommendations.push(
+          'This URL does not appear to be standard RSS/Atom XML. Use the Feed Builder to scrape it.',
+        );
+      }
+
+      sendJson(res, 200, {
+        ok: fetchRes.status >= 200 && fetchRes.status < 300 && !parseError,
+        url: fetchRes.url,
+        httpStatus: fetchRes.status,
+        durationMs: fetchRes.durationMs,
+        contentType: fetchRes.contentType,
+        isCloudflare: fetchRes.challenged,
+        isFeedXml: isXml,
+        feedTitle,
+        entriesCount,
+        latestEntry,
+        parseError,
+        recommendations,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      sendJson(res, 200, {
+        ok: false,
+        url,
+        httpStatus: null,
+        durationMs: null,
+        contentType: null,
+        isCloudflare: false,
+        isFeedXml: false,
+        feedTitle: '',
+        entriesCount: 0,
+        latestEntry: null,
+        parseError: msg,
+        recommendations: [`Network request failed: ${msg}. Check feed URL accessibility.`],
+      });
     }
   });
 }

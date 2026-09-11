@@ -1,8 +1,11 @@
+export type UserRole = 'owner' | 'admin' | 'member';
+
 export interface User {
   id: number;
   email: string;
   passwordHash: string;
   displayName: string;
+  role: UserRole;
   createdAt: string;
 }
 
@@ -27,7 +30,7 @@ export interface OAuthConnection {
 
 export interface OAuthState {
   state: string;
-  userId: number;
+  userId: number | null;
   provider: string;
   createdAt: string;
 }
@@ -67,6 +70,13 @@ export interface SiteMonitor {
   createdAt: string;
 }
 
+export interface DiscordGuild {
+  guildId: string;
+  userId: number;
+  name: string;
+  createdAt: string;
+}
+
 export interface ActivityEntry {
   ts: string;
   userId: number | null;
@@ -81,11 +91,22 @@ type Row = Record<string, unknown>;
 
 export const rowToUser = (r: Row | undefined): User | null => {
   if (!r) return null;
+  const id = Number(r.id);
+  const rawRole = r.role !== undefined && r.role !== null ? String(r.role) : '';
+  const role: UserRole =
+    rawRole === 'owner' || rawRole === 'admin' || rawRole === 'member'
+      ? (rawRole as UserRole)
+      : rawRole === 'user'
+        ? 'member'
+        : id === 1
+          ? 'owner'
+          : 'member';
   return {
-    id: Number(r.id),
+    id,
     email: String(r.email),
     passwordHash: String(r.password_hash),
     displayName: String(r.display_name),
+    role,
     createdAt: String(r.created_at),
   };
 };
@@ -163,6 +184,16 @@ export const rowToMonitor = (r: Row | undefined): SiteMonitor | null => {
     status: String(r.status),
     lastCheckedAt: r.last_checked_at === null ? null : String(r.last_checked_at),
     webhookId: r.webhook_id === null ? null : Number(r.webhook_id),
+    createdAt: String(r.created_at),
+  };
+};
+
+export const rowToDiscordGuild = (r: Row | undefined): DiscordGuild | null => {
+  if (!r) return null;
+  return {
+    guildId: String(r.guild_id),
+    userId: Number(r.user_id),
+    name: String(r.name ?? ''),
     createdAt: String(r.created_at),
   };
 };

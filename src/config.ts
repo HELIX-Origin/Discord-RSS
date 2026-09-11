@@ -10,27 +10,75 @@ export interface AppConfig {
   statusIntervalMs: number;
   requestTimeoutMs: number;
   publicBaseUrl: string | null;
+  sslKey: string | null;
+  sslCert: string | null;
+  botSslKey: string | null;
+  botSslCert: string | null;
+  redisPort: number;
   redisUrl: string | null;
   logLevel: LogLevel;
+  botToken: string | null;
+  botPort: number;
+  clientId: string | null;
+  clientSecret: string | null;
+  redirectUrl: string | null;
+  callbackUrl: string | null;
 }
 
 export function defaultConfig(): AppConfig {
-  const port = parsePort(process.env['DISCORD_RSS_PORT']);
-  const host = process.env['DISCORD_RSS_HOST'] ?? '127.0.0.1';
-  const dataDir = process.env['DISCORD_RSS_DATA'] ?? resolve(process.cwd(), 'data');
-  const publicBaseUrl = process.env['DISCORD_RSS_PUBLIC_BASE_URL']?.trim() || null;
-  const logLevel = parseLogLevel(process.env['DISCORD_RSS_LOG_LEVEL']);
+  const port = parsePort(process.env['SITE_PORT'], 3434);
+  const host = process.env['INTERNAL_URL']?.trim() ?? '127.0.0.1';
+  const dataDir = process.env['SQLITE_DATA'] ?? resolve(process.cwd(), 'data');
+  const publicBaseUrl = process.env['PUBLIC_URL']?.trim() || null;
+  const sslKey = process.env['SITE_SSL_KEY']?.trim() || null;
+  const sslCert = process.env['SITE_SSL_CERT']?.trim() || null;
+  const botSslKey = process.env['DISCORD_SSL_KEY']?.trim() || sslKey;
+  const botSslCert = process.env['DISCORD_SSL_CERT']?.trim() || sslCert;
+  const logLevel = parseLogLevel(process.env['LOG_LEVEL']);
+  const botToken = process.env['DISCORD_TOKEN']?.trim() || null;
+  const botPort = parsePort(process.env['DISCORD_PORT'], 3131);
+  const redisPort = parsePort(process.env['REDIS_PORT'], 3535);
+  const redisUrl = `redis://${host}:${redisPort}`;
+  const clientId = process.env['DISCORD_CLIENT_ID']?.trim() || null;
+  const clientSecret = process.env['DISCORD_CLIENT_SECRET']?.trim() || null;
+  const callbackHost = host === '127.0.0.1' || host === '0.0.0.0' ? 'localhost' : host;
+  const botProto = botSslKey && botSslCert ? 'https' : 'http';
+
+  // DISCORD_REDIRECT_URL is the Bot Invite / Authorization URL
+  const redirectUrl =
+    process.env['DISCORD_REDIRECT_URL']?.trim() ||
+    (clientId
+      ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(clientId)}&permissions=8&integration_type=0&scope=bot+applications.commands`
+      : null);
+
+  // DISCORD_CALLBACK_URL is the OAuth Callback URL auto-derived from host/port or publicBaseUrl
+  const callbackUrl =
+    process.env['DISCORD_CALLBACK_URL']?.trim() ||
+    (publicBaseUrl
+      ? `${publicBaseUrl.replace(/\/+$/, '')}/api/auth/callback/discord`
+      : `${botProto}://${callbackHost}:${botPort}/api/auth/callback/discord`);
 
   return {
     host,
     port,
-    dbPath: resolve(dataDir, 'discord-rss.db'),
-    pollIntervalMs: parsePositiveInt(process.env['DISCORD_RSS_POLL_INTERVAL_MS'], 60_000),
-    statusIntervalMs: parsePositiveInt(process.env['DISCORD_RSS_STATUS_INTERVAL_MS'], 30_000),
-    requestTimeoutMs: parsePositiveInt(process.env['DISCORD_RSS_REQUEST_TIMEOUT_MS'], 15_000),
+    dbPath: resolve(dataDir, 'helix-rss.db'),
+    pollIntervalMs: parsePositiveInt(process.env['POLL_INTERVAL_MS'], 60_000),
+    statusIntervalMs: parsePositiveInt(process.env['STATUS_INTERVAL_MS'], 30_000),
+    requestTimeoutMs: parsePositiveInt(process.env['REQUEST_TIMEOUT_MS'], 15_000),
     publicBaseUrl,
-    redisUrl: process.env['DISCORD_RSS_REDIS_URL']?.trim() || null,
+    sslKey,
+    sslCert,
+    botSslKey,
+    botSslCert,
+    redisPort,
+    redisUrl,
     logLevel,
+    botToken,
+    botPort,
+    clientId,
+    clientSecret,
+    redirectUrl,
+    callbackUrl,
   };
 }
 
@@ -40,8 +88,8 @@ function parseLogLevel(raw: string | undefined): LogLevel {
   return 'info';
 }
 
-function parsePort(raw: string | undefined): number {
-  if (raw === undefined) return 3434;
+function parsePort(raw: string | undefined, fallback = 3434): number {
+  if (raw === undefined) return fallback;
   const value = Number(raw);
   // Port 0 is allowed so smoke tests can bind to an ephemeral port.
   if (!Number.isInteger(value) || value < 0 || value > 65_535) {

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   display_name TEXT NOT NULL DEFAULT '',
+  role TEXT NOT NULL DEFAULT 'member',
   created_at TEXT NOT NULL
 );
 
@@ -38,7 +39,7 @@ CREATE TABLE IF NOT EXISTS oauth_connections (
 
 CREATE TABLE IF NOT EXISTS oauth_states (
   state TEXT PRIMARY KEY,
-  user_id INTEGER NOT NULL,
+  user_id INTEGER,
   provider TEXT NOT NULL,
   created_at TEXT NOT NULL,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -113,6 +114,14 @@ CREATE TABLE IF NOT EXISTS activity_log (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS discord_guilds (
+  guild_id TEXT PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_oauth_user_provider ON oauth_connections(user_id, provider);
 CREATE INDEX IF NOT EXISTS idx_oauth_states_state ON oauth_states(state);
@@ -121,4 +130,5 @@ CREATE INDEX IF NOT EXISTS idx_webhooks_user ON webhooks(user_id);
 CREATE INDEX IF NOT EXISTS idx_site_status_user ON site_status(user_id);
 CREATE INDEX IF NOT EXISTS idx_sent_entries_feed ON sent_entries(feed_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_ts ON activity_log(ts DESC);
+CREATE INDEX IF NOT EXISTS idx_discord_guilds_user ON discord_guilds(user_id);
 `;

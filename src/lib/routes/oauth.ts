@@ -9,7 +9,7 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     const userId = await requireUser(req, res, d);
     if (userId === null) return;
     try {
-      const redirectUri = redirectUriForProvider(d, ctx.params['provider']);
+      const redirectUri = redirectUriForProvider(d, ctx.params['provider'], req);
       const authorizeUrl = d.oauth.buildAuthorizeUrl(userId, ctx.params['provider'], redirectUri);
       sendJson(res, 200, { url: authorizeUrl });
     } catch (err) {
@@ -22,7 +22,7 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     const code = ctx.query.get('code') ?? '';
     const provider = ctx.params['provider'];
     try {
-      const redirectUri = redirectUriForProvider(d, provider);
+      const redirectUri = redirectUriForProvider(d, provider, req);
       await d.oauth.handleCallback(state, code, redirectUri);
       d.repo.logActivity(null, 'info', 'oauth', `OAuth provider "${provider}" connected`);
       sendHtml(res, 200, renderOAuthCallbackHtml('success', provider));

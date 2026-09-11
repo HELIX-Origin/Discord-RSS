@@ -56,7 +56,8 @@ export class Database {
     const monitorCount = count('SELECT COUNT(*) AS c FROM site_status');
     const sentCount = count('SELECT COUNT(*) AS c FROM sent_entries');
     const pageRow = this.db.prepare('PRAGMA page_count').get() as { page_count?: number | bigint } | undefined;
-    const sizeBytes = Number(pageRow?.page_count ?? 0) * 4096;
+    const pageSizeRow = this.db.prepare('PRAGMA page_size').get() as { page_size?: number | bigint } | undefined;
+    const sizeBytes = Number(pageRow?.page_count ?? 0) * Number(pageSizeRow?.page_size ?? 4096);
     return {
       feedCount,
       webhookCount,

@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import type { Repository } from '../db/repository.js';
+import type { AppConfig } from '../config.js';
 import { CloudflareProvider } from './cloudflare.js';
+import { DiscordProvider } from './discord.js';
 import type { OAuthProvider, OAuthProviderConfig } from './types.js';
 
 const STATE_TTL_MS = 10 * 60 * 1000;
@@ -12,8 +14,12 @@ function settingKey(provider: string, field: 'client_id' | 'client_secret' | 'en
 export class OAuthService {
   private readonly providers = new Map<string, OAuthProvider>();
 
-  constructor(private readonly repo: Repository) {
+  constructor(
+    private readonly repo: Repository,
+    private readonly appConfig?: Partial<AppConfig> | null,
+  ) {
     this.register(new CloudflareProvider());
+    this.register(new DiscordProvider());
   }
 
   register(provider: OAuthProvider): void {
@@ -46,11 +52,27 @@ export class OAuthService {
   getConfig(provider: string): OAuthProviderConfig | null {
     const base = this.providers.get(provider)?.config();
     if (!base) return null;
+
+    let clientId = this.repo.getSetting(settingKey(provider, 'client_id')) ?? '';
+    let clientSecret = this.repo.getSetting(settingKey(provider, 'client_secret')) ?? '';
+    const enabledSetting = this.repo.getSetting(settingKey(provider, 'enabled'));
+
+    if (provider === 'discord') {
+      if (!clientId) {
+        clientId = this.appConfig?.clientId ?? process.env['DISCORD_CLIENT_ID']?.trim() ?? '';
+      }
+      if (!clientSecret) {
+        clientSecret = this.appConfig?.clientSecret ?? process.env['DISCORD_CLIENT_SECRET']?.trim() ?? '';
+      }
+    }
+
+    const enabled = enabledSetting !== null ? enabledSetting === 'true' : Boolean(clientId && clientSecret);
+
     return {
       ...base,
-      clientId: this.repo.getSetting(settingKey(provider, 'client_id')) ?? '',
-      clientSecret: this.repo.getSetting(settingKey(provider, 'client_secret')) ?? '',
-      enabled: this.repo.getSetting(settingKey(provider, 'enabled')) === 'true',
+      clientId,
+      clientSecret,
+      enabled,
     };
   }
 
@@ -87,7 +109,7 @@ export class OAuthService {
     redirectUri: string,
   ): Promise<{ userId: number; provider: string }> {
     const ctx = this.repo.consumeOAuthState(state);
-    if (!ctx) throw new Error('Invalid or expired OAuth state');
+    if (!ctx || ctx.userId === null) throw new Error('Invalid or expired OAuth state');
 
     const p = this.getProvider(ctx.provider);
     if (!p) throw new Error(`Unknown OAuth provider: ${ctx.provider}`);

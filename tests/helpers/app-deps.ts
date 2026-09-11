@@ -20,8 +20,6 @@ export async function buildAppDeps(options?: {
 }): Promise<BuiltAppDeps> {
   const db = options?.db ?? openTestDb('appdeps', 'error');
   const repo = new Repository(db);
-  const oauth = new OAuthService(repo);
-
   const config: AppConfig = {
     ...defaultConfig(),
     port: 0,
@@ -30,6 +28,7 @@ export async function buildAppDeps(options?: {
     statusIntervalMs: 3_600_000,
     ...(options?.config ?? {}),
   };
+  const oauth = new OAuthService(repo, config);
 
   let redis: RedisCoordinator | null = null;
   if (options?.redisUrl !== undefined) {

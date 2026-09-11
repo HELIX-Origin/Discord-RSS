@@ -1,7 +1,7 @@
 /**
  * Optional cross-instance coordination layer.
  *
- * Enabled only when DISCORD_RSS_REDIS_URL is set. Used for distributed poll
+ * Enabled only when REDIS_URL is set. Used for distributed poll
  * locks and shared sent-entry dedupe so multiple app instances never deliver
  * the same feed entry twice. Every call degrades gracefully: if Redis is
  * unreachable, locks are treated as acquirable (single-instance fallback),

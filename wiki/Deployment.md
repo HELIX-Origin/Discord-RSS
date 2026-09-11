@@ -71,17 +71,16 @@ This guide provides instructions for deploying the Discord RSS service, includin
 
 ## Environment Variables
 
-- `DISCORD_RSS_PORT`: Port on which the Discord RSS service will run. (default: 3434)
-- `DISCORD_RSS_HOST`: Host address for the Discord RSS service. (default: 127.0.0.1)
-- `DISCORD_RSS_DATA`: Path to the main data directory for the Discord RSS service. (default: ./data)
-- `DISCORD_RSS_POLL_INTERVAL_MS`: Polling interval in milliseconds for fetching RSS feeds. (default: 60000)
-- `DISCORD_RSS_STATUS_INTERVAL_MS`: Interval in milliseconds for updating the service status. (default: 30000)
-- `DISCORD_RSS_REQUEST_TIMEOUT_MS`: Request timeout in milliseconds for the Discord RSS service. (default: 15000)
-- `DISCORD_RSS_PUBLIC_BASE_URL`: Public base URL for the Discord RSS service. (Leave blank if only using locally)
-- `DISCORD_RSS_REDIS_PORT`: Port for the Redis instance used by the Discord RSS service. (Leave blank if not using Redis) (default: 6379)
-- `DISCORD_RSS_REDIS_URL`: URL for the Redis instance used by the Discord RSS service. (Leave blank if not using Redis)
-- `DISCORD_RSS_TEST_DATA`: Path to the test data directory for the Discord RSS service. (default: ./data/.tmp)
-- `DISCORD_RSS_LOG_LEVEL`: Logging level for the Discord RSS service. (default: info)
+- `PORT`: Port on which the Discord RSS service will run. (default: 3434)
+- `HOST`: Host address for the Discord RSS service. (default: 127.0.0.1)
+- `DATA`: Path to the main data directory for the Discord RSS service. (default: ./data)
+- `POLL_INTERVAL_MS`: Polling interval in milliseconds for fetching RSS feeds. (default: 60000)
+- `STATUS_INTERVAL_MS`: Interval in milliseconds for updating the service status. (default: 30000)
+- `REQUEST_TIMEOUT_MS`: Request timeout in milliseconds for the Discord RSS service. (default: 15000)
+- `PUBLIC_URL`: Public base URL for the Discord RSS service. (Leave blank if only using locally)
+- `REDIS_URL`: URL for the Redis instance used by the Discord RSS service. (Leave blank if not using Redis)
+- `TEST_DATA`: Path to the test data directory for the Discord RSS service. (default: ./data/.tmp)
+- `LOG_LEVEL`: Logging level for the Discord RSS service. (default: info)
 
 ### Logging Levels
 
@@ -123,16 +122,16 @@ To deploy the Discord RSS service to Heroku using the CLI, follow these steps:
 6. Set the necessary environment variables for your application:
 
   ```bash
-  heroku config:set DISCORD_RSS_PORT=3434
-  heroku config:set DISCORD_RSS_HOST=127.0.0.1
-  heroku config:set DISCORD_RSS_DATA=./data
-  heroku config:set DISCORD_RSS_POLL_INTERVAL_MS=60000
-  heroku config:set DISCORD_RSS_STATUS_INTERVAL_MS=30000
-  heroku config:set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
-  heroku config:set DISCORD_RSS_PUBLIC_BASE_URL=https://your-app-name.herokuapp.com
-  heroku config:set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
-  heroku config:set DISCORD_RSS_TEST_DATA=./test-data
-  heroku config:set DISCORD_RSS_LOG_LEVEL=info
+  heroku config:set PORT=3434
+  heroku config:set HOST=127.0.0.1
+  heroku config:set DATA=./data
+  heroku config:set POLL_INTERVAL_MS=60000
+  heroku config:set STATUS_INTERVAL_MS=30000
+  heroku config:set REQUEST_TIMEOUT_MS=15000
+  heroku config:set PUBLIC_URL=https://your-app-name.herokuapp.com
+  heroku config:set REDIS_URL=redis://your-redis-url:6379
+  heroku config:set TEST_DATA=./test-data
+  heroku config:set LOG_LEVEL=info
   ```
 
 7. Deploy the application to Heroku:
@@ -180,16 +179,16 @@ To deploy the Discord RSS service to Railway using the CLI, follow these steps:
 6. Set the necessary environment variables for your project:
 
   ```bash
-  railway variables set DISCORD_RSS_PORT=3434
-  railway variables set DISCORD_RSS_HOST=127.0.0.1
-  railway variables set DISCORD_RSS_DATA=./data
-  railway variables set DISCORD_RSS_POLL_INTERVAL_MS=60000
-  railway variables set DISCORD_RSS_STATUS_INTERVAL_MS=30000
-  railway variables set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
-  railway variables set DISCORD_RSS_PUBLIC_BASE_URL=https://your-project-name.railway.app
-  railway variables set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
-  railway variables set DISCORD_RSS_TEST_DATA=./test-data
-  railway variables set DISCORD_RSS_LOG_LEVEL=info
+  railway variables set PORT=3434
+  railway variables set HOST=127.0.0.1
+  railway variables set DATA=./data
+  railway variables set POLL_INTERVAL_MS=60000
+  railway variables set STATUS_INTERVAL_MS=30000
+  railway variables set REQUEST_TIMEOUT_MS=15000
+  railway variables set PUBLIC_URL=https://your-project-name.railway.app
+  railway variables set REDIS_URL=redis://your-redis-url:6379
+  railway variables set TEST_DATA=./test-data
+  railway variables set LOG_LEVEL=info
   ```
 
 7. Deploy the application to Railway:
@@ -231,16 +230,16 @@ To deploy the Discord RSS service to Fly.io using the CLI, follow these steps:
 6. Set the necessary environment variables for your application:
 
   ```bash
-  fly secrets set DISCORD_RSS_PORT=3434
-  fly secrets set DISCORD_RSS_HOST=127.0.0.1
-  fly secrets set DISCORD_RSS_DATA=./data
-  fly secrets set DISCORD_RSS_POLL_INTERVAL_MS=60000
-  fly secrets set DISCORD_RSS_STATUS_INTERVAL_MS=30000
-  fly secrets set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
-  fly secrets set DISCORD_RSS_PUBLIC_BASE_URL=https://your-app-name.fly.dev
-  fly secrets set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
-  fly secrets set DISCORD_RSS_TEST_DATA=./test-data
-  fly secrets set DISCORD_RSS_LOG_LEVEL=info
+  fly secrets set PORT=3434
+  fly secrets set HOST=127.0.0.1
+  fly secrets set DATA=./data
+  fly secrets set POLL_INTERVAL_MS=60000
+  fly secrets set STATUS_INTERVAL_MS=30000
+  fly secrets set REQUEST_TIMEOUT_MS=15000
+  fly secrets set PUBLIC_URL=https://your-app-name.fly.dev
+  fly secrets set REDIS_URL=redis://your-redis-url:6379
+  fly secrets set TEST_DATA=./test-data
+  fly secrets set LOG_LEVEL=info
   ```
 
 7. Deploy the application to Fly.io:
@@ -282,16 +281,16 @@ To deploy the Discord RSS service to Render using the CLI, follow these steps:
 6. Set the necessary environment variables for your service:
 
   ```bash
-  render env set DISCORD_RSS_PORT=3434
-  render env set DISCORD_RSS_HOST=127.0.0.1
-  render env set DISCORD_RSS_DATA=./data
-  render env set DISCORD_RSS_POLL_INTERVAL_MS=60000
-  render env set DISCORD_RSS_STATUS_INTERVAL_MS=30000
-  render env set DISCORD_RSS_REQUEST_TIMEOUT_MS=15000
-  render env set DISCORD_RSS_PUBLIC_BASE_URL=https://your-service-name.onrender.com
-  render env set DISCORD_RSS_REDIS_URL=redis://your-redis-url:6379
-  render env set DISCORD_RSS_TEST_DATA=./test-data
-  render env set DISCORD_RSS_LOG_LEVEL=info
+  render env set PORT=3434
+  render env set HOST=127.0.0.1
+  render env set DATA=./data
+  render env set POLL_INTERVAL_MS=60000
+  render env set STATUS_INTERVAL_MS=30000
+  render env set REQUEST_TIMEOUT_MS=15000
+  render env set PUBLIC_URL=https://your-service-name.onrender.com
+  render env set REDIS_URL=redis://your-redis-url:6379
+  render env set TEST_DATA=./test-data
+  render env set LOG_LEVEL=info
   ```
 
 7. Deploy the application to Render:

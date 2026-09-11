@@ -63,14 +63,15 @@ export class OAuthRepository {
     this.state.deleteOAuthConnection(userId, provider);
   }
 
-  saveOAuthState(state: string, userId: number, provider: string): void {
+  saveOAuthState(state: string, userId: number | null, provider: string): void {
+    const effectiveUserId = userId === 0 ? null : userId;
     this.db.raw
       .prepare('INSERT OR REPLACE INTO oauth_states (state, user_id, provider, created_at) VALUES (?, ?, ?, ?)')
-      .run(state, userId, provider, nowIso());
-    this.state.putOAuthState({ state, userId, provider, createdAt: nowIso() });
+      .run(state, effectiveUserId, provider, nowIso());
+    this.state.putOAuthState({ state, userId: effectiveUserId, provider, createdAt: nowIso() });
   }
 
-  consumeOAuthState(state: string): { userId: number; provider: string } | null {
+  consumeOAuthState(state: string): { userId: number | null; provider: string } | null {
     const entry = this.state.getOAuthState(state);
     if (!entry) return null;
     this.db.raw.prepare('DELETE FROM oauth_states WHERE state = ?').run(state);

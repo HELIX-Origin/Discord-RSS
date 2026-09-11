@@ -1,4 +1,4 @@
-# Discord RSS — Reproduction-Safe Runbook
+# HELIX RSS — Reproduction-Safe Runbook
 
 This runbook walks a fresh Windows checkout through the full service flow: install, configure, run, add a feed, verify delivery, and reset state safely. Every step is idempotent and does not require external credentials beyond a Discord webhook URL.
 
@@ -7,8 +7,8 @@ This runbook walks a fresh Windows checkout through the full service flow: insta
 Prerequisites: Node.js **>= 22.9** (uses `node:sqlite` and `--env-file-if-exists`).
 
 ```bash
-git clone https://github.com/HELIX-Origin/Discord-RSS.git
-cd Discord-RSS
+git clone https://github.com/HELIX-Origin/HELIX-RSS.git
+cd HELIX-RSS
 npm install
 ```
 
@@ -24,13 +24,20 @@ Edit `.env` as needed. The defaults are safe for local use:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `DISCORD_RSS_PORT` | `3434` | Dashboard + API port |
-| `DISCORD_RSS_HOST` | `127.0.0.1` | Bind address; `0.0.0.0` to expose on LAN |
-| `DISCORD_RSS_DATA` | `./data` | SQLite + runtime data folder |
-| `DISCORD_RSS_POLL_INTERVAL_MS` | `60000` | Feed poll interval |
-| `DISCORD_RSS_STATUS_INTERVAL_MS` | `30000` | Site monitor interval |
-| `DISCORD_RSS_REDIS_URL` | *(empty)* | Optional Redis URL |
-| `DISCORD_RSS_LOG_LEVEL` | `info` | `debug` | `info` | `warn` | `error` |
+| `INTERNAL_URL` | `127.0.0.1` | Bind address for site + bot; `0.0.0.0` to expose on LAN |
+| `PUBLIC_URL` | *(empty)* | Optional public domain for external access + OAuth redirect URIs |
+| `SITE_PORT` | `3434` | Dashboard + API port |
+| `DISCORD_PORT` | `3131` | Discord bot HTTP endpoint port |
+| `POLL_INTERVAL_MS` | `60000` | Feed poll interval |
+| `STATUS_INTERVAL_MS` | `30000` | Site monitor interval |
+| `REQUEST_TIMEOUT_MS` | `15000` | HTTP request timeout |
+| `SQLITE_DATA` | `./data` | SQLite + runtime data folder |
+| `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error` |
+| `REDIS_HOST` | *(empty)* | Optional Redis server hostname/IP |
+| `REDIS_PORT` | `3535` | Redis server port |
+| `DISCORD_TOKEN` | *(empty)* | Bot token — bot starts automatically when set |
+| `DISCORD_CLIENT_ID` | *(empty)* | Discord application client ID |
+| `DISCORD_REDIRECT_URL` | *(empty)* | Bot invite link (replace `your_client_id` with actual client ID) |
 
 OAuth provider credentials are **not** env vars — they are stored in SQLite and managed from the dashboard **Integrations** tab.
 
@@ -68,7 +75,7 @@ Open <http://127.0.0.1:3434>.
 
 1. On the **Feeds** tab, click the **Poll now** action next to the feed.
    - This calls `POST /api/feeds/:id/poll`.
-2. The watcher will also poll automatically every `DISCORD_RSS_POLL_INTERVAL_MS`.
+2. The watcher will also poll automatically every `POLL_INTERVAL_MS`.
 
 ## 8. Verify a Discord delivery
 
@@ -79,7 +86,7 @@ Open <http://127.0.0.1:3434>.
 
 ## 9. Reset state safely
 
-The service is stateless at the process level; all runtime data lives under `DISCORD_RSS_DATA` (default `./data/`).
+The service is stateless at the process level; all runtime data lives under `DATA` (default `./data/`).
 
 ```bash
 # Stop the service (Ctrl+C), then:
@@ -105,5 +112,22 @@ Runs type-check, Prettier format-check, ESLint, and the Vitest suite. All tests 
 
 1. In the dashboard **Integrations** tab, enable **Cloudflare**.
 2. Enter the Cloudflare OAuth app Client ID and Client Secret.
-3. Set `DISCORD_RSS_PUBLIC_BASE_URL` to the public URL of this instance — it is used to build OAuth redirect URIs.
+3. Set `PUBLIC_URL` to the public URL of this instance — it is used to build OAuth redirect URIs.
 4. The integration is exercised via `npm run check` against a mocked token endpoint (no real Cloudflare credentials needed).
+
+## Discord Bot & Slash Commands (optional)
+
+1. Set `DISCORD_TOKEN` (Bot token from Discord Developer Portal) and `DISCORD_CLIENT_ID` (Application Client ID) in `.env`. The bot starts automatically when `DISCORD_TOKEN` is set.
+2. Start the service (`npm start`). The bot registers global application slash commands on launch:
+   - `/feed add <name> <url> [channel] [feed_type]` — adds a feed and automatically creates a channel webhook.
+   - `/feed list` — lists configured feeds for the server.
+   - `/feed remove <id_or_name>` — deletes a feed.
+   - `/feed poll <id_or_name>` — triggers an immediate poll.
+   - `/feed toggle <id_or_name> <enabled>` — enables or pauses feed polling.
+   - `/webhook create <name> <channel>` — creates a Discord channel webhook.
+   - `/webhook list` — lists webhooks.
+   - `/monitor add <name> <url> [channel]` — adds website status monitor.
+   - `/monitor list`, `/monitor remove`, `/monitor check` — manages monitors.
+   - `/stats` — displays service statistics, uptime, database size, and bot invite link.
+   - `/bind [email]` — links the Discord server with a web dashboard user account.
+3. All operations made via slash commands are immediately synchronized with the web dashboard.

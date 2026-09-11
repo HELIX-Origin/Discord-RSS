@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import type { OAuthProvider, OAuthProviderConfig, OAuthTokenResponse } from './types.js';
 
 interface TokenSuccess {
@@ -71,11 +70,39 @@ export class CloudflareProvider implements OAuthProvider {
     }
 
     const success = json as TokenSuccess;
+    const accountId = await fetchCloudflareAccountId(success.access_token);
+
     return {
       accessToken: success.access_token,
       refreshToken: success.refresh_token ?? null,
       expiresIn: success.expires_in ?? null,
-      accountId: randomBytes(8).toString('hex'),
+      accountId,
     };
   }
+}
+
+/**
+ * Fetches the primary Cloudflare account ID for the authenticated user.
+ * Falls back to a deterministic SHA-256 hash of the access token if the
+ * accounts API call fails (e.g. insufficient scope).
+ */
+async function fetchCloudflareAccountId(accessToken: string): Promise<string> {
+  try {
+    const res = await fetch('https://api.cloudflare.com/client/v4/accounts?per_page=1', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as { result?: Array<{ id?: string }> };
+      const id = data.result?.[0]?.id;
+      if (id) return id;
+    }
+  } catch {
+    /* fall through to deterministic fallback */
+  }
+  // Deterministic fallback: stable hex derived from the access token
+  const { createHash } = await import('node:crypto');
+  return createHash('sha256').update(accessToken).digest('hex').slice(0, 16);
 }

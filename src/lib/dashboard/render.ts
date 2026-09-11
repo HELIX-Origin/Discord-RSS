@@ -1,22 +1,24 @@
 import type { AppDeps } from '../../app.js';
-import {
-  isHostUser,
-  renderDevToolsNavItem,
-  renderDevToolsSection,
-  renderDevToolsScript,
-} from '../../http/dev-tools.js';
+import { isOwnerUser, isAdminOrOwner } from '../../lib/routes/shared.js';
+import { renderDevToolsNavItem, renderDevToolsSection, renderDevToolsScript } from '../../http/dev-tools.js';
 
-export function renderDashboardHtml(deps: AppDeps, userId: number): string {
-  const isHost = isHostUser(userId);
+export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
+  const isOwner = isOwnerUser(userId, deps);
+  const isAdmin = !isOwner && isAdminOrOwner(userId, deps);
+  const canAccessSettings = isOwner || isAdmin;
+  const isHost = canAccessSettings;
   const dbStats = deps.db.stats();
   const providers = deps.oauth.listProviders();
+  const botInviteUrl = deps.config.clientId
+    ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=534723950656`
+    : null;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Discord RSS Dashboard</title>
+  <title>HELIX RSS Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -40,25 +42,38 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
       </div>
       <div>
         <h1 class="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
-          Discord <span class="text-cyan-400">RSS</span>
+          HELIX <span class="text-cyan-400">RSS</span>
         </h1>
         <p class="text-xs text-gray-400">Feed &amp; status monitor for Discord communities</p>
       </div>
     </div>
 
     <div class="flex items-center space-x-3">
-      <a href="https://discord.com/developers/docs/resources/webhook" target="_blank" class="hidden sm:inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 transition border border-gray-700">
-        <i class="fa-brands fa-discord mr-1.5"></i> Discord Webhooks
-      </a>
+      ${
+        botInviteUrl
+          ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="hidden sm:inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
+        <i class="fa-brands fa-discord mr-1.5 text-sm"></i> Add Bot to Server
+      </a>`
+          : ''
+      }
       <span id="db-badge" class="hidden md:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-950/60 text-cyan-300 border border-cyan-800">
         <i class="fa-solid fa-database mr-1.5 text-xs text-emerald-400"></i> SQLite: ${Math.round(dbStats.dbSizeBytes / 1024)} KB
       </span>
-      <span id="user-pill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
+      ${
+        userId !== null
+          ? `<span id="user-pill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
         <i class="fa-solid fa-user mr-1.5 text-cyan-400"></i> <span id="user-email">Loading...</span>
       </span>
       <button onclick="logout()" title="Log out" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white transition border border-gray-700">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
-      </button>
+      </button>`
+          : `<a href="/login" class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-600 hover:bg-cyan-500 text-white transition shadow-sm shadow-cyan-500/20">
+        <i class="fa-solid fa-right-to-bracket mr-1.5"></i> Log In
+      </a>
+      <a href="/register" class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
+        <i class="fa-solid fa-user-plus mr-1.5"></i> Register
+      </a>`
+      }
     </div>
   </header>
 
@@ -79,9 +94,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
         <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-star w-5"></i> Popular Feeds
         </button>
-        <button onclick="switchTab('webhooks')" id="tab-btn-webhooks" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-paper-plane w-5"></i> Webhooks
-        </button>
         <button onclick="switchTab('monitors')" id="tab-btn-monitors" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-heart-pulse w-5"></i> Status Monitors
         </button>
@@ -89,16 +101,20 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
         <button onclick="switchTab('integrations')" id="tab-btn-integrations" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-cloud w-5"></i> Integrations
         </button>
-        <button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
+        ${
+          isHost
+            ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
           <i class="fa-solid fa-sliders w-5"></i> Settings
-        </button>
+        </button>`
+            : ''
+        }
       </div>
 
       <div class="p-3 rounded-xl bg-gray-900/90 border border-gray-800 text-xs text-gray-400 space-y-1.5">
         <div class="flex justify-between"><span>Delivery:</span><span class="text-cyan-400 font-semibold">Direct to Discord</span></div>
         <div class="flex justify-between"><span>Parser:</span><span class="text-emerald-400 font-semibold">RSS · Atom</span></div>
         <div class="flex justify-between"><span>Database:</span><span class="text-emerald-400 font-mono">SQLite (node:sqlite)</span></div>
-        <div class="flex justify-between"><span>Auth:</span><span class="text-indigo-400 font-mono">Email + password</span></div>
+        <div class="flex justify-between"><span>Auth:</span><span class="text-indigo-400 font-mono">Discord OAuth</span></div>
       </div>
     </nav>
 
@@ -113,9 +129,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
             <span class="text-xs text-gray-500 mt-1 block">Active subscriptions</span>
           </div>
           <div class="glass p-5 rounded-2xl border border-gray-800">
-            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Webhooks</span>
-            <div class="text-3xl font-extrabold text-blue-400 mt-2" id="stat-webhooks">0</div>
-            <span class="text-xs text-gray-500 mt-1 block">Discord endpoints</span>
+            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Discord Delivery</span>
+            <div class="text-3xl font-extrabold text-[#5865F2] mt-2" id="stat-channels">0</div>
+            <span class="text-xs text-gray-500 mt-1 block">Connected channels</span>
           </div>
           <div class="glass p-5 rounded-2xl border border-gray-800">
             <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Status Monitors</span>
@@ -152,7 +168,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
             <h2 class="text-base font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-square-plus text-cyan-400"></i> Add Feed
             </h2>
-            <p class="text-xs text-gray-400 mt-1">Paste an RSS or Atom feed URL. New entries are posted to the linked webhook as rich Discord embeds.</p>
+            <p class="text-xs text-gray-400 mt-1">Paste an RSS or Atom feed URL. Select the Discord channel where new entries should be delivered.</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -164,9 +180,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
               <input type="text" id="feed-url" placeholder="https://example.com/feed.xml" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono">
             </div>
             <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Webhook</label>
+              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destination Discord Channel</label>
               <select id="feed-webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
-                <option value="">-- Select webhook --</option>
+                <option value="">-- Select Discord channel --</option>
               </select>
             </div>
           </div>
@@ -226,9 +242,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
               <input type="text" id="builder-feed-name" placeholder="Latest forum posts" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500">
             </div>
             <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Webhook</label>
+              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destination Discord Channel</label>
               <select id="builder-feed-webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500">
-                <option value="">-- Select webhook --</option>
+                <option value="">-- Select Discord channel --</option>
               </select>
             </div>
           </div>
@@ -243,82 +259,48 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
             </div>
             <div>
               <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Link Selector</label>
-              <input type="text" id="builder-sel-link" placeholder="a.title" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
+              <input type="text" id="builder-sel-link" placeholder="a" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
             </div>
             <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Description Selector <span class="normal-case text-gray-600">(optional)</span></label>
-              <input type="text" id="builder-sel-desc" placeholder="p.excerpt" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
+              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Description Selector (opt)</label>
+              <input type="text" id="builder-sel-desc" placeholder="p.summary" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-violet-500 font-mono">
             </div>
           </div>
-          <div class="flex justify-end mt-4">
-            <button onclick="testBuilderSelectors()" class="px-5 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 font-semibold text-sm text-white transition flex items-center gap-2 mr-2">
-              <i class="fa-solid fa-play"></i> Test
+          <div class="flex justify-between items-center pt-2">
+            <button onclick="testBuilderSelectors()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition border border-gray-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-play"></i> Test Selectors
             </button>
-            <button onclick="saveBuilderFeed()" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-cyan-600/20">
-              <i class="fa-solid fa-plus"></i> Save Scrape Feed
+            <button onclick="saveBuilderFeed()" class="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-violet-600/20">
+              <i class="fa-solid fa-floppy-disk"></i> Save Scrape Feed
             </button>
           </div>
-          <div id="builder-test-result" class="mt-4 hidden"></div>
+          <div id="builder-test-result" class="hidden space-y-3 pt-2"></div>
         </div>
       </section>
 
       <!-- 3. POPULAR FEEDS -->
       <section id="tab-popular" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-star text-amber-400"></i> Popular Feeds
-          </h2>
-          <p class="text-xs text-gray-400 mt-1">One-click feeds from a curated catalog. Pick a feed, choose a webhook, and enable it instantly. Feeds post to the webhook on the next poll.</p>
-          <div id="presets-body" class="mt-4">
+        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-star text-amber-400"></i> Popular Feeds
+            </h2>
+            <p class="text-xs text-gray-400 mt-1">One-click subscribe to top news, tech, science, and gaming feeds into any Discord channel.</p>
+          </div>
+          <div id="presets-body" class="space-y-4">
             <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading popular feeds...</div>
           </div>
         </div>
       </section>
 
-      <!-- 4. WEBHOOKS -->
-      <section id="tab-webhooks" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-square-plus text-blue-400"></i> Add Webhook
-            </h2>
-            <p class="text-xs text-gray-400 mt-1">Paste a Discord webhook URL from your server's Integrations settings. Feeds with a linked webhook post entries here.</p>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Webhook Name</label>
-              <input type="text" id="webhook-name" placeholder="Community News" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Webhook URL</label>
-              <input type="text" id="webhook-url" placeholder="https://discord.com/api/webhooks/000/..." class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500 font-mono">
-            </div>
-          </div>
-          <div class="flex justify-end">
-            <button onclick="addWebhook()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-blue-600/20">
-              <i class="fa-solid fa-plus"></i> Add Webhook
-            </button>
-          </div>
-        </div>
-
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-paper-plane text-blue-400"></i> Webhooks
-          </h2>
-          <div id="webhooks-table-body" class="space-y-2">
-            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading webhooks...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 5. STATUS MONITORS -->
+      <!-- 4. STATUS MONITORS -->
       <section id="tab-monitors" class="tab-content hidden space-y-6">
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <div>
             <h2 class="text-base font-bold text-white flex items-center gap-2">
               <i class="fa-solid fa-square-plus text-indigo-400"></i> Add Status Monitor
             </h2>
-            <p class="text-xs text-gray-400 mt-1">Poll a site URL. Transition notifications are posted to the linked webhook when a site goes down or recovers.</p>
+            <p class="text-xs text-gray-400 mt-1">Poll a site URL. Transition notifications are posted to the selected Discord channel when a site goes down or recovers.</p>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -330,9 +312,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
               <input type="text" id="monitor-url" placeholder="https://example.com" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500 font-mono">
             </div>
             <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Alert Webhook</label>
+              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Alert Discord Channel</label>
               <select id="monitor-webhook" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-indigo-500">
-                <option value="">-- Select webhook --</option>
+                <option value="">-- Select Discord channel --</option>
               </select>
             </div>
           </div>
@@ -369,7 +351,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
         </div>
       </section>
 
-      <!-- 7. SETTINGS -->
+      ${
+        isHost
+          ? `<!-- 7. SETTINGS -->
       <section id="tab-settings" class="tab-content hidden space-y-6">
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -431,14 +415,137 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
               .join('')}
           </div>
         </div>
-      </section>
+
+        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-purple-400"></i> User Permissions &amp; Roles
+              </h2>
+              <p class="text-xs text-gray-400 mt-0.5">
+                ${
+                  isOwner
+                    ? 'Manage registered users and assign administrator permissions. Administrators can configure service settings and API credentials.'
+                    : 'View registered users and roles. Only the Owner can promote or demote administrators.'
+                }
+              </p>
+            </div>
+            ${
+              isOwner
+                ? '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950/80 text-amber-300 border border-amber-800"><i class="fa-solid fa-crown mr-1.5 text-amber-400"></i>Owner Controls</span>'
+                : '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-950/80 text-purple-300 border border-purple-800"><i class="fa-solid fa-shield-halved mr-1.5 text-purple-400"></i>Admin (Read-Only)</span>'
+            }
+          </div>
+          <div id="users-table-body" class="space-y-2">
+            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading user list...</div>
+          </div>
+        </div>
+
+        <!-- Member Feed Health & Diagnostics Card -->
+        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-stethoscope text-emerald-400"></i> Member Feed Health &amp; Diagnostics
+              </h2>
+              <p class="text-xs text-gray-400 mt-0.5">
+                Scan all member feeds across the system to detect missing webhooks, disabled endpoints, Cloudflare blocks, and configuration errors.
+              </p>
+            </div>
+            <button onclick="fetchFeedDiagnostics()" class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition border border-gray-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+              <i class="fa-solid fa-rotate-right"></i> Scan Feeds
+            </button>
+          </div>
+
+          <!-- Diagnostic Metrics -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
+              <div class="text-[10px] uppercase font-semibold text-gray-500">Total Feeds</div>
+              <div id="diag-total-feeds" class="text-xl font-bold text-white mt-1">-</div>
+            </div>
+            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
+              <div class="text-[10px] uppercase font-semibold text-gray-500">Issues Detected</div>
+              <div id="diag-issues-count" class="text-xl font-bold text-amber-400 mt-1">-</div>
+            </div>
+            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
+              <div class="text-[10px] uppercase font-semibold text-gray-500">Missing Webhooks</div>
+              <div id="diag-missing-webhooks" class="text-xl font-bold text-red-400 mt-1">-</div>
+            </div>
+            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
+              <div class="text-[10px] uppercase font-semibold text-gray-500">Healthy Feeds</div>
+              <div id="diag-healthy-count" class="text-xl font-bold text-emerald-400 mt-1">-</div>
+            </div>
+          </div>
+
+          <!-- Detected Configuration Issues List -->
+          <div class="space-y-2 pt-2">
+            <div class="text-xs font-semibold text-gray-300 flex items-center gap-2">
+              <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Member Feeds with Configuration Issues
+            </div>
+            <div id="diag-issues-body" class="space-y-2">
+              <div class="text-gray-500 py-4 text-center font-mono text-xs">Scanning feeds for issues...</div>
+            </div>
+          </div>
+
+          <!-- Live Feed Diagnostic Tester for Admins -->
+          <div class="pt-4 border-t border-gray-800/80 space-y-3">
+            <div class="text-xs font-semibold text-gray-300 flex items-center gap-2">
+              <i class="fa-solid fa-magnifying-glass-chart text-cyan-400"></i> Live Feed Inspector
+            </div>
+            <p class="text-xs text-gray-400">Test any member feed or custom URL to inspect response headers, cloudflare challenges, and article parsing.</p>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div class="md:col-span-2">
+                <input type="text" id="diag-test-url" placeholder="https://example.com/feed.xml" class="w-full bg-black/40 border border-gray-800 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-emerald-500">
+              </div>
+              <div>
+                <select id="diag-test-feed-select" onchange="selectDiagnosticFeed(this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
+                  <option value="">-- Quick select a feed --</option>
+                </select>
+              </div>
+              <div>
+                <button onclick="runLiveFeedDiagnostic()" class="w-full h-full min-h-[42px] px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 font-semibold text-xs text-white transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-700/20">
+                  <i class="fa-solid fa-stethoscope"></i> Run Diagnostic
+                </button>
+              </div>
+            </div>
+            <div id="diag-test-result" class="hidden p-4 rounded-xl text-xs font-mono bg-gray-900 border border-gray-800 space-y-3"></div>
+          </div>
+        </div>
+      </section>`
+          : ''
+      }
       ${renderDevToolsSection(isHost)}
     </main>
   </div>
 
+  <!-- Member Feeds Inspection Modal -->
+  <div id="member-feeds-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 hidden">
+    <div class="glass w-full max-w-3xl rounded-2xl border border-gray-700 max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="h-9 w-9 rounded-xl bg-cyan-950/60 border border-cyan-800 flex items-center justify-center text-cyan-400">
+            <i class="fa-solid fa-folder-tree"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2" id="modal-member-title">Member Feeds</h3>
+            <p class="text-xs text-gray-400" id="modal-member-subtitle">Inspect configuration and webhooks</p>
+          </div>
+        </div>
+        <button onclick="closeMemberFeedsModal()" class="h-8 w-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div id="modal-member-body" class="p-5 overflow-y-auto space-y-3 flex-1">
+        <div class="text-gray-500 py-6 text-center font-mono text-xs">Loading member feeds...</div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    let webhooksCache = [];
+    let discordGuildsCache = [];
     let presetsCache = [];
+    let botInviteUrlCache = null;
+    let discordBotEnabled = false;
 
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -520,22 +627,74 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
       }
     }
 
-    function populateWebhookSelects(webhooks) {
+    function buildChannelOptionsHtml(currentValue) {
+      if (!discordGuildsCache || !discordGuildsCache.length) {
+        if (botInviteUrlCache) {
+          return '<option value="">-- No channels found (Invite bot to server first) --</option>';
+        }
+        return '<option value="">-- No Discord channels available --</option>';
+      }
+      let html = '<option value="">-- Select Discord channel --</option>';
+      discordGuildsCache.forEach(g => {
+        const channels = g.channels || [];
+        if (channels.length) {
+          html += \`<optgroup label="\${escapeHtmlAttr(g.name)}">\`;
+          channels.forEach(ch => {
+            const val = 'channel:' + ch.id;
+            const selected = (currentValue === val || currentValue === ch.id) ? 'selected' : '';
+            html += \`<option value="\${val}" \${selected}>#\${escapeHtmlAttr(ch.name)}</option>\`;
+          });
+          html += '</optgroup>';
+        }
+      });
+      return html;
+    }
+
+    function populateDestinationSelects() {
       const feedsSel = document.getElementById('feed-webhook');
       const monitorsSel = document.getElementById('monitor-webhook');
       const builderSel = document.getElementById('builder-feed-webhook');
-      webhooksCache = webhooks;
-      const option = wh => \`<option value="\${wh.id}">\${wh.name}\${wh.enabled ? '' : ' (disabled)'}</option>\`;
-      feedsSel.innerHTML = '<option value="">-- Select webhook --</option>' + webhooks.map(option).join('');
-      monitorsSel.innerHTML = '<option value="">-- Select webhook --</option>' + webhooks.map(option).join('');
-      if (builderSel) builderSel.innerHTML = '<option value="">-- Select webhook --</option>' + webhooks.map(option).join('');
+      if (feedsSel) feedsSel.innerHTML = buildChannelOptionsHtml(feedsSel.value);
+      if (monitorsSel) monitorsSel.innerHTML = buildChannelOptionsHtml(monitorsSel.value);
+      if (builderSel) builderSel.innerHTML = buildChannelOptionsHtml(builderSel.value);
       refreshPresetWebhookOptions();
     }
 
     function refreshPresetWebhookOptions() {
       document.querySelectorAll('select[data-preset-webhook]').forEach(sel => {
-        sel.innerHTML = '<option value="">-- Select webhook --</option>' + webhooksCache.map(option => \`<option value="\${option.id}">\${option.name}\${option.enabled ? '' : ' (disabled)'}</option>\`).join('');
+        sel.innerHTML = buildChannelOptionsHtml(sel.value);
       });
+    }
+
+    async function fetchDiscordChannels() {
+      try {
+        const res = await fetch('/api/discord/channels');
+        if (res.status === 401 || res.status === 403) return;
+        const data = await res.json();
+        discordGuildsCache = data.guilds || [];
+        botInviteUrlCache = data.botInviteUrl;
+        discordBotEnabled = Boolean(data.botEnabled);
+        populateDestinationSelects();
+        const statChannels = document.getElementById('stat-channels');
+        if (statChannels) {
+          const total = discordGuildsCache.reduce((acc, g) => acc + (g.channels?.length || 0), 0);
+          statChannels.textContent = total;
+        }
+      } catch {}
+    }
+
+    function parseDestinationPayload(destination) {
+      if (!destination) return {};
+      if (destination.startsWith('channel:')) {
+        return { channelId: destination.replace('channel:', '') };
+      }
+      if (destination.startsWith('webhook:')) {
+        return { webhookId: Number(destination.replace('webhook:', '')) };
+      }
+      if (/^[0-9]+$/.test(destination)) {
+        return { channelId: destination };
+      }
+      return {};
     }
 
     async function fetchPresets() {
@@ -569,8 +728,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
                   <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(p.url)}</div>
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
-                  <select data-preset-webhook class="w-40 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                    <option value="">-- Select webhook --</option>
+                  <select data-preset-webhook class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                    <option value="">-- Select Discord channel --</option>
                   </select>
                   <button onclick="enablePreset('\${p.id}', this)" \${p.alreadyAdded ? 'disabled' : ''} class="px-3 py-2 rounded-lg \${p.alreadyAdded ? 'bg-green-950/60 text-green-400 border border-green-800 cursor-default' : 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40'} text-xs font-semibold transition"><i class="fa-solid \${p.alreadyAdded ? 'fa-check' : 'fa-bolt'} mr-1"></i>\${p.alreadyAdded ? 'Added' : 'Enable'}</button>
                 </div>
@@ -588,13 +747,20 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
       if (!preset) return;
       const row = btn.closest('.flex');
       const sel = row ? row.querySelector('select[data-preset-webhook]') : null;
-      const webhookId = sel ? sel.value : '';
-      if (!webhookId) return alert('Select a webhook for "' + preset.name + '" first (or add one on the Webhooks tab).');
+      const destination = sel ? sel.value : '';
+      if (!destination) {
+        if (botInviteUrlCache && (!discordGuildsCache || !discordGuildsCache.length)) {
+          return alert('Please invite the Discord bot to your server first.');
+        }
+        return alert('Please select a destination Discord channel for "' + preset.name + '".');
+      }
+      const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/feeds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: preset.name, url: preset.url, webhookId: Number(webhookId), feedType: 'rss' })
+        body: JSON.stringify({ name: preset.name, url: preset.url, feedType: 'rss', ...dest })
       });
+      if (checkAuthError(res)) return;
       const data = await res.json();
       if (res.ok) {
         alert('Enabled "' + preset.name + '".');
@@ -605,10 +771,25 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
       }
     }
 
+    function checkAuthError(res) {
+      if (res.status === 401) {
+        if (confirm('You must be logged in to perform this action. Go to login page?')) {
+          window.location.href = '/login';
+        }
+        return true;
+      }
+      return false;
+    }
+
     async function fetchFeeds() {
       const res = await fetch('/api/feeds');
       const feeds = await res.json();
       const container = document.getElementById('feeds-table-body');
+      if (!Array.isArray(feeds)) {
+        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in to view and manage feeds.</div>';
+        document.getElementById('stat-feeds').textContent = '0';
+        return;
+      }
       if (!feeds.length) {
         container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No feeds yet. Add one above.</div>';
         document.getElementById('stat-feeds').textContent = '0';
@@ -619,11 +800,11 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
         <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-cyan-500/40 transition">
           <div class="space-y-1 min-w-0">
             <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-sm">\${f.name}</span>
+              <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
               <span class="text-[10px] px-2 py-0.5 rounded \${f.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${f.enabled ? 'Enabled' : 'Disabled'}</span>
             </div>
-            <div class="text-xs text-gray-400 font-mono truncate">\${f.url}</div>
-            <div class="text-[10px] text-gray-500">Webhook: \${webhooksCache.find(w => w.id === f.webhookId)?.name ?? 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
+            <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(f.url)}</div>
+            <div class="text-[10px] text-gray-500">Delivery: \${f.webhookId ? 'Discord Channel' : 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
             <button onclick="toggleFeed(\${f.id}, \${f.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${f.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${f.enabled ? 'Pause' : 'Resume'}</button>
@@ -634,35 +815,15 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
       \`).join('');
     }
 
-    async function fetchWebhooks() {
-      const res = await fetch('/api/webhooks');
-      const webhooks = await res.json();
-      populateWebhookSelects(webhooks);
-      const container = document.getElementById('webhooks-table-body');
-      if (!webhooks.length) {
-        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No webhooks yet. Add one above.</div>';
-        document.getElementById('stat-webhooks').textContent = '0';
-        return;
-      }
-      document.getElementById('stat-webhooks').textContent = webhooks.length;
-      container.innerHTML = webhooks.map(w => \`
-        <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-blue-500/40 transition">
-          <div class="space-y-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-sm">\${w.name}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded \${w.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${w.enabled ? 'Enabled' : 'Disabled'}</span>
-            </div>
-            <div class="text-xs text-gray-400 font-mono truncate">\${w.url}</div>
-          </div>
-          <button onclick="deleteItem('webhooks', \${w.id}, 'webhook')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition shrink-0"><i class="fa-solid fa-trash mr-1"></i>Delete</button>
-        </div>
-      \`).join('');
-    }
-
     async function fetchMonitors() {
       const res = await fetch('/api/monitors');
       const monitors = await res.json();
       const container = document.getElementById('monitors-table-body');
+      if (!Array.isArray(monitors)) {
+        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in to view and manage monitors.</div>';
+        document.getElementById('stat-monitors').textContent = '0';
+        return;
+      }
       if (!monitors.length) {
         container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No monitors yet. Add one above.</div>';
         document.getElementById('stat-monitors').textContent = '0';
@@ -673,15 +834,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
         <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-indigo-500/40 transition">
           <div class="space-y-1 min-w-0">
             <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-sm">\${m.name}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded \${statusPillClass(m.status)}">\${m.status}</span>
+              <span class="font-bold text-white text-sm">\${escapeHtmlAttr(m.name)}</span>
+              <span class="text-[10px] px-2 py-0.5 rounded \${statusPillClass(m.status)}">\${escapeHtmlAttr(m.status)}</span>
               <span class="text-[10px] px-2 py-0.5 rounded \${m.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${m.enabled ? 'Enabled' : 'Disabled'}</span>
             </div>
-            <div class="text-xs text-gray-400 font-mono truncate">\${m.url}</div>
-            <div class="text-[10px] text-gray-500">Last checked: \${m.lastCheckedAt ? new Date(m.lastCheckedAt).toLocaleString() : 'Never'}</div>
+            <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(m.url)}</div>
+            <div class="text-[10px] text-gray-500">Alerts: \${m.webhookId ? 'Discord Channel' : 'No channel linked'} · Last checked: \${m.lastCheckedAt ? new Date(m.lastCheckedAt).toLocaleString() : 'Never'}</div>
           </div>
           <div class="flex items-center gap-2 shrink-0">
-            <span class="text-[10px] text-gray-500">→ \${webhooksCache.find(w => w.id === m.webhookId)?.name ?? 'No webhook'}</span>
             <button onclick="toggleMonitor(\${m.id}, \${m.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${m.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${m.enabled ? 'Pause' : 'Resume'}</button>
             <button onclick="deleteItem('monitors', \${m.id}, 'monitor')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-trash"></i></button>
           </div>
@@ -719,14 +879,19 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
     }
 
     async function fetchSettings() {
-      const res = await fetch('/api/settings');
-      const data = await res.json();
-      document.getElementById('setting-base-url').value = data.publicBaseUrl || '';
-      (data.oauthProviders || []).forEach(p => {
-        // Credentials intentionally not echoed back; only show enabled state
-        const enabledEl = document.getElementById('cfg-' + p.provider + '-enabled');
-        if (enabledEl) enabledEl.checked = p.enabled;
-      });
+      const baseUrlInput = document.getElementById('setting-base-url');
+      if (!baseUrlInput) return;
+      try {
+        const res = await fetch('/api/settings');
+        if (res.status === 401 || res.status === 403) return;
+        const data = await res.json();
+        baseUrlInput.value = data.publicBaseUrl || '';
+        (data.oauthProviders || []).forEach(p => {
+          // Credentials intentionally not echoed back; only show enabled state
+          const enabledEl = document.getElementById('cfg-' + p.provider + '-enabled');
+          if (enabledEl) enabledEl.checked = p.enabled;
+        });
+      } catch {}
     }
 
     async function builderSelectors() {
@@ -791,11 +956,12 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
     async function addDiscoveredFeed(url) {
       const name = prompt('Feed name:', url.split('/').pop() || 'Feed');
       if (!name) return;
-      const webhookId = document.getElementById('feed-webhook').value;
+      const destination = document.getElementById('feed-webhook') ? document.getElementById('feed-webhook').value : '';
+      const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/feeds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url, webhookId: webhookId || null, feedType: 'rss' })
+        body: JSON.stringify({ name, url, feedType: 'rss', ...dest })
       });
       const data = await res.json();
       if (res.ok) { alert('Feed added.'); fetchAll(); switchTab('feeds'); }
@@ -844,40 +1010,50 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
     async function saveBuilderFeed() {
       const url = builderUrlField || document.getElementById('builder-url').value.trim();
       const sel = builderSelectors();
-      const webhookId = document.getElementById('builder-feed-webhook').value;
+      const destination = document.getElementById('builder-feed-webhook').value;
       const nameEl = document.getElementById('builder-feed-name');
       const feedName = nameEl.value.trim() || url.split('/').pop() || 'Scrape Feed';
       if (!url || !sel.itemSelector || !sel.titleSelector || !sel.linkSelector) return alert('Analyze a URL and set all selectors first.');
+      const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/feeds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: feedName,
           url,
-          webhookId: webhookId || null,
           feedType: 'scrape',
-          scrape: { item: sel.itemSelector, title: sel.titleSelector, link: sel.linkSelector, description: sel.descriptionSelector }
+          scrape: { item: sel.itemSelector, title: sel.titleSelector, link: sel.linkSelector, description: sel.descriptionSelector },
+          ...dest
         })
       });
+      if (checkAuthError(res)) return;
       const data = await res.json();
       if (res.ok) { alert('Scrape feed saved.'); fetchAll(); switchTab('feeds'); }
       else alert(data.error || 'Failed to save scrape feed');
     }
 
     async function fetchAll() {
-      await Promise.all([fetchMe(), fetchStats(), fetchFeeds(), fetchWebhooks(), fetchMonitors(), fetchPresets()]);
+      const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchMonitors(), fetchPresets()];
+      if (document.getElementById('setting-base-url') || document.getElementById('users-table-body')) {
+        tasks.push(fetchSettings());
+        tasks.push(fetchUsers());
+        tasks.push(fetchFeedDiagnostics());
+      }
+      await Promise.all(tasks);
     }
 
     async function addFeed() {
       const name = document.getElementById('feed-name').value.trim();
       const url = document.getElementById('feed-url').value.trim();
-      const webhookId = document.getElementById('feed-webhook').value;
+      const destination = document.getElementById('feed-webhook').value;
       if (!name || !url) return alert('Please provide a feed name and URL.');
+      const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/feeds', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url, webhookId: webhookId || null })
+        body: JSON.stringify({ name, url, feedType: 'rss', ...dest })
       });
+      if (checkAuthError(res)) return;
       const data = await res.json();
       if (res.ok) {
         document.getElementById('feed-name').value = '';
@@ -888,35 +1064,18 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
       }
     }
 
-    async function addWebhook() {
-      const name = document.getElementById('webhook-name').value.trim();
-      const url = document.getElementById('webhook-url').value.trim();
-      if (!name || !url) return alert('Please provide a webhook name and URL.');
-      const res = await fetch('/api/webhooks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById('webhook-name').value = '';
-        document.getElementById('webhook-url').value = '';
-        fetchAll();
-      } else {
-        alert(data.error || 'Failed to add webhook');
-      }
-    }
-
     async function addMonitor() {
       const name = document.getElementById('monitor-name').value.trim();
       const url = document.getElementById('monitor-url').value.trim();
-      const webhookId = document.getElementById('monitor-webhook').value;
+      const destination = document.getElementById('monitor-webhook').value;
       if (!name || !url) return alert('Please provide a monitor name and URL.');
+      const dest = parseDestinationPayload(destination);
       const res = await fetch('/api/monitors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url, webhookId: webhookId || null })
+        body: JSON.stringify({ name, url, ...dest })
       });
+      if (checkAuthError(res)) return;
       const data = await res.json();
       if (res.ok) {
         document.getElementById('monitor-name').value = '';
@@ -928,23 +1087,27 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
     }
 
     async function toggleFeed(id, enabled) {
-      await fetch('/api/feeds/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
+      const res = await fetch('/api/feeds/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
+      if (checkAuthError(res)) return;
       fetchAll();
     }
 
     async function toggleMonitor(id, enabled) {
-      await fetch('/api/monitors/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
+      const res = await fetch('/api/monitors/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
+      if (checkAuthError(res)) return;
       fetchAll();
     }
 
     async function pollFeed(id) {
-      await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
+      const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
+      if (checkAuthError(res)) return;
       fetchAll();
     }
 
     async function deleteItem(collection, id, label) {
       if (!confirm('Delete this ' + label + '?')) return;
-      await fetch('/api/' + collection + '/' + id, { method: 'DELETE' });
+      const res = await fetch('/api/' + collection + '/' + id, { method: 'DELETE' });
+      if (checkAuthError(res)) return;
       fetchAll();
     }
 
@@ -957,6 +1120,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ clientId, clientSecret, enabled })
       });
+      if (checkAuthError(res)) return;
       const data = await res.json();
       if (res.ok) alert('Saved ' + provider + ' config.');
       else alert(data.error || 'Failed to save config');
@@ -965,17 +1129,354 @@ export function renderDashboardHtml(deps: AppDeps, userId: number): string {
 
     async function saveSettings() {
       const publicBaseUrl = document.getElementById('setting-base-url').value.trim();
-      await fetch('/api/settings', {
+      const res = await fetch('/api/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ publicBaseUrl })
       });
+      if (checkAuthError(res)) return;
       alert('Settings saved.');
+    }
+
+    async function fetchUsers() {
+      const container = document.getElementById('users-table-body');
+      if (!container) return;
+      try {
+        const res = await fetch('/api/settings/users');
+        if (res.status === 401 || res.status === 403) return;
+        const users = await res.json();
+        if (!Array.isArray(users) || !users.length) {
+          container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No registered users found.</div>';
+          return;
+        }
+        const isOwnerUser = ${isOwner ? 'true' : 'false'};
+        container.innerHTML = users.map(u => {
+          const roleBadge = u.role === 'owner'
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-crown text-amber-400"></i> Owner</span>'
+            : u.role === 'admin'
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950/80 text-purple-300 border border-purple-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-shield-halved text-purple-400"></i> Admin</span>'
+            : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-1 shrink-0"><i class="fa-solid fa-user text-gray-400"></i> Member</span>';
+
+          const healthBadge = (u.feedsWithIssuesCount > 0)
+            ? \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i> \${u.feedsWithIssuesCount} issue\${u.feedsWithIssuesCount === 1 ? '' : 's'}</span>\`
+            : (u.feedCount > 0)
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-circle-check text-emerald-400"></i> Healthy</span>'
+            : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-500 border border-gray-700 flex items-center gap-1 shrink-0">No feeds</span>';
+
+          let actionHtml = '';
+          if (isOwnerUser) {
+            if (u.role === 'member' || u.role === 'user') {
+              actionHtml = \`<button onclick="updateUserRole(\${u.id}, 'admin')" class="px-3 py-1.5 rounded-lg bg-purple-900/60 hover:bg-purple-800 text-purple-200 text-xs border border-purple-700 transition font-semibold flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-shield-halved"></i> Promote to Admin</button>\`;
+            } else if (u.role === 'admin') {
+              actionHtml = \`<button onclick="updateUserRole(\${u.id}, 'member')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white text-xs border border-gray-700 transition flex items-center gap-1.5 shrink-0"><i class="fa-solid fa-arrow-down"></i> Demote to Member</button>\`;
+            } else {
+              actionHtml = '<span class="text-[11px] text-gray-500 italic shrink-0">Primary Host</span>';
+            }
+          }
+
+          const safeUserName = escapeHtmlAttr(u.displayName || u.email).replace(/'/g, "\\\\'");
+
+          return \`
+            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-gray-700 transition">
+              <div class="space-y-1 min-w-0">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(u.displayName || u.email)}</span>
+                  \${roleBadge}
+                  \${healthBadge}
+                </div>
+                <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(u.email)}</div>
+                <div class="text-[10px] text-gray-500 font-mono">User ID: #\${u.id} · Feeds: \${u.feedCount} · Webhooks: \${u.webhookCount} · Joined: \${new Date(u.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap shrink-0">
+                <button onclick="inspectUserFeeds(\${u.id}, '\${safeUserName}')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-cyan-950/80 text-cyan-300 hover:text-cyan-200 text-xs border border-gray-700 hover:border-cyan-700 transition font-semibold flex items-center gap-1.5 shrink-0">
+                  <i class="fa-solid fa-stethoscope text-cyan-400"></i> Inspect Feeds
+                </button>
+                \${actionHtml}
+              </div>
+            </div>\`;
+        }).join('');
+      } catch (err) {
+        container.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load users.</div>';
+      }
+    }
+
+    async function updateUserRole(userId, newRole) {
+      if (!confirm('Are you sure you want to change user #' + userId + ' role to ' + newRole + '?')) return;
+      try {
+        const res = await fetch('/api/settings/users/' + userId + '/role', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ role: newRole })
+        });
+        if (checkAuthError(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          alert('User role updated successfully.');
+          fetchUsers();
+        } else {
+          alert(data.error || 'Failed to update user role');
+        }
+      } catch (err) {
+        alert('Network error: ' + err.message);
+      }
+    }
+
+    async function inspectUserFeeds(userId, userName) {
+      const modal = document.getElementById('member-feeds-modal');
+      const title = document.getElementById('modal-member-title');
+      const subtitle = document.getElementById('modal-member-subtitle');
+      const body = document.getElementById('modal-member-body');
+      if (!modal || !body) return;
+
+      title.textContent = 'Member Feeds: ' + userName;
+      subtitle.textContent = 'User #' + userId + ' · Feeds and webhook diagnostics';
+      body.innerHTML = '<div class="text-gray-400 py-6 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading member feeds...</div>';
+      modal.classList.remove('hidden');
+
+      try {
+        const res = await fetch('/api/settings/users/' + userId + '/feeds');
+        if (res.status === 401 || res.status === 403) {
+          body.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">Unauthorized. Admin permissions required.</div>';
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok) {
+          body.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">' + escapeHtmlAttr(data.error || 'Failed to load feeds') + '</div>';
+          return;
+        }
+
+        const feeds = data.feeds || [];
+        if (!feeds.length) {
+          body.innerHTML = '<div class="p-6 rounded-xl bg-gray-900 border border-gray-800 text-gray-400 text-center font-mono text-xs">This member has not configured any feeds yet.</div>';
+          return;
+        }
+
+        body.innerHTML = feeds.map(f => {
+          const statusBadge = f.enabled
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-green-950 text-green-300 border border-green-800">Active</span>'
+            : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700">Paused</span>';
+
+          const webhookBadge = f.webhookId === null
+            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 flex items-center gap-1"><i class="fa-solid fa-link-slash"></i> No Webhook</span>'
+            : f.webhookEnabled
+            ? \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1"><i class="fa-solid fa-link"></i> \${escapeHtmlAttr(f.webhookName || 'Webhook #' + f.webhookId)}</span>\`
+            : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800 flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> \${escapeHtmlAttr(f.webhookName || 'Webhook #' + f.webhookId)} (Disabled)</span>\`;
+
+          const issuesHtml = (f.issues && f.issues.length)
+            ? \`<div class="p-3 rounded-lg bg-amber-950/40 border border-amber-800/80 text-amber-300 text-xs space-y-1">
+                <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Diagnostics:</div>
+                <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-200/90">
+                  \${f.issues.map(iss => \`<li>\${escapeHtmlAttr(iss)}</li>\`).join('')}
+                </ul>
+              </div>\`
+            : '';
+
+          const safeUrl = escapeHtmlAttr(f.url).replace(/'/g, "\\\\'");
+
+          return \`
+            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-300 border border-gray-700 uppercase">\${escapeHtmlAttr(f.feedType)}</span>
+                  \${statusBadge}
+                  \${webhookBadge}
+                </div>
+                <button onclick="testFeedFromModal('\${safeUrl}')" class="px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                  <i class="fa-solid fa-stethoscope"></i> Test in Inspector
+                </button>
+              </div>
+              <div class="text-xs text-gray-400 font-mono truncate bg-black/40 p-2 rounded-lg border border-gray-800">\${escapeHtmlAttr(f.url)}</div>
+              <div class="text-[10px] text-gray-500 font-mono">Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled'}</div>
+              \${issuesHtml}
+            </div>\`;
+        }).join('');
+      } catch (err) {
+        body.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">Failed to fetch member feeds: ' + escapeHtmlAttr(err.message) + '</div>';
+      }
+    }
+
+    function closeMemberFeedsModal() {
+      const modal = document.getElementById('member-feeds-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function testFeedFromModal(feedUrl) {
+      closeMemberFeedsModal();
+      switchTab('settings');
+      testSpecificFeed(feedUrl);
+    }
+
+    let diagnosticsFeedsCache = [];
+
+    async function fetchFeedDiagnostics() {
+      const issuesBody = document.getElementById('diag-issues-body');
+      if (!issuesBody) return;
+      try {
+        const res = await fetch('/api/settings/diagnostics/feeds');
+        if (res.status === 401 || res.status === 403) return;
+        const data = await res.json();
+        if (!res.ok) return;
+
+        diagnosticsFeedsCache = data.allFeeds || [];
+
+        const totalEl = document.getElementById('diag-total-feeds');
+        const issuesEl = document.getElementById('diag-issues-count');
+        const missingWhEl = document.getElementById('diag-missing-webhooks');
+        const healthyEl = document.getElementById('diag-healthy-count');
+
+        if (totalEl) totalEl.textContent = data.totalFeeds;
+        if (issuesEl) issuesEl.textContent = data.issuesCount;
+        if (missingWhEl) missingWhEl.textContent = data.stats?.missingWebhookCount ?? 0;
+        if (healthyEl) healthyEl.textContent = data.healthyFeedsCount;
+
+        const selectEl = document.getElementById('diag-test-feed-select');
+        if (selectEl && data.allFeeds) {
+          selectEl.innerHTML = '<option value="">-- Quick select a feed (' + data.allFeeds.length + ' total) --</option>' +
+            data.allFeeds.map(f => \`<option value="\${escapeHtmlAttr(f.url)}">\${escapeHtmlAttr(f.name)} (\${escapeHtmlAttr(f.userEmail)})</option>\`).join('');
+        }
+
+        const issues = data.feedsWithIssues || [];
+        if (!issues.length) {
+          issuesBody.innerHTML = \`<div class="p-4 rounded-xl bg-green-950/40 border border-green-800/80 text-green-300 text-xs flex items-center gap-2.5 font-mono"><i class="fa-solid fa-circle-check text-emerald-400 text-base shrink-0"></i><span>All \${data.totalFeeds} member feeds across the system are configured correctly with active webhooks.</span></div>\`;
+          return;
+        }
+
+        issuesBody.innerHTML = issues.map(item => {
+          const safeUrl = escapeHtmlAttr(item.feedUrl).replace(/'/g, "\\\\'");
+          return \`
+            <div class="p-4 rounded-xl bg-gray-900 border border-amber-900/40 hover:border-amber-700/60 transition space-y-3">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(item.feedName)}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 uppercase">\${escapeHtmlAttr(item.feedType)}</span>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/70 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-user mr-1 text-[9px]"></i>\${escapeHtmlAttr(item.userDisplayName || item.userEmail)}</span>
+                </div>
+                <button onclick="testSpecificFeed('\${safeUrl}')" class="px-3 py-1.5 rounded-lg bg-emerald-800/70 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
+                  <i class="fa-solid fa-stethoscope"></i> Test in Inspector
+                </button>
+              </div>
+              <div class="text-xs text-gray-400 font-mono truncate bg-black/40 p-2 rounded-lg border border-gray-800">\${escapeHtmlAttr(item.feedUrl)}</div>
+              <div class="space-y-2 pt-1">
+                \${item.problems.map(p => {
+                  const badgeClass = p.severity === 'error'
+                    ? 'bg-red-950/80 text-red-300 border-red-800'
+                    : p.severity === 'warning'
+                    ? 'bg-amber-950/80 text-amber-300 border-amber-800'
+                    : 'bg-blue-950/80 text-blue-300 border-blue-800';
+                  return \`
+                    <div class="p-2.5 rounded-lg bg-black/30 border border-gray-800 text-xs space-y-1">
+                      <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold border uppercase \${badgeClass}">\${p.title}</span>
+                        <span class="text-gray-300">\${escapeHtmlAttr(p.description)}</span>
+                      </div>
+                      <div class="text-[11px] text-cyan-300/90 pl-1"><i class="fa-solid fa-arrow-right mr-1 text-[10px]"></i>\${escapeHtmlAttr(p.recommendation)}</div>
+                    </div>\`;
+                }).join('')}
+              </div>
+            </div>\`;
+        }).join('');
+      } catch (err) {
+        issuesBody.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load feed diagnostics.</div>';
+      }
+    }
+
+    function selectDiagnosticFeed(url) {
+      if (url) {
+        const input = document.getElementById('diag-test-url');
+        if (input) input.value = url;
+      }
+    }
+
+    function testSpecificFeed(url) {
+      const input = document.getElementById('diag-test-url');
+      if (input) input.value = url;
+      runLiveFeedDiagnostic();
+    }
+
+    async function runLiveFeedDiagnostic() {
+      const urlInput = document.getElementById('diag-test-url');
+      const outBox = document.getElementById('diag-test-result');
+      if (!urlInput || !outBox) return;
+
+      const url = urlInput.value.trim();
+      if (!url) return alert('Enter or select a feed URL to inspect.');
+
+      outBox.classList.remove('hidden');
+      outBox.innerHTML = '<div class="text-gray-400 py-3 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Testing feed connectivity, Cloudflare challenges, and article parsing...</div>';
+
+      try {
+        const res = await fetch('/api/settings/diagnostics/feed-check', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          outBox.innerHTML = '<div class="p-3 rounded-lg bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>' + escapeHtmlAttr(data.error || 'Diagnostic check failed') + '</div>';
+          return;
+        }
+
+        const statusPill = data.status === 200
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-green-950 text-green-300 border border-green-800 font-bold">200 OK</span>'
+          : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 font-bold">\${data.status} \${escapeHtmlAttr(data.statusText || 'Error')}</span>\`;
+
+        const challengePill = data.challenged
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800 flex items-center gap-1 font-bold"><i class="fa-solid fa-shield-virus text-amber-400"></i> Cloudflare Block</span>'
+          : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1 font-bold"><i class="fa-solid fa-shield-halved text-emerald-400"></i> Passed (No Block)</span>';
+
+        const parsePill = data.isXml
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">XML RSS/Atom</span>'
+          : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">HTML Webpage</span>';
+
+        let latestEntryHtml = '';
+        if (data.latestEntry) {
+          latestEntryHtml = \`
+            <div class="p-3 rounded-lg bg-black/40 border border-gray-800 space-y-1">
+              <div class="text-[10px] uppercase font-semibold text-gray-500">Latest Discovered Article:</div>
+              <div class="text-xs font-bold text-white">\${escapeHtmlAttr(data.latestEntry.title || 'Untitled')}</div>
+              <div class="text-[11px] text-gray-400 font-mono truncate">\${escapeHtmlAttr(data.latestEntry.link || '')}</div>
+              \${data.latestEntry.publishedAt ? \`<div class="text-[10px] text-gray-500 font-mono">Published: \${escapeHtmlAttr(data.latestEntry.publishedAt)}</div>\` : ''}
+            </div>\`;
+        }
+
+        let recommendationsHtml = '';
+        if (data.recommendations && data.recommendations.length) {
+          recommendationsHtml = \`
+            <div class="p-3 rounded-lg bg-amber-950/40 border border-amber-800/80 space-y-1 text-xs">
+              <div class="font-bold text-amber-300 flex items-center gap-1.5"><i class="fa-solid fa-lightbulb"></i> Recommendations:</div>
+              <ul class="list-disc list-inside text-amber-200/90 text-[11px] space-y-0.5">
+                \${data.recommendations.map(r => \`<li>\${escapeHtmlAttr(r)}</li>\`).join('')}
+              </ul>
+            </div>\`;
+        }
+
+        outBox.innerHTML = \`
+          <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-gray-800">
+              <div class="flex items-center gap-2 flex-wrap">
+                \${statusPill}
+                \${challengePill}
+                \${parsePill}
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-300 border border-gray-700">\${data.entriesCount} article\${data.entriesCount === 1 ? '' : 's'} parsed</span>
+              </div>
+              <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(data.contentType || 'unknown')}</div>
+            </div>
+            \${data.feedTitle ? \`<div class="text-xs font-bold text-white"><span class="text-gray-400 font-normal">Feed Title:</span> \${escapeHtmlAttr(data.feedTitle)}</div>\` : ''}
+            \${data.parseError ? \`<div class="p-2.5 rounded-lg bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>Parse Warning: \${escapeHtmlAttr(data.parseError)}</div>\` : ''}
+            \${latestEntryHtml}
+            \${recommendationsHtml}
+          </div>\`;
+      } catch (err) {
+        outBox.innerHTML = '<div class="p-3 rounded-lg bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">Diagnostic request failed: ' + escapeHtmlAttr(err.message) + '</div>';
+      }
     }
 
     ${renderDevToolsScript()}
 
     fetchAll();
+    const urlTab = new URLSearchParams(window.location.search).get('tab');
+    if (urlTab) switchTab(urlTab);
     setInterval(fetchStats, 10000);
   </script>
 </body>

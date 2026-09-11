@@ -88,4 +88,26 @@ describe('Cloudflare OAuth flow', () => {
     expect(cf?.enabled).toBe(true);
     expect(cf?.configured).toBe(true);
   });
+
+  it('restricts /api/settings to host/owner only and forbids non-host users', async () => {
+    // Register a secondary non-host user
+    const nonHostClient = new TestClient(server.url);
+    await nonHostClient.post('/api/auth/register', { email: 'user2@example.com', password: 'password123' });
+
+    // Non-host user attempting to GET settings
+    const getRes = await nonHostClient.get('/api/settings');
+    expect(getRes.status).toBe(403);
+
+    // Non-host user attempting to POST settings
+    const postRes = await nonHostClient.post('/api/settings', { publicBaseUrl: 'http://evil.com' });
+    expect(postRes.status).toBe(403);
+
+    // Non-host user attempting to update OAuth credentials
+    const oauthRes = await nonHostClient.post('/api/settings/oauth/cloudflare', {
+      clientId: 'hacked',
+      clientSecret: 'hacked',
+      enabled: false,
+    });
+    expect(oauthRes.status).toBe(403);
+  });
 });

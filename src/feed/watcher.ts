@@ -91,7 +91,7 @@ export class FeedWatcher {
       );
     } else {
       if (!/\b(rss|atom|rdf)\b/i.test(result.text.slice(0, 2048))) {
-        console.warn(`[feed] "${feed.name}" response does not look like XML (${result.contentType})`);
+        this.logger.warn(`Feed "${feed.name}" response does not look like XML (${result.contentType})`);
         return;
       }
       try {

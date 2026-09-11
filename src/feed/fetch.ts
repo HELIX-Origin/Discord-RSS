@@ -29,7 +29,7 @@ export interface HttpFetcherOptions {
   maxBytes?: number;
 }
 
-export const DEFAULT_USER_AGENT = 'DiscordRSS/0.1 (+https://github.com/HELIX-Origin/Discord-RSS)';
+export const DEFAULT_USER_AGENT = 'HelixRSS/0.1 (+https://github.com/HELIX-Origin/HELIX-RSS)';
 
 export async function fetchRaw(url: string, options: HttpFetcherOptions = {}): Promise<FetchResult> {
   const { timeoutMs = 15_000, maxRedirects = 5, userAgent = DEFAULT_USER_AGENT, maxBytes = 10 * 1024 * 1024 } = options;
@@ -65,12 +65,11 @@ export async function fetchRaw(url: string, options: HttpFetcherOptions = {}): P
         },
       });
 
-      redirects += 1;
-
-      if (res.status >= 300 && res.status < 400 && redirects <= maxRedirects) {
+      if (res.status >= 300 && res.status < 400 && redirects < maxRedirects) {
         const location = res.headers.get('location');
         if (location) {
           currentUrl = new URL(location, currentUrl).toString();
+          redirects += 1;
           continue;
         }
       }
@@ -116,7 +115,7 @@ export function isCloudflareChallenge(contentType: string | null, server: string
   return false;
 }
 
-export async function isFeedXml(result: FetchResult): Promise<boolean> {
+export function isFeedXml(result: FetchResult): boolean {
   const head = result.text.slice(0, 1024).toLowerCase();
   return head.includes('<rss') || head.includes('<feed') || head.includes('<rdf');
 }

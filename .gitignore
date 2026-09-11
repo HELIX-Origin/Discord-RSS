@@ -32,8 +32,16 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Lock files (regenerate with npm install)
-package-lock.json
+# Lock files for alternative package managers (npm lock file is committed)
 npm-shrinkwrap.json
 .pnpm-lock.yaml
 yarn.lock
+
+# Keep plan files under source control, but don't commit them.
+.agents/plans/**
+
+# Whitelist files in untracked locations to be tracked
+# This section explicitly whitelists the files that should be tracked.
+!./agents/plans/roadmap.md
+!./agents/plans/phase*.md
+

@@ -29,6 +29,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
       name?: string;
       url?: string;
       webhookId?: number | null;
+      channelId?: string | null;
       feedType?: 'rss' | 'scrape';
       scrape?: { item?: string; title?: string; link?: string; description?: string } | null;
     };
@@ -36,9 +37,37 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
     if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
-    if (body.webhookId !== undefined && body.webhookId !== null && !d.repo.getWebhook(userId, body.webhookId)) {
+
+    let resolvedWebhookId: number | null = body.webhookId ?? null;
+
+    // If channelId is provided and no webhookId, auto-provision Discord webhook via bot
+    if (!resolvedWebhookId && body.channelId?.trim()) {
+      if (!d.bot) {
+        return sendError(res, 400, 'Discord bot is not running. Cannot auto-provision channel webhook.');
+      }
+      try {
+        const wh = await d.bot.createChannelWebhook(body.channelId.trim(), `HELIX - ${name}`);
+        const savedWh = d.repo.addWebhook(userId, wh.name, wh.url);
+        d.repo.logActivity(
+          userId,
+          'info',
+          'webhooks',
+          `Auto-provisioned Discord webhook "${savedWh.name}" for feed "${name}"`,
+        );
+        resolvedWebhookId = savedWh.id;
+      } catch (err) {
+        return sendError(
+          res,
+          400,
+          err instanceof Error ? err.message : 'Failed to auto-create Discord channel webhook',
+        );
+      }
+    }
+
+    if (resolvedWebhookId !== null && !d.repo.getWebhook(userId, resolvedWebhookId)) {
       return sendError(res, 400, 'Webhook not found');
     }
+
     try {
       const feedType = body.feedType === 'scrape' ? 'scrape' : 'rss';
       const scrape =
@@ -50,7 +79,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
               description: body.scrape.description?.trim() || undefined,
             }
           : null;
-      const feed = d.repo.addFeed(userId, name, url, body.webhookId ?? null, feedType, scrape);
+      const feed = d.repo.addFeed(userId, name, url, resolvedWebhookId, feedType, scrape);
       d.repo.logActivity(userId, 'info', 'feeds', `Added ${feedType === 'scrape' ? 'scrape ' : ''}feed "${feed.name}"`);
       sendJson(res, 201, feed);
     } catch (err) {

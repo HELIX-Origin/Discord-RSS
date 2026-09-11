@@ -6,7 +6,7 @@ import type { LogLevel } from '../../src/util/logger.js';
 let counter = 0;
 
 export function getTestDataDir(): string {
-  return process.env['DISCORD_RSS_TEST_DATA'] ?? resolve(process.cwd(), 'data', '.tmp');
+  return process.env['SQLITE_TEST_DATA'] ?? resolve(process.cwd(), 'data', '.tmp');
 }
 
 export function testDbPath(prefix: string): string {

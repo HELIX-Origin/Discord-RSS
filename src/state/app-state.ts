@@ -1,5 +1,6 @@
 import type { Database } from '../db/database.js';
 import {
+  rowToDiscordGuild,
   rowToFeed,
   rowToMonitor,
   rowToOAuthConnection,
@@ -7,6 +8,7 @@ import {
   rowToUser,
   rowToWebhook,
   type ActivityEntry,
+  type DiscordGuild,
   type Feed,
   type OAuthConnection,
   type OAuthState,
@@ -37,6 +39,7 @@ export class AppState {
   private feedsById = new Map<number, Feed>();
   private webhooksById = new Map<number, Webhook>();
   private monitorsById = new Map<number, SiteMonitor>();
+  private discordGuilds = new Map<string, DiscordGuild>();
   private settings = new Map<string, string>();
   private activity: ActivityEntry[] = [];
   private sentByFeed = new Map<number, Set<string>>();
@@ -89,6 +92,11 @@ export class AppState {
       if (m) this.putMonitor(m);
     }
 
+    for (const r of raws.prepare('SELECT * FROM discord_guilds').all() as Row[]) {
+      const g = rowToDiscordGuild(r);
+      if (g) this.putDiscordGuild(g);
+    }
+
     for (const r of raws.prepare('SELECT * FROM settings').all() as Row[]) {
       this.settings.set(String(r.key), String(r.value));
     }
@@ -120,6 +128,10 @@ export class AppState {
 
   getUserByEmail(email: string): User | null {
     return this.usersByEmail.get(email) ?? null;
+  }
+
+  listUsers(): User[] {
+    return Array.from(this.usersById.values()).sort((a, b) => a.id - b.id);
   }
 
   putUser(user: User): void {
@@ -272,6 +284,20 @@ export class AppState {
       m.status = status;
       m.lastCheckedAt = lastCheckedAt;
     }
+  }
+
+  // ---- Discord Guilds ----
+
+  getDiscordGuild(guildId: string): DiscordGuild | null {
+    return this.discordGuilds.get(guildId) ?? null;
+  }
+
+  putDiscordGuild(guild: DiscordGuild): void {
+    this.discordGuilds.set(guild.guildId, guild);
+  }
+
+  deleteDiscordGuild(guildId: string): void {
+    this.discordGuilds.delete(guildId);
   }
 
   // ---- Settings ----

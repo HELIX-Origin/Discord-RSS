@@ -13,13 +13,44 @@ export function registerMonitorsRoutes(router: Router<AppDeps>): void {
   router.add('POST', '/api/monitors', async (req, res, _ctx, d) => {
     const userId = await requireUser(req, res, d);
     if (userId === null) return;
-    const body = (await readBodyJson(req)) as { name?: string; url?: string; webhookId?: number | null };
+    const body = (await readBodyJson(req)) as {
+      name?: string;
+      url?: string;
+      webhookId?: number | null;
+      channelId?: string | null;
+    };
     const name = body.name?.trim();
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
     if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
+
+    let resolvedWebhookId: number | null = body.webhookId ?? null;
+
+    if (!resolvedWebhookId && body.channelId?.trim()) {
+      if (!d.bot) {
+        return sendError(res, 400, 'Discord bot is not running. Cannot auto-provision channel webhook.');
+      }
+      try {
+        const wh = await d.bot.createChannelWebhook(body.channelId.trim(), `HELIX - ${name}`);
+        const savedWh = d.repo.addWebhook(userId, wh.name, wh.url);
+        d.repo.logActivity(
+          userId,
+          'info',
+          'webhooks',
+          `Auto-provisioned Discord webhook "${savedWh.name}" for monitor "${name}"`,
+        );
+        resolvedWebhookId = savedWh.id;
+      } catch (err) {
+        return sendError(
+          res,
+          400,
+          err instanceof Error ? err.message : 'Failed to auto-create Discord channel webhook',
+        );
+      }
+    }
+
     try {
-      const monitor = d.repo.addMonitor(userId, name, url, body.webhookId ?? null);
+      const monitor = d.repo.addMonitor(userId, name, url, resolvedWebhookId);
       sendJson(res, 201, monitor);
     } catch (err) {
       sendError(res, 409, err instanceof Error ? err.message : 'Failed to add monitor');

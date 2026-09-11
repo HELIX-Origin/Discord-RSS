@@ -3,12 +3,47 @@ import { rowToUser, rowToFeed } from '../../../src/state/types.js';
 
 describe('row mappers', () => {
   it('maps user row', () => {
-    const row = { id: 1, email: 'a@b.com', password_hash: 'h', display_name: 'A', created_at: 't' };
-    expect(rowToUser(row)).toEqual({
+    const ownerRow = { id: 1, email: 'a@b.com', password_hash: 'h', display_name: 'A', created_at: 't' };
+    expect(rowToUser(ownerRow)).toEqual({
       id: 1,
       email: 'a@b.com',
       passwordHash: 'h',
       displayName: 'A',
+      role: 'owner',
+      createdAt: 't',
+    });
+
+    const userRow = {
+      id: 2,
+      email: 'u@b.com',
+      password_hash: 'h',
+      display_name: 'U',
+      role: 'admin',
+      created_at: 't',
+    };
+    expect(rowToUser(userRow)).toEqual({
+      id: 2,
+      email: 'u@b.com',
+      passwordHash: 'h',
+      displayName: 'U',
+      role: 'admin',
+      createdAt: 't',
+    });
+
+    const memberRow = {
+      id: 3,
+      email: 'm@b.com',
+      password_hash: 'h',
+      display_name: 'M',
+      role: 'member',
+      created_at: 't',
+    };
+    expect(rowToUser(memberRow)).toEqual({
+      id: 3,
+      email: 'm@b.com',
+      passwordHash: 'h',
+      displayName: 'M',
+      role: 'member',
       createdAt: 't',
     });
   });

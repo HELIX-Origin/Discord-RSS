@@ -1,31 +1,31 @@
-# Discord-RSS
+# HELIX-RSS
 
-A lightweight and efficient utility designed to bridge RSS feeds directly into Discord channels. 
+A lightweight and efficient utility designed to bridge RSS/Atom feeds directly into Discord channels.
 
 ## Overview
 
-Discord-RSS automates content delivery from your favorite RSS and Atom feeds straight into your Discord server channels using webhooks. Whether you're tracking release logs, blog updates, or news streams, this tool keeps your community in the loop without manual monitoring.
+HELIX-RSS automates content delivery from your favorite RSS and Atom feeds straight into your Discord server channels using webhooks or the built-in Discord Bot. Whether you're tracking release logs, blog updates, or news streams, this tool keeps your community in the loop without manual monitoring.
 
 ## Features
 
 - **Automated Feed Polling:** Regularly checks configured RSS/Atom endpoints for new items.
-- **Discord Webhook Integration:** Cleanly formats and pushes updates straight to designated channels.
-- **Lightweight and Efficient:** Minimal resource usage while maintaining high performance for real-time updates.
+- **Discord Webhook & Bot Integration:** Cleanly formats and pushes updates straight to designated channels, with interactive Discord slash commands (`/feed`, `/webhook`, `/monitor`, `/stats`, `/bind`).
+- **Lightweight and Efficient:** Minimal resource usage with zero runtime dependencies while maintaining high performance.
 
 ## Documentation & Wiki
 
 Detailed guides, configuration instructions, and advanced setup documentation are maintained in the project wiki:
 
-* [Home & Getting Started](https://github.com/HELIX-Origin/Discord-RSS/wiki/Home)
-* [Configuration Guide](https://github.com/HELIX-Origin/Discord-RSS/wiki/Configuration)
-* [Troubleshooting](https://github.com/HELIX-Origin/Discord-RSS/wiki/Troubleshooting)
+* [Home & Getting Started](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Home)
+* [Configuration Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Configuration)
+* [Troubleshooting](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Troubleshooting)
 
 ## Installation & Setup
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/HELIX-Origin/Discord-RSS.git
-   cd Discord-RSS
+   git clone https://github.com/HELIX-Origin/HELIX-RSS.git
+   cd HELIX-RSS
    npm install
    npm start
    ```
@@ -61,6 +61,6 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
 ## Community Links
 
 - 😎 [HELIX Origin Discord](https://discord.com/invite/Ww3XBZC2HV)
-- 🌐 [Project Wiki](https://github.com/HELIX-Origin/Discord-RSS/wiki)
-- 🐛 [Issue Tracker](https://github.com/HELIX-Origin/Discord-RSS/issues)
-- 💡 [Feature Requests](https://github.com/HELIX-Origin/Discord-RSS/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22)
+- 🌐 [Project Wiki](https://github.com/HELIX-Origin/HELIX-RSS/wiki)
+- 🐛 [Issue Tracker](https://github.com/HELIX-Origin/HELIX-RSS/issues)
+- 💡 [Feature Requests](https://github.com/HELIX-Origin/HELIX-RSS/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22)

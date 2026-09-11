@@ -10,7 +10,7 @@ You need Node.js >= 22.5. Run `node --version` and upgrade if needed.
 
 ### Port 3434 is already in use
 
-The `.env` default is `DISCORD_RSS_PORT=3434`. If another process is using it, set a different port or kill the stale process. On Windows:
+The `.env` default is `PORT=3434`. If another process is using it, set a different port or kill the stale process. On Windows:
 
 ```cmd
 netstat -ano | findstr :3434
@@ -22,7 +22,7 @@ taskkill /PID <PID> /F
 ### Feed is not polled
 
 - Check the dashboard **Dev Tools** tab (host-only) and click **Poll all feeds now**.
-- Verify `DISCORD_RSS_POLL_INTERVAL_MS` is set and the scheduler is running.
+- Verify `POLL_INTERVAL_MS` is set and the scheduler is running.
 - Look at the JSON logs for `level: error` or `level: warn` from `source: feed`.
 
 ### Duplicate posts to Discord
@@ -62,11 +62,11 @@ See the forum integration docs:
 
 ### Redis is configured but coordination is not working
 
-- Verify `DISCORD_RSS_REDIS_URL` is set and reachable.
+- Verify `REDIS_URL` is set and reachable.
 - Redis is optional; without it, deduplication and locks are local to the process.
 
 ## Logging
 
-Set `DISCORD_RSS_LOG_LEVEL` to one of: `debug`, `info`, `warn`, `error`.
+Set `LOG_LEVEL` to one of: `debug`, `info`, `warn`, `error`.
 
 Default is `info`. Use `debug` for verbose scheduler/watcher output.

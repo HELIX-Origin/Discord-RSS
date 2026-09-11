@@ -14,7 +14,7 @@ export class AuthService {
     email: string,
     password: string,
     displayName?: string,
-  ): { user: { id: number; email: string; displayName: string }; token: string; expiresAt: Date } {
+  ): { user: { id: number; email: string; displayName: string; role: string }; token: string; expiresAt: Date } {
     const normalized = email.trim().toLowerCase();
     if (!this.emailPattern.test(normalized)) {
       throw new AuthError('Invalid email address');
@@ -25,10 +25,12 @@ export class AuthService {
     if (this.repo.getByEmail(normalized)) {
       throw new AuthError('An account with that email already exists');
     }
+    const isFirstUser = this.repo.listUsers().length === 0;
     const user = this.repo.createUser(
       normalized,
       passwordService.hash(password),
       displayName?.trim() ?? normalized.split('@')[0],
+      isFirstUser ? 'owner' : 'member',
     );
     return this.startSession(user.id);
   }
@@ -36,7 +38,7 @@ export class AuthService {
   login(
     email: string,
     password: string,
-  ): { user: { id: number; email: string; displayName: string }; token: string; expiresAt: Date } {
+  ): { user: { id: number; email: string; displayName: string; role: string }; token: string; expiresAt: Date } {
     const normalized = email.trim().toLowerCase();
     const user = this.repo.getByEmail(normalized);
     if (!user || !passwordService.verify(password, user.passwordHash)) {
@@ -50,16 +52,17 @@ export class AuthService {
   }
 
   private startSession(userId: number): {
-    user: { id: number; email: string; displayName: string };
+    user: { id: number; email: string; displayName: string; role: string };
     token: string;
     expiresAt: Date;
   } {
-    const user = this.repo.getUserById(userId)!;
+    const user = this.repo.getUserById(userId);
+    if (!user) throw new AuthError('User not found');
     const token = randomUUID().toString() + randomUUID().toString().replaceAll('-', '');
     const expiresAt = sessionService.sessionExpiry();
-    this.repo.createSession(user.id, token, expiresAt.toISOString());
+    this.repo.createSession(userId, token, expiresAt.toISOString());
     return {
-      user: { id: user.id, email: user.email, displayName: user.displayName },
+      user: { id: user.id, email: user.email, displayName: user.displayName, role: user.role },
       token,
       expiresAt,
     };

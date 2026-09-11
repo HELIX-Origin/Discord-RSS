@@ -8,7 +8,7 @@ const LEVELS: Record<LogLevel, number> = {
 };
 
 function defaultLevel(): LogLevel {
-  const env = process.env['DISCORD_RSS_LOG_LEVEL']?.toLowerCase();
+  const env = process.env['LOG_LEVEL']?.toLowerCase();
   if (env && env in LEVELS) return env as LogLevel;
   return 'info';
 }

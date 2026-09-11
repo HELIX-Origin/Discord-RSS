@@ -6,7 +6,16 @@ import { FeedRepository } from '../lib/repository/feeds.js';
 import { WebhookRepository } from '../lib/repository/webhooks.js';
 import { MonitorRepository } from '../lib/repository/monitors.js';
 import { SettingsRepository } from '../lib/repository/settings.js';
-import type { ActivityEntry, Feed, OAuthConnection, Session, SiteMonitor, User, Webhook } from '../state/types.js';
+import type {
+  ActivityEntry,
+  Feed,
+  OAuthConnection,
+  Session,
+  SiteMonitor,
+  User,
+  UserRole,
+  Webhook,
+} from '../state/types.js';
 
 export type {
   ActivityEntry,
@@ -16,6 +25,7 @@ export type {
   Session,
   SiteMonitor,
   User,
+  UserRole,
   Webhook,
 } from '../state/types.js';
 
@@ -52,8 +62,16 @@ export class Repository {
 
   // ---- Users & auth ----
 
-  createUser(email: string, passwordHash: string, displayName: string): User {
-    return this.users.createUser(email, passwordHash, displayName);
+  createUser(email: string, passwordHash: string, displayName: string, role: UserRole = 'member'): User {
+    return this.users.createUser(email, passwordHash, displayName, role);
+  }
+
+  listUsers(): User[] {
+    return this.users.listUsers();
+  }
+
+  setUserRole(userId: number, role: UserRole): void {
+    this.users.setUserRole(userId, role);
   }
 
   getById(id: number): User | null {
@@ -84,6 +102,22 @@ export class Repository {
     return this.users.getUserBySessionToken(token);
   }
 
+  getGuildBinding(guildId: string): import('../state/types.js').DiscordGuild | null {
+    return this.users.getGuildBinding(guildId);
+  }
+
+  bindGuild(guildId: string, userId: number, name = ''): import('../state/types.js').DiscordGuild {
+    return this.users.bindGuild(guildId, userId, name);
+  }
+
+  getOrCreateGuildUser(guildId: string, guildName = ''): User {
+    return this.users.getOrCreateGuildUser(guildId, guildName);
+  }
+
+  getOrCreateOwnerUser(): User {
+    return this.users.getOrCreateOwnerUser();
+  }
+
   // ---- OAuth connections ----
 
   oauthConnectionsFor(userId: number): OAuthConnection[] {
@@ -102,11 +136,11 @@ export class Repository {
     this.oauth.deleteOAuthConnection(userId, provider);
   }
 
-  saveOAuthState(state: string, userId: number, provider: string): void {
+  saveOAuthState(state: string, userId: number | null, provider: string): void {
     this.oauth.saveOAuthState(state, userId, provider);
   }
 
-  consumeOAuthState(state: string): { userId: number; provider: string } | null {
+  consumeOAuthState(state: string): { userId: number | null; provider: string } | null {
     return this.oauth.consumeOAuthState(state);
   }
 

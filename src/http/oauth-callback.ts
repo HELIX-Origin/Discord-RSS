@@ -1,9 +1,12 @@
+﻿import { escapeHtml } from './helpers.js';
+
 export function renderOAuthCallbackHtml(status: 'success' | 'error', provider: string, errorMessage?: string): string {
   const isSuccess = status === 'success';
-  const title = isSuccess ? `Connected ${provider}` : 'Connection Failed';
+  const safeProvider = escapeHtml(provider);
+  const title = isSuccess ? `Connected ${safeProvider}` : 'Connection Failed';
   const message = isSuccess
-    ? `You have successfully connected ${provider}. You can close this window and return to the dashboard.`
-    : (errorMessage ?? `Failed to connect ${provider}. Please try again.`);
+    ? `You have successfully connected ${safeProvider}. You can close this window and return to the dashboard.`
+    : escapeHtml(errorMessage ?? `Failed to connect ${safeProvider}. Please try again.`);
 
   return `<!DOCTYPE html>
 <html lang="en">

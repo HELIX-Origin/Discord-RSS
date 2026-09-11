@@ -6,6 +6,8 @@ import type { FeedWatcher } from './feed/watcher.js';
 import type { StatusWatcher } from './status/watcher.js';
 import type { RedisCoordinator } from './state/redis.js';
 
+import type { DiscordBot } from './bot/bot.js';
+
 export interface AppDeps {
   config: AppConfig;
   db: Database;
@@ -14,4 +16,5 @@ export interface AppDeps {
   feeds: FeedWatcher;
   status: StatusWatcher;
   redis: RedisCoordinator | null;
+  bot?: DiscordBot | null;
 }
