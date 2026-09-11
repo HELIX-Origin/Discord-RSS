@@ -2,14 +2,13 @@
 
 This runbook walks a fresh Windows checkout through the full service flow: install, configure, run, add a feed, verify delivery, and reset state safely. Every step is idempotent and does not require external credentials beyond a Discord webhook URL.
 
-## 1. Install dependencies
+## 1. Clone the repository
 
 Prerequisites: Node.js **>= 22.9** (uses `node:sqlite` and `--env-file-if-exists`).
 
 ```bash
 git clone https://github.com/HELIX-Origin/HELIX-RSS.git
 cd HELIX-RSS
-npm install
 ```
 
 No runtime dependencies are required. `redis` is optional and only used for cross-instance coordination.
@@ -41,9 +40,10 @@ Edit `.env` as needed. The defaults are safe for local use:
 
 OAuth provider credentials are **not** env vars — they are stored in SQLite and managed from the dashboard **Integrations** tab.
 
-## 3. Build and start
+## 3. Install, build, and start
 
 ```bash
+npm install
 npm run build
 npm start
 ```
