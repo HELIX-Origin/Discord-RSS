@@ -1,12 +1,6 @@
-# Example 1: Local testing or hosts-file custom domain (replace with your local domain or localhost)
-# Use "tls internal" so Caddy issues trusted local certificates without needing public DNS
-your-domain.local, localhost {
-	tls internal
+# Automatic reverse proxy for PUBLIC_URL or custom domain (defaults to localhost)
+# Caddy automatically provisions and renews Let's Encrypt / ZeroSSL certificates when a domain is provided:
+{$PUBLIC_URL:localhost} {
 	reverse_proxy {$INTERNAL_TARGET:127.0.0.1:3131}
 }
 
-# Example 2: Public domain on a VPS (uncomment and replace with your real domain)
-# Caddy automatically provisions and renews Let's Encrypt / ZeroSSL certificates:
-# rss.yourdomain.com {
-#     reverse_proxy {$INTERNAL_TARGET:127.0.0.1:3131}
-# }
