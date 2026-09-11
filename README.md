@@ -27,6 +27,7 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
    git clone https://github.com/HELIX-Origin/HELIX-RSS.git
    cd HELIX-RSS
    npm install
+   npm run build
    npm start
    ```
 
