@@ -1,6 +1,8 @@
+import { existsSync, rmSync } from 'node:fs';
 import https from 'node:https';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { generateSelfSignedCertificate } from '../../../src/util/self-signed.js';
+import { generateSelfSignedCertificate, getOrCreateSelfSignedCertificate } from '../../../src/util/self-signed.js';
 
 describe('generateSelfSignedCertificate', () => {
   it('generates a valid PEM private key and certificate', () => {
@@ -57,5 +59,18 @@ describe('generateSelfSignedCertificate', () => {
     const creds = generateSelfSignedCertificate('helix.local', ['mybot.test', '192.168.1.50']);
     expect(creds.cert).toContain('-----BEGIN CERTIFICATE-----');
     expect(creds.key).toContain('-----BEGIN PRIVATE KEY-----');
+  });
+
+  it('persists and reuses self-signed certificate and crt file on disk', () => {
+    const tmpDir = resolve(process.cwd(), 'data', '.tmp', 'certs-test-' + Date.now());
+    const creds1 = getOrCreateSelfSignedCertificate(tmpDir, 'test.domain');
+    expect(existsSync(resolve(tmpDir, 'self-signed-cert.pem'))).toBe(true);
+    expect(existsSync(resolve(tmpDir, 'self-signed-cert.crt'))).toBe(true);
+    expect(existsSync(resolve(tmpDir, 'self-signed-key.pem'))).toBe(true);
+
+    const creds2 = getOrCreateSelfSignedCertificate(tmpDir, 'test.domain');
+    expect(creds2.cert).toBe(creds1.cert);
+    expect(creds2.key).toBe(creds1.key);
+    rmSync(tmpDir, { recursive: true, force: true });
   });
 });

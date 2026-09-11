@@ -222,6 +222,8 @@ export function getOrCreateSelfSignedCertificate(
     mkdirSync(certsDir, { recursive: true });
     writeFileSync(certPath, generated.cert, 'utf8');
     writeFileSync(keyPath, generated.key, 'utf8');
+    // Also save as .crt for native Windows Certificate Manager / Explorer association
+    writeFileSync(resolve(certsDir, 'self-signed-cert.crt'), generated.cert, 'utf8');
   } catch {
     // Non-fatal if filesystem is read-only
   }
