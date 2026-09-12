@@ -28,26 +28,42 @@ export async function handleAboutCommand(
 
   const fields: Array<{ name: string; value: string; inline?: boolean }> = [
     {
-      name: '📡 Core Capabilities',
-      value: [
-        '• **RSS & Atom Feeds** — Automatic polling, deduplication, and rich embeds with primary images',
-        '• **Direct Channel Delivery** — Dispatches updates straight to designated Discord channels',
-        '• **Webpage Scraper** — Automated updates for websites lacking native RSS/Atom feeds',
-        '• **Responsive Web Dashboard** — Dual-tone Light and Dark themes with live logs and feed controls',
-      ].join('\n'),
-      inline: false,
+      name: '📡 RSS & Atom Feeds',
+      value: 'Automatic polling, deduplication, and rich embeds with primary images',
+      inline: true,
     },
     {
-      name: '⚡ Architecture',
-      value: [
-        '• **Runtime**: Native Node.js & TypeScript ESM (zero runtime dependencies)',
-        '• **Storage**: High-speed in-memory state with SQLite write-through persistence',
-        `• **Uptime**: ${uptimeStr}`,
-      ].join('\n'),
-      inline: false,
+      name: '📣 Direct Channel Delivery',
+      value: 'Dispatches updates straight to designated Discord channels',
+      inline: true,
     },
     {
-      name: '🖥️ Web Dashboard',
+      name: '🕸️ Webpage Scraper',
+      value: 'Automated updates for websites lacking native RSS/Atom feeds',
+      inline: true,
+    },
+    {
+      name: '🎛️ Web Dashboard',
+      value: 'Light & Dark themes with live logs and feed controls',
+      inline: true,
+    },
+    {
+      name: '⚙️ Runtime',
+      value: 'Native Node.js & TypeScript ESM (zero runtime dependencies)',
+      inline: true,
+    },
+    {
+      name: '💾 Storage',
+      value: 'In-memory AppState with SQLite write-through persistence',
+      inline: true,
+    },
+    {
+      name: '⏱️ Uptime',
+      value: uptimeStr,
+      inline: true,
+    },
+    {
+      name: '🖥️ Dashboard Link',
       value: `[Open Dashboard](${dashboardUrl})`,
       inline: true,
     },

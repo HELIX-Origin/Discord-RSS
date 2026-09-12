@@ -53,7 +53,7 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
             {
               name: '⚙️ System Health',
               value: `**Uptime:** ${uptimeStr}\n**DB Size:** ${(stats.dbSizeBytes / 1024).toFixed(1)} KB\n**Redis:** ${deps.redis ? '🟢 Connected' : '⚪ Single-instance'}`,
-              inline: false,
+              inline: true,
             },
             {
               name: '🖥️ Web Dashboard',

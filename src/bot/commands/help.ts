@@ -48,14 +48,14 @@ function buildCommandDetailEmbed(command: ApplicationCommand, branding: AppBrand
       fields.push({
         name: `/${command.name} ${sub.name}`,
         value: `${sub.description}${subArgs}`,
-        inline: false,
+        inline: true,
       });
     }
   } else if (directOptions.length > 0) {
     fields.push({
       name: 'Options',
       value: directOptions.map(formatOptionSummary).join('\n'),
-      inline: false,
+      inline: true,
     });
   }
 
@@ -88,14 +88,14 @@ function buildAllCommandsEmbed(commands: ApplicationCommand[], branding: AppBran
       return {
         name: `/${cmd.name}`,
         value: `${cmd.description}\n\n**Subcommands:**\n${subList}`,
-        inline: false,
+        inline: true,
       };
     }
 
     return {
       name: `/${cmd.name}`,
       value: `${cmd.description}\n\n**Usage:** \`/${cmd.name}\``,
-      inline: false,
+      inline: true,
     };
   });
 

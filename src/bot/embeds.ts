@@ -354,7 +354,7 @@ export function freeGameEmbed(game: FreeGameItem, feedTitle = 'Free Games'): Dis
     fields.push({
       name: '🔗 Claim Game',
       value: `[Claim Free on ${game.platform} ↗](${game.url})`,
-      inline: false,
+      inline: true,
     });
   }
 

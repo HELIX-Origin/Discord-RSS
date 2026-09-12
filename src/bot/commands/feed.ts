@@ -193,7 +193,7 @@ async function handleAdd(
                 value: targetChannelId ? `<#${targetChannelId}>` : 'None',
                 inline: true,
               },
-              { name: 'Feed URL', value: `\`${feed.url}\``, inline: false },
+              { name: 'Feed URL', value: `\`${feed.url}\``, inline: true },
             ],
             footer: {
               text: `${appDisplayName(deps)} • Direct Bot Delivery`,
@@ -236,7 +236,7 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
     return {
       name: `#${f.id} — ${f.name} (${status})`,
       value: `**URL:** \`${f.url}\`\n**Channel:** ${target}\n**Last Checked:** ${lastChecked}`,
-      inline: false,
+      inline: true,
     };
   });
 
@@ -308,7 +308,7 @@ async function handlePoll(options: InteractionOption[], userId: number, deps: Ap
             title: `🔄 Polled Feed: ${feed.name}`,
             color: 0x06b6d4,
             fields: [
-              { name: 'Feed URL', value: feed.url, inline: false },
+              { name: 'Feed URL', value: feed.url, inline: true },
               {
                 name: 'Last Checked',
                 value: updated?.lastCheckedAt
