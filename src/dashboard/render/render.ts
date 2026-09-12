@@ -1,35 +1,37 @@
 import type { AppDeps } from '../../app.js';
 import { isOwnerUser, isAdminOrOwner, canUserAccessDashboard } from '../routes/shared.js';
-import { renderDevToolsNavItem, renderDevToolsSection, renderDevToolsScript } from '../http/dev-tools.js';
 
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
+  // Permission barrier for non-admin Discord users without Manage Channels
   if (userId !== null && !canUserAccessDashboard(userId, deps)) {
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Access Denied · HELIX RSS</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background: #0b0f19; color: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 1rem; padding: 2rem; max-width: 440px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
+    .icon { display: inline-flex; width: 4rem; height: 4rem; align-items: center; justify-content: center; border-radius: 1rem; background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); font-size: 1.75rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; color: #fff; }
+    p { font-size: 0.875rem; color: #9ca3af; line-height: 1.5; margin-bottom: 1.5rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; background: #1f2937; color: #d1d5db; font-size: 0.875rem; font-weight: 600; text-decoration: none; border: 1px solid #374151; cursor: pointer; transition: all 0.15s; }
+    .btn:hover { background: #374151; color: #fff; }
+  </style>
 </head>
-<body class="bg-[#0b0f19] text-white min-h-screen flex items-center justify-center font-sans p-4">
-  <div class="bg-gray-900/80 border border-gray-800 rounded-2xl p-8 max-w-md text-center shadow-2xl backdrop-blur space-y-4">
-    <div class="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 text-2xl mb-2">
-      <i class="fa-solid fa-lock"></i>
-    </div>
-    <h1 class="text-xl font-bold">Manage Channels Permission Required</h1>
-    <p class="text-sm text-gray-400">
-      Access to the HELIX RSS dashboard is restricted to server owners and administrators with the <strong>Manage Channels</strong> permission in Discord.
-    </p>
-    <div class="pt-2 flex justify-center gap-3">
-      <button onclick="logout()" class="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold transition border border-gray-700">
-        <i class="fa-solid fa-arrow-right-from-bracket mr-1.5"></i> Log Out
-      </button>
-    </div>
+<body>
+  <div class="card">
+    <div class="icon"><i class="fa-solid fa-lock"></i></div>
+    <h1>Manage Channels Required</h1>
+    <p>Access to the HELIX RSS dashboard is restricted to Discord server owners and members with the <strong>Manage Channels</strong> permission.</p>
+    <button onclick="logout()" class="btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</button>
   </div>
   <script>
     async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
       window.location.href = '/login';
     }
   </script>
@@ -50,618 +52,429 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HELIX RSS Dashboard</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>HELIX RSS · Discord Feed Syndication</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('helix-theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (saved === 'light' || (!saved && !prefersDark)) {
-          document.documentElement.classList.add('light-theme');
-        } else {
-          document.documentElement.classList.remove('light-theme');
-        }
-      } catch (e) {}
-    })();
-  </script>
   <style>
     :root {
-      --bg-main: #0b0f19;
-      --bg-glass: rgba(17, 24, 39, 0.7);
-      --border-glass: rgba(55, 65, 81, 0.5);
-      --text-main: #f3f4f6;
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-inner: #111827;
+      --border: #1f2937;
+      --border-hover: #374151;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dim: #6b7280;
+      --primary: #06b6d4;
+      --primary-hover: #0891b2;
+      --primary-bg: rgba(6, 182, 212, 0.12);
+      --primary-border: rgba(6, 182, 212, 0.35);
+      --discord: #5865F2;
+      --discord-hover: #4752C4;
+      --amber: #f59e0b;
+      --emerald: #10b981;
+      --red: #ef4444;
     }
-    html.light-theme {
-      --bg-main: #e8ecf2;
-      --bg-glass: rgba(248, 250, 252, 0.88);
-      --border-glass: rgba(203, 213, 225, 0.9);
-      --text-main: #1e293b;
+    html.light {
+      --bg: #e8ecf2;
+      --card-bg: rgba(248, 250, 252, 0.95);
+      --card-inner: #ffffff;
+      --border: #cbd5e1;
+      --border-hover: #94a3b8;
+      --text: #1e293b;
+      --text-muted: #475569;
+      --text-dim: #64748b;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --primary-bg: rgba(14, 165, 233, 0.12);
+      --primary-border: rgba(14, 165, 233, 0.35);
     }
-    body {
-      font-family: 'Outfit', sans-serif;
-      background-color: var(--bg-main);
-      color: var(--text-main);
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    code, pre, .font-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .glass { background: var(--bg-glass); backdrop-filter: blur(12px); border: 1px solid var(--border-glass); }
-    .glow-cyan { text-shadow: 0 0 12px rgba(6, 182, 212, 0.6); }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: var(--bg-main); }
-    ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background-color 0.2s, color 0.2s; }
+    
+    /* Header */
+    header { position: sticky; top: 0; z-index: 50; background: var(--card-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--text); }
+    .brand-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: #06b6d4; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+    .brand-title { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-title span { color: var(--primary); }
+    .brand-sub { font-size: 0.75rem; color: var(--text-muted); }
+    .nav-actions { display: flex; align-items: center; gap: 0.625rem; }
 
-    /* Light Theme utilities */
-    html.light-theme ::-webkit-scrollbar-track { background: #e8ecf2; }
-    html.light-theme ::-webkit-scrollbar-thumb { background: #94a3b8; }
-    html.light-theme ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-    html.light-theme .text-white { color: #1e293b !important; }
-    html.light-theme .text-gray-400 { color: #475569 !important; }
-    html.light-theme .text-gray-300 { color: #334155 !important; }
-    html.light-theme .text-gray-500 { color: #64748b !important; }
-    html.light-theme .bg-gray-950 { background-color: #dfe4ec !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
-    html.light-theme .bg-gray-900 { background-color: #f8fafc !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
-    html.light-theme .bg-gray-900\\/90 { background-color: rgba(248, 250, 252, 0.95) !important; }
-    html.light-theme .bg-gray-800 { background-color: #edf1f7 !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
-    html.light-theme .bg-gray-800\\/80 { background-color: #edf1f7 !important; }
-    html.light-theme .border-gray-800 { border-color: #cbd5e1 !important; }
-    html.light-theme .border-gray-700 { border-color: #cbd5e1 !important; }
-    html.light-theme .bg-black\\/40 { background-color: #e2e8f0 !important; border-color: #cbd5e1 !important; color: #1e293b !important; }
-    html.light-theme input, html.light-theme select, html.light-theme textarea { background-color: #ffffff !important; color: #1e293b !important; border-color: #cbd5e1 !important; }
-    html.light-theme input::placeholder { color: #94a3b8 !important; }
-    html.light-theme .tab-btn { color: #64748b; }
-    html.light-theme .tab-btn:hover { background-color: #dfe4ec !important; color: #0f172a !important; }
-    html.light-theme .tab-btn.text-cyan-300 { color: #0284c7 !important; background-color: rgba(14, 165, 233, 0.15) !important; border-color: rgba(14, 165, 233, 0.4) !important; font-weight: 600; }
-    html.light-theme #db-badge { background-color: rgba(14, 165, 233, 0.12) !important; color: #0369a1 !important; border-color: rgba(14, 165, 233, 0.3) !important; }
-    html.light-theme #user-pill { background-color: #edf1f7 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
-    html.light-theme #theme-toggle-btn { background-color: #edf1f7 !important; color: #334155 !important; border-color: #cbd5e1 !important; }
-    html.light-theme #theme-toggle-btn:hover { background-color: #dfe4ec !important; color: #0f172a !important; }
-    html.light-theme .shadow-xl, html.light-theme .shadow-2xl { box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04) !important; }
+    /* Layout */
+    .container { max-width: 1280px; width: 100%; margin: 0 auto; padding: 1.5rem; flex: 1; display: flex; gap: 1.5rem; }
+    @media (max-width: 860px) { .container { flex-direction: column; } }
+
+    /* Sidebar Navigation */
+    nav.sidebar { width: 240px; flex-shrink: 0; background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; height: calc(100vh - 6.5rem); position: sticky; top: 5rem; }
+    @media (max-width: 860px) { nav.sidebar { width: 100%; height: auto; position: static; } }
+    .tab-list { display: flex; flex-direction: column; gap: 0.375rem; }
+    .tab-btn { width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); background: transparent; border: 1px solid transparent; cursor: pointer; text-align: left; transition: all 0.15s; }
+    .tab-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .tab-btn.active { color: var(--primary); background: var(--primary-bg); border-color: var(--primary-border); }
+    .sidebar-footer { padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between; }
+    .sidebar-footer a { color: var(--text-muted); text-decoration: none; }
+    .sidebar-footer a:hover { color: var(--primary); }
+
+    /* Main Content */
+    main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5rem; }
+    .tab-pane { display: none; flex-direction: column; gap: 1.5rem; }
+    .tab-pane.active { display: flex; }
+
+    /* Cards & Components */
+    .card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.15); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+    .card-desc { font-size: 0.8125rem; color: var(--text-muted); }
+
+    /* Grid layout */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .stat-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1.25rem; }
+    .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .stat-value { font-size: 1.875rem; font-weight: 800; color: var(--primary); margin-top: 0.5rem; }
+    .stat-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+    /* Form Controls */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
+    .form-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    input[type="text"], select, textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text); outline: none; transition: border-color 0.15s; }
+    input[type="text"]:focus, select:focus { border-color: var(--primary); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; text-decoration: none; transition: all 0.15s; }
+    .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(6,182,212,0.25); }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-discord { background: var(--discord); color: #fff; }
+    .btn-discord:hover { background: var(--discord-hover); }
+    .btn-ghost { background: var(--card-inner); color: var(--text-muted); border-color: var(--border); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+    .btn-danger { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
+    .btn-danger:hover { background: rgba(239,68,68,0.3); color: #fff; }
+    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem; }
+
+    /* Feed & List Items */
+    .feed-item { background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; transition: border-color 0.15s; }
+    .feed-item:hover { border-color: var(--border-hover); }
+    .feed-details { min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+    .feed-name-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .feed-name { font-weight: 700; font-size: 0.9375rem; color: var(--text); }
+    .feed-url { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 480px; }
+    .feed-meta { font-size: 0.6875rem; color: var(--text-dim); }
+    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; border-radius: 0.375rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge-green { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-gray { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid var(--border); }
+    .badge-amber { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+
+    /* Interval Pills */
+    .interval-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+    .interval-btn { padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 600; background: var(--card-inner); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .interval-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    .interval-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .empty-state { padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
-  <!-- Top Navigation Header -->
-  <header class="glass sticky top-0 z-50 border-b border-gray-800 px-6 py-3.5 flex items-center justify-between">
-    <div class="flex items-center space-x-3">
-      <div class="h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-cyan-500/30 border border-cyan-500/30 shrink-0 bg-gray-900 flex items-center justify-center">
-        <i class="fa-solid fa-rss text-cyan-400 text-lg"></i>
-      </div>
+<body>
+  <!-- Top Navigation -->
+  <header>
+    <a href="/dashboard" class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-rss"></i></div>
       <div>
-        <h1 class="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
-          HELIX <span class="text-cyan-400">RSS</span>
-        </h1>
-        <p class="text-xs text-gray-400">Feed syndication for Discord communities</p>
+        <div class="brand-title">HELIX <span>RSS</span></div>
+        <div class="brand-sub">Discord Feed Syndication</div>
       </div>
-    </div>
+    </a>
 
-    <div class="flex items-center space-x-3">
-      <button id="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Light/Dark Theme" class="inline-flex items-center justify-center h-8 w-8 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white transition border border-gray-700">
-        <i id="theme-toggle-icon" class="fa-solid fa-moon text-cyan-400"></i>
+    <div class="nav-actions">
+      <button onclick="toggleTheme()" class="btn btn-ghost btn-sm" title="Toggle Theme">
+        <i id="theme-icon" class="fa-solid fa-moon"></i>
       </button>
       ${
         botInviteUrl
-          ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
-        <i class="fa-brands fa-discord mr-1.5 text-sm"></i> Add Bot to Server
+          ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-discord btn-sm">
+        <i class="fa-brands fa-discord"></i> Invite Bot
       </a>`
           : ''
       }
-      <span id="db-badge" class="hidden md:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-cyan-950/60 text-cyan-300 border border-cyan-800">
-        <i class="fa-solid fa-database mr-1.5 text-xs text-emerald-400"></i> SQLite: ${Math.round(dbStats.dbSizeBytes / 1024)} KB
-      </span>
       ${
         userId !== null
-          ? `<span id="user-pill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
-        <i class="fa-solid fa-user mr-1.5 text-cyan-400"></i> <span id="user-name">Discord User</span>
+          ? `<span class="badge badge-gray" style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">
+        <i class="fa-solid fa-user" style="color: var(--primary); margin-right: 0.25rem;"></i> <span id="user-display-name">Discord User</span>
       </span>
-      <button onclick="logout()" title="Log out" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white transition border border-gray-700">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i>
-      </button>`
-          : `<a href="/api/auth/discord" class="inline-flex items-center px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition shadow-sm shadow-[#5865F2]/25">
-        <i class="fa-brands fa-discord mr-1.5 text-sm"></i> Log In with Discord
-      </a>`
+      <button onclick="logout()" class="btn btn-ghost btn-sm" title="Log Out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>`
+          : `<a href="/api/auth/discord" class="btn btn-discord btn-sm"><i class="fa-brands fa-discord"></i> Log In with Discord</a>`
       }
     </div>
   </header>
 
-  <!-- Main Container -->
-  <div class="flex-1 flex max-w-7xl w-full mx-auto p-6 gap-6">
-    <!-- Sidebar Navigation -->
-    <nav class="w-56 xl:w-64 glass rounded-2xl p-4 flex flex-col justify-between shrink-0 h-[calc(100vh-7.5rem)] sticky top-20">
-      <div class="space-y-1.5">
-        <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-white bg-cyan-600/20 text-cyan-300 border border-cyan-500/30">
-          <i class="fa-solid fa-chart-line w-5"></i> Overview
+  <!-- Container -->
+  <div class="container">
+    <!-- Sidebar -->
+    <nav class="sidebar">
+      <div class="tab-list">
+        <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-btn active">
+          <i class="fa-solid fa-chart-line"></i> Overview
         </button>
-        <button onclick="switchTab('feeds')" id="tab-btn-feeds" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-rss w-5"></i> Feeds
+        <button onclick="switchTab('feeds')" id="tab-btn-feeds" class="tab-btn">
+          <i class="fa-solid fa-list"></i> Feeds
         </button>
-        <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-star w-5"></i> Popular Feeds
+        <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn">
+          <i class="fa-solid fa-star"></i> Popular Feeds
         </button>
-        ${renderDevToolsNavItem(isHost)}
         ${
           isHost
-            ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition text-gray-400 hover:text-white hover:bg-gray-800/80">
-          <i class="fa-solid fa-sliders w-5"></i> Settings
+            ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn">
+          <i class="fa-solid fa-sliders"></i> Settings
         </button>`
             : ''
         }
       </div>
 
-      <div class="p-3 rounded-xl bg-gray-900/90 border border-gray-800 text-xs text-gray-400 space-y-1.5">
-        <div class="flex justify-between"><span>Delivery:</span><span class="text-cyan-400 font-semibold">Direct to Discord</span></div>
-        <div class="flex justify-between"><span>Parser:</span><span class="text-emerald-400 font-semibold">RSS · Atom</span></div>
-        <div class="flex justify-between"><span>Database:</span><span class="text-emerald-400 font-mono">SQLite (node:sqlite)</span></div>
-        <div class="flex justify-between"><span>Auth:</span><span class="text-indigo-400 font-mono">Discord OAuth</span></div>
-      </div>
-      <div class="pt-3 border-t border-gray-800 text-[11px] text-gray-500 flex justify-between px-1">
-        <a href="/privacy" class="hover:text-cyan-400 transition">Privacy</a>
+      <div class="sidebar-footer">
+        <a href="/privacy">Privacy</a>
         <span>&middot;</span>
-        <a href="/tos" class="hover:text-cyan-400 transition">Terms</a>
+        <a href="/tos">Terms</a>
         <span>&middot;</span>
-        <a href="https://github.com/HELIX-Origin/HELIX-RSS" target="_blank" rel="noreferrer" class="hover:text-cyan-400 transition">GitHub</a>
+        <a href="https://github.com/HELIX-Origin/HELIX-RSS" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </nav>
 
-    <!-- Tab Contents -->
-    <main class="flex-1 space-y-6 min-w-0">
-      <!-- 1. OVERVIEW TAB -->
-      <section id="tab-overview" class="tab-content space-y-6">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          <div class="glass p-5 rounded-2xl border border-gray-800">
-            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">My Feeds</span>
-            <div class="text-3xl font-extrabold text-cyan-400 mt-2" id="stat-feeds">0</div>
-            <span class="text-xs text-gray-500 mt-1 block">Active subscriptions</span>
+    <!-- Main View -->
+    <main>
+      <!-- TAB 1: OVERVIEW -->
+      <section id="tab-overview" class="tab-pane active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">My Subscriptions</div>
+            <div class="stat-value" id="stat-feeds-count">0</div>
+            <div class="stat-sub">Active feed syndications</div>
           </div>
-          <div class="glass p-5 rounded-2xl border border-gray-800">
-            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">Discord Delivery</span>
-            <div class="text-3xl font-extrabold text-[#5865F2] mt-2" id="stat-channels">0</div>
-            <span class="text-xs text-gray-500 mt-1 block">Connected channels</span>
+          <div class="stat-card">
+            <div class="stat-label">Discord Delivery</div>
+            <div class="stat-value" style="color: #5865F2;" id="stat-channels-count">0</div>
+            <div class="stat-sub">Connected channels</div>
           </div>
-          <div class="glass p-5 rounded-2xl border border-gray-800">
-            <span class="text-xs font-semibold uppercase text-gray-400 tracking-wider">SQLite Engine</span>
-            <div class="text-3xl font-extrabold text-emerald-400 mt-2">${Math.round(dbStats.dbSizeBytes / 1024)} KB</div>
-            <span class="text-xs text-gray-500 mt-1 block">Local synchronous storage</span>
+          <div class="stat-card">
+            <div class="stat-label">Database Engine</div>
+            <div class="stat-value" style="color: #10b981;">${Math.round(dbStats.dbSizeBytes / 1024)} KB</div>
+            <div class="stat-sub">SQLite synchronous engine</div>
           </div>
         </div>
 
-        <!-- Recent Activity Feed -->
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div class="flex justify-between items-center">
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> Recent Activity
-            </h2>
-            <button onclick="fetchAll()" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition flex items-center gap-1.5 border border-gray-700">
-              <i class="fa-solid fa-rotate-right"></i> Refresh
-            </button>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Recent Activity</div>
+              <div class="card-desc">System logs, delivery notifications, and parser status</div>
+            </div>
+            <button onclick="loadOverviewTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
           </div>
-          <div id="activity-feed" class="space-y-2 max-h-72 overflow-y-auto font-mono text-xs">
-            <div class="text-gray-500 py-4 text-center">Loading recent activity...</div>
+          <div id="activity-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 320px; overflow-y: auto;">
+            <div class="empty-state">Loading recent activity...</div>
           </div>
         </div>
       </section>
 
-      <!-- 2. FEEDS TAB -->
-      <section id="tab-feeds" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
+      <!-- TAB 2: FEEDS -->
+      <section id="tab-feeds" class="tab-pane">
+        <!-- Add Feed Card -->
+        <div class="card">
           <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-square-plus text-cyan-400"></i> Add Feed
-            </h2>
-            <p class="text-xs text-gray-400 mt-1">Paste an RSS or Atom feed URL. Select the Discord channel where new entries should be delivered.</p>
+            <div class="card-title"><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Add New RSS Feed</div>
+            <div class="card-desc">Provide any RSS, Atom, or XML feed URL and select the destination Discord channel.</div>
           </div>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Feed Name</label>
-              <input type="text" id="feed-name" placeholder="Example Blog" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Feed Name</label>
+              <input type="text" id="add-feed-name" placeholder="E.g., TechCrunch News">
             </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Feed URL</label>
-              <input type="text" id="feed-url" placeholder="https://example.com/feed.xml" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500 font-mono">
+            <div class="form-group">
+              <label class="form-label">Feed URL</label>
+              <input type="text" id="add-feed-url" placeholder="https://example.com/rss.xml" style="font-family: monospace;">
             </div>
-            <div>
-              <label class="block text-xs font-semibold uppercase text-gray-400 mb-1.5">Destination Discord Channel</label>
-              <select id="feed-channel" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500">
-                <option value="">-- Select Discord channel --</option>
+            <div class="form-group">
+              <label class="form-label">Destination Discord Channel</label>
+              <select id="add-feed-channel">
+                <option value="">-- Select Discord Channel --</option>
               </select>
             </div>
           </div>
-          <div class="flex justify-end">
-            <button onclick="addFeed()" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-cyan-600/20">
-              <i class="fa-solid fa-plus"></i> Add Feed
-            </button>
+          <div style="display: flex; justify-content: flex-end;">
+            <button onclick="submitAddFeed()" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Feed</button>
           </div>
         </div>
 
-        <!-- Feed Posting Interval (Per-User Setting) -->
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <!-- Feed Posting Interval Card -->
+        <div class="card">
+          <div class="card-header">
             <div>
-              <h2 class="text-base font-bold text-white flex items-center gap-2">
-                <i class="fa-regular fa-clock text-cyan-400"></i> Feed Posting Interval
-              </h2>
-              <p class="text-xs text-gray-400 mt-0.5">Frequency for checking your feeds and delivering new posts to Discord channels.</p>
+              <div class="card-title"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> Feed Posting Interval</div>
+              <div class="card-desc">How often the system checks feeds for new articles and delivers them to your Discord channels.</div>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-400">Active interval:</span>
-              <span id="user-interval-badge" class="px-2.5 py-1 rounded-full text-xs font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">1 hour</span>
-            </div>
+            <span class="badge badge-green" id="active-interval-badge">1 hour</span>
           </div>
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1" id="user-interval-buttons">
-            <button type="button" onclick="setUserPollInterval(60000)" id="btn-user-60000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-              <i class="fa-solid fa-bolt text-xs text-cyan-400"></i> 1 minute
-            </button>
-            <button type="button" onclick="setUserPollInterval(600000)" id="btn-user-600000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-              <i class="fa-regular fa-clock text-xs text-cyan-400"></i> 10 minutes
-            </button>
-            <button type="button" onclick="setUserPollInterval(1800000)" id="btn-user-1800000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-              <i class="fa-regular fa-clock text-xs text-cyan-400"></i> 30 minutes
-            </button>
-            <button type="button" onclick="setUserPollInterval(3600000)" id="btn-user-3600000" class="interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-              <i class="fa-regular fa-clock text-xs text-cyan-400"></i> 1 hour
-            </button>
+          <div class="interval-group" id="interval-buttons-container">
+            <button type="button" onclick="setUserInterval(60000)" id="int-btn-60000" class="interval-btn"><i class="fa-solid fa-bolt"></i> 1 minute</button>
+            <button type="button" onclick="setUserInterval(600000)" id="int-btn-600000" class="interval-btn"><i class="fa-regular fa-clock"></i> 10 minutes</button>
+            <button type="button" onclick="setUserInterval(1800000)" id="int-btn-1800000" class="interval-btn"><i class="fa-regular fa-clock"></i> 30 minutes</button>
+            <button type="button" onclick="setUserInterval(3600000)" id="int-btn-3600000" class="interval-btn active"><i class="fa-regular fa-clock"></i> 1 hour</button>
           </div>
         </div>
 
-        <!-- Feeds List -->
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div class="flex justify-between items-center">
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-list text-cyan-400"></i> My Feeds
-            </h2>
-            <div class="flex items-center gap-2">
-              <button onclick="pollAllUserFeeds()" id="btn-poll-all" class="px-3 py-1.5 rounded-lg bg-cyan-700/80 hover:bg-cyan-600 text-xs font-semibold text-white transition flex items-center gap-1.5 border border-cyan-600 shadow-sm">
-                <i class="fa-solid fa-bolt"></i> Poll Feeds Now
-              </button>
-              <button onclick="fetchAll()" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition flex items-center gap-1.5 border border-gray-700">
-                <i class="fa-solid fa-rotate-right"></i> Refresh
-              </button>
+        <!-- My Feeds List Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-list" style="color: var(--primary);"></i> My Subscribed Feeds</div>
+              <div class="card-desc">Manage, pause, poll, or remove your active feed syndications.</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button onclick="pollAllFeeds()" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Poll Feeds Now</button>
+              <button onclick="loadFeedsTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
             </div>
           </div>
-          <div id="feeds-table-body" class="space-y-2">
-            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading feeds...</div>
+          <div id="feeds-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div class="empty-state">Loading feeds...</div>
           </div>
         </div>
       </section>
 
-      <!-- 3. POPULAR FEEDS TAB -->
-      <section id="tab-popular" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
+      <!-- TAB 3: POPULAR FEEDS CATALOG -->
+      <section id="tab-popular" class="tab-pane">
+        <div class="card">
           <div>
-            <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-star text-amber-400"></i> Popular Feeds Catalog
-            </h2>
-            <p class="text-xs text-gray-400 mt-1">One-click subscribe to top news, tech, AI, gaming, and developer feeds directly into any Discord channel.</p>
+            <div class="card-title"><i class="fa-solid fa-star" style="color: var(--amber);"></i> Popular Feeds Catalog</div>
+            <div class="card-desc">One-click subscribe to top news, tech, science, gaming, and developer feeds directly into any Discord channel.</div>
           </div>
-          <div id="presets-body" class="space-y-4">
-            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading popular feeds...</div>
+          <div id="presets-list-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div class="empty-state">Loading popular feeds catalog...</div>
           </div>
         </div>
       </section>
 
-      <!-- 4. SETTINGS TAB (ADMIN ONLY) -->
+      <!-- TAB 4: SETTINGS (ADMIN ONLY) -->
       ${
         isHost
-          ? `<section id="tab-settings" class="tab-content hidden space-y-6">
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <h2 class="text-base font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-sliders text-indigo-400"></i> Service Settings
-          </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
-              <span class="font-bold text-cyan-400">Public Base URL</span>
-              <p class="text-xs text-gray-400">Where this dashboard is reachable (used for OAuth redirect URIs).</p>
-              <input type="text" id="setting-base-url" placeholder="http://159.223.140.212:3131" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
-            </div>
-            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">
-              <div class="flex items-center justify-between">
-                <span class="font-bold text-cyan-400">Global Feed Posting Interval</span>
-                <span id="current-interval-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">1 hour</span>
-              </div>
-              <p class="text-xs text-gray-400">Default frequency for background feed checking.</p>
-              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1" id="poll-interval-buttons">
-                <button type="button" onclick="selectPollInterval(60000)" id="btn-interval-60000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-                  <i class="fa-solid fa-bolt text-[10px] mr-1 text-cyan-400"></i>1 min
-                </button>
-                <button type="button" onclick="selectPollInterval(600000)" id="btn-interval-600000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-                  <i class="fa-regular fa-clock text-[10px] mr-1 text-cyan-400"></i>10 min
-                </button>
-                <button type="button" onclick="selectPollInterval(1800000)" id="btn-interval-1800000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-                  <i class="fa-regular fa-clock text-[10px] mr-1 text-cyan-400"></i>30 min
-                </button>
-                <button type="button" onclick="selectPollInterval(3600000)" id="btn-interval-3600000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
-                  <i class="fa-regular fa-clock text-[10px] mr-1 text-cyan-400"></i>1 hour
-                </button>
-              </div>
+          ? `<section id="tab-settings" class="tab-pane">
+        <div class="card">
+          <div>
+            <div class="card-title"><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> System Settings</div>
+            <div class="card-desc">Configure public endpoints, OAuth redirection, and service defaults.</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Public Base URL</label>
+              <input type="text" id="cfg-base-url" placeholder="http://159.223.140.212:3131">
             </div>
           </div>
-          <div class="flex justify-end">
-            <button onclick="saveSettings()" class="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 font-semibold text-sm text-white transition flex items-center gap-2 shadow-lg shadow-cyan-600/20">
-              <i class="fa-solid fa-floppy-disk"></i> Save Settings
-            </button>
+          <div style="display: flex; justify-content: flex-end;">
+            <button onclick="saveSystemSettings()" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
           </div>
         </div>
 
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div class="flex items-center justify-between">
+        <div class="card">
+          <div class="card-header">
             <div>
-              <h2 class="text-base font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-users text-cyan-400"></i> Registered Users &amp; Discord App Team
-              </h2>
-              <p class="text-xs text-gray-400 mt-0.5">
-                Team permissions are synced from the Discord Developer Portal. All members of your Discord Application Team automatically receive administrative privileges.
-              </p>
+              <div class="card-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Registered Users &amp; Discord App Team</div>
+              <div class="card-desc">All Discord Application team members automatically have administrative privileges.</div>
             </div>
-            <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-people-group mr-1.5 text-cyan-400"></i>Discord App Team</span>
+            <button onclick="loadUsersList()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
           </div>
-          <div id="users-table-body" class="space-y-2">
-            <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading user list...</div>
-          </div>
-        </div>
-
-        <!-- Member Feed Health & Diagnostics Card -->
-        <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h2 class="text-base font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-stethoscope text-emerald-400"></i> Member Feed Health &amp; Diagnostics
-              </h2>
-              <p class="text-xs text-gray-400 mt-0.5">
-                Scan all member feeds across the system to detect unlinked channels, disabled endpoints, and feed delivery issues.
-              </p>
-            </div>
-            <button onclick="fetchFeedDiagnostics()" class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition border border-gray-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-              <i class="fa-solid fa-rotate-right"></i> Scan Feeds
-            </button>
-          </div>
-
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
-              <div class="text-[10px] uppercase font-semibold text-gray-500">Total Feeds</div>
-              <div id="diag-total-feeds" class="text-xl font-bold text-white mt-1">-</div>
-            </div>
-            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
-              <div class="text-[10px] uppercase font-semibold text-gray-500">Issues Detected</div>
-              <div id="diag-issues-count" class="text-xl font-bold text-amber-400 mt-1">-</div>
-            </div>
-            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
-              <div class="text-[10px] uppercase font-semibold text-gray-500">Unlinked Channels</div>
-              <div id="diag-missing-channels" class="text-xl font-bold text-red-400 mt-1">-</div>
-            </div>
-            <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
-              <div class="text-[10px] uppercase font-semibold text-gray-500">Healthy Feeds</div>
-              <div id="diag-healthy-count" class="text-xl font-bold text-emerald-400 mt-1">-</div>
-            </div>
-          </div>
-
-          <div class="space-y-2 pt-2">
-            <div class="text-xs font-semibold text-gray-300 flex items-center gap-2">
-              <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Member Feeds with Configuration Issues
-            </div>
-            <div id="diag-issues-body" class="space-y-2">
-              <div class="text-gray-500 py-4 text-center font-mono text-xs">Scanning feeds for issues...</div>
-            </div>
-          </div>
-
-          <!-- Live Feed Inspector -->
-          <div class="pt-4 border-t border-gray-800/80 space-y-3">
-            <div class="text-xs font-semibold text-gray-300 flex items-center gap-2">
-              <i class="fa-solid fa-magnifying-glass-chart text-cyan-400"></i> Live Feed Inspector
-            </div>
-            <p class="text-xs text-gray-400">Test any member feed or custom URL to inspect response headers, cloudflare challenges, and article parsing.</p>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div class="md:col-span-2">
-                <input type="text" id="diag-test-url" placeholder="https://example.com/feed.xml" class="w-full bg-black/40 border border-gray-800 rounded-xl p-3 text-xs font-mono text-white focus:outline-none focus:border-emerald-500">
-              </div>
-              <div>
-                <select id="diag-test-feed-select" onchange="selectDiagnosticFeed(this.value)" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500">
-                  <option value="">-- Quick select a feed --</option>
-                </select>
-              </div>
-              <div>
-                <button onclick="runLiveFeedDiagnostic()" class="w-full h-full min-h-[42px] px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 font-semibold text-xs text-white transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-700/20">
-                  <i class="fa-solid fa-stethoscope"></i> Run Diagnostic
-                </button>
-              </div>
-            </div>
-            <div id="diag-test-result" class="hidden p-4 rounded-xl text-xs font-mono bg-gray-900 border border-gray-800 space-y-3"></div>
+          <div id="users-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div class="empty-state">Loading users...</div>
           </div>
         </div>
       </section>`
           : ''
       }
-      ${renderDevToolsSection(isHost)}
     </main>
   </div>
 
-  <!-- Member Feeds Inspection Modal -->
-  <div id="member-feeds-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 hidden">
-    <div class="glass w-full max-w-3xl rounded-2xl border border-gray-700 max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
-      <div class="p-5 border-b border-gray-800 flex items-center justify-between">
-        <div class="flex items-center gap-2.5">
-          <div class="h-9 w-9 rounded-xl bg-cyan-950/60 border border-cyan-800 flex items-center justify-center text-cyan-400">
-            <i class="fa-solid fa-folder-tree"></i>
-          </div>
-          <div>
-            <h3 class="text-sm font-bold text-white flex items-center gap-2" id="modal-member-title">Member Feeds</h3>
-            <p class="text-xs text-gray-400" id="modal-member-subtitle">Inspect configuration and channel delivery</p>
-          </div>
-        </div>
-        <button onclick="closeMemberFeedsModal()" class="h-8 w-8 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </div>
-      <div id="modal-member-body" class="p-5 overflow-y-auto space-y-3 flex-1">
-        <div class="text-gray-500 py-6 text-center font-mono text-xs">Loading member feeds...</div>
-      </div>
-    </div>
-  </div>
-
   <script>
-    function escapeHtmlAttr(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    // Sanitizer
+    function esc(s) {
+      if (s === null || s === undefined) return '';
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
-    const escapeHtml = escapeHtmlAttr;
 
-    let discordGuildsCache = [];
-    let presetsCache = [];
-    let botInviteUrlCache = null;
-    let discordBotEnabled = false;
+    // State caches
+    let cachedChannels = [];
+    let cachedPresets = [];
+    let activeTabName = 'overview';
 
+    // Tab Switching
     function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('bg-cyan-600/20', 'text-cyan-300', 'border', 'border-cyan-500/30');
-        btn.classList.add('text-gray-400');
-      });
+      activeTabName = tabId;
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
       const target = document.getElementById('tab-' + tabId);
       const btn = document.getElementById('tab-btn-' + tabId);
-      if (target) target.classList.remove('hidden');
-      if (btn) {
-        btn.classList.add('bg-cyan-600/20', 'text-cyan-300', 'border', 'border-cyan-500/30');
-        btn.classList.remove('text-gray-400');
-      }
-      if (tabId === 'popular') {
-        fetchPresets();
-      }
+      if (target) target.classList.add('active');
+      if (btn) btn.classList.add('active');
+
+      // Lazy-load data when switching to a tab
+      if (tabId === 'overview') loadOverviewTab();
+      else if (tabId === 'feeds') loadFeedsTab();
+      else if (tabId === 'popular') loadPopularTab();
+      else if (tabId === 'settings') loadSettingsTab();
     }
 
+    // Theme Toggle
+    function initTheme() {
+      const saved = localStorage.getItem('helix-theme');
+      if (saved === 'light') {
+        document.documentElement.classList.add('light');
+        document.getElementById('theme-icon').className = 'fa-solid fa-sun';
+      }
+    }
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.toggle('light');
+      localStorage.setItem('helix-theme', isLight ? 'light' : 'dark');
+      document.getElementById('theme-icon').className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    }
+
+    // Auth & Logout
     async function logout() {
-      try {
-        await fetch('/api/auth/logout', { method: 'POST' });
-      } catch {}
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch {}
       window.location.href = '/login';
     }
 
-    async function fetchMe() {
+    function checkAuth(res) {
+      if (res.status === 401) {
+        if (confirm('You must be logged in with Discord to perform this action. Go to login page?')) {
+          window.location.href = '/login';
+        }
+        return false;
+      }
+      return true;
+    }
+
+    // User Profile
+    async function loadUserProfile() {
       try {
-        const res = await fetch('/api/auth/me');
+        const res = await fetch('/api/auth/me', { signal: AbortSignal.timeout(5000) });
         if (!res.ok) return;
         const data = await res.json();
         if (data && data.authenticated && data.user) {
-          const userEl = document.getElementById('user-name');
-          if (userEl) userEl.textContent = data.user.displayName || data.user.username || 'Discord User';
+          const el = document.getElementById('user-display-name');
+          if (el) el.textContent = data.user.displayName || data.user.username || 'Discord User';
         }
       } catch {}
     }
 
-    let userPollIntervalMs = 3600000;
-    const intervalLabels = {
-      60000: '1 minute',
-      600000: '10 minutes',
-      1800000: '30 minutes',
-      3600000: '1 hour'
-    };
-
-    function updateIntervalButtons(ms) {
-      userPollIntervalMs = ms;
-      const intervals = [60000, 600000, 1800000, 3600000];
-      intervals.forEach(val => {
-        const btn = document.getElementById('btn-user-' + val);
-        if (btn) {
-          if (val === ms) {
-            btn.className = 'interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-cyan-600 text-white border-cyan-500 shadow-sm';
-          } else {
-            btn.className = 'interval-btn px-4 py-2.5 rounded-xl text-xs font-semibold border transition flex items-center justify-center gap-2 bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700';
-          }
-        }
-      });
-      const badge = document.getElementById('user-interval-badge');
-      if (badge && intervalLabels[ms]) {
-        badge.textContent = intervalLabels[ms];
+    // Channels Dropdown Builder
+    function buildChannelOptionsHtml(currentVal) {
+      if (!cachedChannels || !cachedChannels.length) {
+        return '<option value="">-- No Discord Channels Available (Invite Bot) --</option>';
       }
-    }
-
-    async function setUserPollInterval(ms) {
-      updateIntervalButtons(ms);
-      try {
-        const res = await fetch('/api/feeds/interval', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pollIntervalMs: ms })
-        });
-        if (checkAuthError(res)) return;
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          alert(data.error || 'Failed to update posting interval');
-        }
-      } catch (err) {
-        alert('Failed to update interval: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
-    async function fetchUserPollInterval() {
-      try {
-        const res = await fetch('/api/feeds/interval');
-        if (res.status === 401 || res.status === 403) return;
-        const data = await res.json();
-        if (data && data.pollIntervalMs) {
-          updateIntervalButtons(data.pollIntervalMs);
-        }
-      } catch {}
-    }
-
-    function initTheme() {
-      const isLight = document.documentElement.classList.contains('light-theme');
-      updateThemeIcon(isLight);
-      try {
-        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-          if (!localStorage.getItem('helix-theme')) {
-            if (e.matches) {
-              document.documentElement.classList.remove('light-theme');
-              updateThemeIcon(false);
-            } else {
-              document.documentElement.classList.add('light-theme');
-              updateThemeIcon(true);
-            }
-          }
-        });
-      } catch {}
-    }
-
-    function toggleTheme() {
-      const isLight = document.documentElement.classList.toggle('light-theme');
-      try {
-        localStorage.setItem('helix-theme', isLight ? 'light' : 'dark');
-      } catch {}
-      updateThemeIcon(isLight);
-    }
-
-    function updateThemeIcon(isLight) {
-      const icon = document.getElementById('theme-toggle-icon');
-      if (icon) {
-        icon.className = isLight ? 'fa-solid fa-sun text-amber-500' : 'fa-solid fa-moon text-cyan-400';
-      }
-    }
-
-    function buildChannelOptionsHtml(currentValue) {
-      if (!discordGuildsCache || !discordGuildsCache.length) {
-        if (botInviteUrlCache) {
-          return '<option value="">-- No channels found (Invite bot to server first) --</option>';
-        }
-        return '<option value="">-- No Discord channels available --</option>';
-      }
-      let html = '<option value="">-- Select Discord channel --</option>';
-      discordGuildsCache.forEach(g => {
+      let html = '<option value="">-- Select Discord Channel --</option>';
+      cachedChannels.forEach(g => {
         const channels = g.channels || [];
         if (channels.length) {
-          html += '<optgroup label="' + escapeHtmlAttr(g.name) + '">';
+          html += '<optgroup label="' + esc(g.name) + '">';
           channels.forEach(ch => {
             const val = 'channel:' + ch.id;
-            const selected = (currentValue === val || currentValue === ch.id) ? 'selected' : '';
-            html += '<option value="' + val + '" ' + selected + '>#' + escapeHtmlAttr(ch.name) + '</option>';
+            const sel = (currentVal === val || currentVal === ch.id) ? 'selected' : '';
+            html += '<option value="' + val + '" ' + sel + '>#' + esc(ch.name) + '</option>';
           });
           html += '</optgroup>';
         }
@@ -669,60 +482,249 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       return html;
     }
 
-    function populateDestinationSelects() {
-      const feedsSel = document.getElementById('feed-channel');
-      if (feedsSel) feedsSel.innerHTML = buildChannelOptionsHtml(feedsSel.value);
-      refreshPresetChannelOptions();
-    }
-
-    function refreshPresetChannelOptions() {
-      document.querySelectorAll('select[data-preset-channel]').forEach(sel => {
-        sel.innerHTML = buildChannelOptionsHtml(sel.value);
-      });
-    }
-
-    async function fetchDiscordChannels() {
+    async function loadDiscordChannels() {
       try {
-        const res = await fetch('/api/discord/channels');
-        if (res.status === 401 || res.status === 403) return;
+        const res = await fetch('/api/discord/channels', { signal: AbortSignal.timeout(6000) });
+        if (!res.ok) return;
         const data = await res.json();
-        discordGuildsCache = data.guilds || [];
-        botInviteUrlCache = data.botInviteUrl;
-        discordBotEnabled = Boolean(data.botEnabled);
-        populateDestinationSelects();
-        const statChannels = document.getElementById('stat-channels');
-        if (statChannels) {
-          const total = discordGuildsCache.reduce((acc, g) => acc + (g.channels?.length || 0), 0);
-          statChannels.textContent = total;
+        cachedChannels = data.guilds || [];
+        
+        // Populate Add Feed dropdown
+        const sel = document.getElementById('add-feed-channel');
+        if (sel) sel.innerHTML = buildChannelOptionsHtml(sel.value);
+
+        // Update connected channels count on overview
+        const chCountEl = document.getElementById('stat-channels-count');
+        if (chCountEl) {
+          const total = cachedChannels.reduce((acc, g) => acc + (g.channels?.length || 0), 0);
+          chCountEl.textContent = total;
+        }
+
+        // Refresh any preset channel selects
+        document.querySelectorAll('select[data-preset-channel]').forEach(s => {
+          s.innerHTML = buildChannelOptionsHtml(s.value);
+        });
+      } catch {}
+    }
+
+    // TAB 1: OVERVIEW
+    async function loadOverviewTab() {
+      const activityEl = document.getElementById('activity-list');
+      const feedsCountEl = document.getElementById('stat-feeds-count');
+      try {
+        const res = await fetch('/api/stats', { signal: AbortSignal.timeout(5000) });
+        if (res.status === 401 || res.status === 403) {
+          if (activityEl) activityEl.innerHTML = '<div class="empty-state">Sign in with Discord to view recent activity.</div>';
+          if (feedsCountEl) feedsCountEl.textContent = '0';
+          return;
+        }
+        const data = await res.json();
+        if (feedsCountEl) feedsCountEl.textContent = data.myFeeds !== undefined ? data.myFeeds : '0';
+
+        if (activityEl && data.activity && data.activity.length) {
+          activityEl.innerHTML = data.activity.map(a => {
+            const color = a.level === 'error' ? '#ef4444' : a.level === 'warn' ? '#f59e0b' : 'var(--primary)';
+            return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8125rem;">' +
+              '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                '<i class="fa-solid fa-circle" style="color: ' + color + '; font-size: 0.5rem;"></i>' +
+                '<span style="color: var(--text);">' + esc(a.message) + '</span>' +
+              '</div>' +
+              '<span style="font-size: 0.6875rem; color: var(--text-dim); font-family: monospace;">' + esc(a.ts) + '</span>' +
+            '</div>';
+          }).join('');
+        } else if (activityEl) {
+          activityEl.innerHTML = '<div class="empty-state">No recent activity recorded yet.</div>';
+        }
+      } catch {
+        if (activityEl) activityEl.innerHTML = '<div class="empty-state">Could not load activity.</div>';
+      }
+    }
+
+    // TAB 2: FEEDS
+    async function loadFeedsTab() {
+      const container = document.getElementById('feeds-list-container');
+      const feedsCountEl = document.getElementById('stat-feeds-count');
+      
+      // Also load user interval and channels
+      loadUserInterval();
+      loadDiscordChannels();
+
+      try {
+        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
+        if (res.status === 401 || res.status === 403) {
+          if (container) container.innerHTML = '<div class="empty-state">Sign in with Discord to view and manage your feeds.</div>';
+          return;
+        }
+        const feeds = await res.json();
+        if (!Array.isArray(feeds) || !feeds.length) {
+          if (container) container.innerHTML = '<div class="empty-state">No feeds added yet. Add a feed above or enable popular feeds.</div>';
+          if (feedsCountEl) feedsCountEl.textContent = '0';
+          return;
+        }
+
+        if (feedsCountEl) feedsCountEl.textContent = feeds.length;
+        if (!container) return;
+
+        container.innerHTML = feeds.map(f => {
+          const statusBadge = f.enabled
+            ? '<span class="badge badge-green">Active</span>'
+            : '<span class="badge badge-gray">Paused</span>';
+          const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
+
+          return '<div class="feed-item">' +
+            '<div class="feed-details">' +
+              '<div class="feed-name-row">' +
+                '<span class="feed-name">' + esc(f.name) + '</span>' +
+                statusBadge +
+              '</div>' +
+              '<div class="feed-url">' + esc(f.url) + '</div>' +
+              '<div class="feed-meta">Delivery: ' + (f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked') + ' &middot; Checked: ' + lastPolled + '</div>' +
+            '</div>' +
+            '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
+              '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
+                '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
+              '</button>' +
+              '<button onclick="pollSingleFeed(' + f.id + ')" class="btn btn-ghost btn-sm" title="Poll now"><i class="fa-solid fa-rotate"></i></button>' +
+              '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch {
+        if (container) container.innerHTML = '<div class="empty-state">Failed to load feeds.</div>';
+      }
+    }
+
+    async function loadUserInterval() {
+      try {
+        const res = await fetch('/api/feeds/interval', { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.pollIntervalMs) {
+          updateIntervalUI(data.pollIntervalMs);
         }
       } catch {}
     }
 
-    function parseDestinationPayload(destination) {
-      if (!destination) return {};
-      if (destination.startsWith('channel:')) {
-        return { channelId: destination.replace('channel:', '') };
-      }
-      if (/^[0-9]+$/.test(destination)) {
-        return { channelId: destination };
-      }
-      return {};
+    function updateIntervalUI(ms) {
+      const labels = { 60000: '1 minute', 600000: '10 minutes', 1800000: '30 minutes', 3600000: '1 hour' };
+      const badge = document.getElementById('active-interval-badge');
+      if (badge && labels[ms]) badge.textContent = labels[ms];
+
+      [60000, 600000, 1800000, 3600000].forEach(val => {
+        const btn = document.getElementById('int-btn-' + val);
+        if (btn) {
+          if (val === ms) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
     }
 
-    async function fetchPresets() {
-      const container = document.getElementById('presets-body');
+    async function setUserInterval(ms) {
+      updateIntervalUI(ms);
       try {
-        const res = await fetch('/api/presets');
+        const res = await fetch('/api/feeds/interval', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pollIntervalMs: ms })
+        });
+        if (!checkAuth(res)) return;
+      } catch {}
+    }
+
+    async function submitAddFeed() {
+      const nameInput = document.getElementById('add-feed-name');
+      const urlInput = document.getElementById('add-feed-url');
+      const chanInput = document.getElementById('add-feed-channel');
+
+      const name = nameInput ? nameInput.value.trim() : '';
+      const url = urlInput ? urlInput.value.trim() : '';
+      const channelVal = chanInput ? chanInput.value : '';
+
+      if (!name || !url) return alert('Please enter both feed name and URL.');
+
+      let channelId = null;
+      if (channelVal.startsWith('channel:')) channelId = channelVal.replace('channel:', '');
+      else if (/^[0-9]+$/.test(channelVal)) channelId = channelVal;
+
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url, channelId, feedType: 'rss' })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          if (nameInput) nameInput.value = '';
+          if (urlInput) urlInput.value = '';
+          loadFeedsTab();
+        } else {
+          alert(data.error || 'Failed to add feed');
+        }
+      } catch (err) {
+        alert('Network error adding feed: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    async function toggleFeed(id, enabled) {
+      try {
+        const res = await fetch('/api/feeds/' + id, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+        if (!checkAuth(res)) return;
+        loadFeedsTab();
+      } catch {}
+    }
+
+    async function pollSingleFeed(id) {
+      try {
+        const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
+        if (!checkAuth(res)) return;
+        alert('Feed poll initiated.');
+        loadFeedsTab();
+      } catch {}
+    }
+
+    async function pollAllFeeds() {
+      try {
+        const res = await fetch('/api/feeds/poll-all', { method: 'POST' });
+        if (!checkAuth(res)) return;
+        alert('Polled all feeds successfully.');
+        loadFeedsTab();
+      } catch {}
+    }
+
+    async function deleteFeed(id) {
+      if (!confirm('Are you sure you want to remove this feed?')) return;
+      try {
+        const res = await fetch('/api/feeds/' + id, { method: 'DELETE' });
+        if (!checkAuth(res)) return;
+        loadFeedsTab();
+      } catch {}
+    }
+
+    // TAB 3: POPULAR FEEDS
+    async function loadPopularTab() {
+      const container = document.getElementById('presets-list-container');
+      if (!container) return;
+
+      // Ensure channels are available for the dropdowns
+      loadDiscordChannels();
+
+      try {
+        const res = await fetch('/api/presets', { signal: AbortSignal.timeout(6000) });
         if (!res.ok) {
-          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available at this time.</div>';
+          container.innerHTML = '<div class="empty-state">Could not load popular feeds catalog.</div>';
           return;
         }
         const presets = await res.json();
         if (!Array.isArray(presets) || !presets.length) {
-          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
+          container.innerHTML = '<div class="empty-state">No presets available.</div>';
           return;
         }
-        presetsCache = presets;
+        cachedPresets = presets;
 
         const groups = {};
         presets.forEach(p => {
@@ -730,632 +732,150 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           (groups[cat] = groups[cat] || []).push(p);
         });
 
-        if (!container) return;
-
         let fullHtml = '';
         for (const cat of Object.keys(groups)) {
           const items = groups[cat] || [];
           let itemsHtml = '';
           for (const p of items) {
             const addedBadge = p.alreadyAdded
-              ? '<span class="text-[10px] px-2 py-0.5 rounded bg-green-950 text-green-300 border border-green-800 font-semibold">Added</span>'
-              : '<span class="text-[10px] px-2 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">Popular</span>';
+              ? '<span class="badge badge-green">Added</span>'
+              : '<span class="badge badge-amber">Popular</span>';
             const btnHtml = p.alreadyAdded
-              ? '<button disabled class="px-3 py-2 rounded-lg bg-green-950/60 text-green-400 border border-green-800 cursor-default text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i>Added</button>'
-              : '<button onclick="enablePreset(\\'' + escapeHtmlAttr(p.id) + '\\', this)" class="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40 text-xs font-semibold transition shadow-sm shadow-amber-600/20"><i class="fa-solid fa-bolt mr-1"></i>Enable</button>';
+              ? '<button disabled class="btn btn-ghost btn-sm" style="opacity: 0.6; cursor: default;"><i class="fa-solid fa-check"></i> Added</button>'
+              : '<button onclick="enablePreset(\\'' + esc(p.id) + '\\', this)" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Enable</button>';
 
-            itemsHtml += '<div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/40 transition">' +
-              '<div class="space-y-1 min-w-0">' +
-                '<div class="flex items-center gap-2">' +
-                  '<span class="font-bold text-white text-sm">' + escapeHtmlAttr(p.name) + '</span>' +
+            itemsHtml += '<div class="feed-item">' +
+              '<div class="feed-details">' +
+                '<div class="feed-name-row">' +
+                  '<span class="feed-name">' + esc(p.name) + '</span>' +
                   addedBadge +
                 '</div>' +
-                '<div class="text-xs text-gray-400">' + escapeHtmlAttr(p.description) + '</div>' +
-                '<div class="text-[10px] text-gray-500 font-mono truncate">' + escapeHtmlAttr(p.url) + '</div>' +
+                '<div style="font-size: 0.8125rem; color: var(--text-muted);">' + esc(p.description) + '</div>' +
+                '<div class="feed-url">' + esc(p.url) + '</div>' +
               '</div>' +
-              '<div class="flex items-center gap-2 shrink-0">' +
-                '<select data-preset-channel class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">' +
-                  '<option value="">-- Select Discord channel --</option>' +
+              '<div style="display: flex; align-items: center; gap: 0.5rem; shrink-0;">' +
+                '<select data-preset-channel style="width: 200px; font-size: 0.75rem; padding: 0.4rem 0.6rem;">' +
+                  buildChannelOptionsHtml('') +
                 '</select>' +
                 btnHtml +
               '</div>' +
             '</div>';
           }
 
-          fullHtml += '<div class="mt-5 first:mt-0">' +
-            '<div class="text-xs font-bold uppercase tracking-wider text-amber-400/90 mb-2.5 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i>' + escapeHtmlAttr(cat) + '</div>' +
-            '<div class="space-y-2">' + itemsHtml + '</div>' +
+          fullHtml += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">' +
+            '<div style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; color: var(--amber); display: flex; align-items: center; gap: 0.375rem;"><i class="fa-solid fa-folder-open"></i> ' + esc(cat) + '</div>' +
+            '<div style="display: flex; flex-direction: column; gap: 0.5rem;">' + itemsHtml + '</div>' +
           '</div>';
         }
 
         container.innerHTML = fullHtml;
-        refreshPresetChannelOptions();
-      } catch (err) {
-        if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Error loading popular feeds catalog. Please refresh.</div>';
+      } catch {
+        container.innerHTML = '<div class="empty-state">Failed to load popular feeds catalog.</div>';
       }
     }
 
     async function enablePreset(presetId, btn) {
-      const preset = presetsCache.find(p => p.id === presetId);
+      const preset = cachedPresets.find(p => p.id === presetId);
       if (!preset) return;
-      const row = btn.closest('.flex');
+      const row = btn.closest('.feed-item');
       const sel = row ? row.querySelector('select[data-preset-channel]') : null;
-      const destination = sel ? sel.value : '';
-      if (!destination) {
-        if (botInviteUrlCache && (!discordGuildsCache || !discordGuildsCache.length)) {
-          return alert('Please invite the Discord bot to your server first.');
-        }
+      const rawVal = sel ? sel.value : '';
+
+      if (!rawVal) {
         return alert('Please select a destination Discord channel for "' + preset.name + '".');
       }
-      const dest = parseDestinationPayload(destination);
+
+      let channelId = null;
+      if (rawVal.startsWith('channel:')) channelId = rawVal.replace('channel:', '');
+      else if (/^[0-9]+$/.test(rawVal)) channelId = rawVal;
+
       try {
         const res = await fetch('/api/feeds', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: preset.name, url: preset.url, feedType: 'rss', ...dest })
+          body: JSON.stringify({ name: preset.name, url: preset.url, channelId, feedType: 'rss' })
         });
-        if (checkAuthError(res)) return;
+        if (!checkAuth(res)) return;
         const data = await res.json();
         if (res.ok) {
           alert('Enabled "' + preset.name + '".');
-          fetchPresets();
-          fetchFeeds();
+          loadPopularTab();
         } else {
           alert(data.error || 'Failed to enable feed');
         }
       } catch (err) {
-        alert('Network error while enabling feed: ' + (err && err.message ? err.message : String(err)));
+        alert('Network error enabling feed: ' + (err && err.message ? err.message : String(err)));
       }
     }
 
-    function checkAuthError(res) {
-      if (res.status === 401) {
-        if (confirm('You must be logged in with Discord to perform this action. Go to login page?')) {
-          window.location.href = '/login';
-        }
-        return true;
-      }
-      return false;
-    }
-
-    async function fetchFeeds() {
-      const container = document.getElementById('feeds-table-body');
-      const statFeeds = document.getElementById('stat-feeds');
+    // TAB 4: SETTINGS (ADMIN)
+    async function loadSettingsTab() {
+      const baseUrlInput = document.getElementById('cfg-base-url');
+      loadUsersList();
       try {
-        const res = await fetch('/api/feeds');
-        if (res.status === 401 || res.status === 403) {
-          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in with Discord to view and manage feeds.</div>';
-          if (statFeeds) statFeeds.textContent = '0';
-          return;
-        }
-        const feeds = await res.json();
-        if (!Array.isArray(feeds)) {
-          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in to view and manage feeds.</div>';
-          if (statFeeds) statFeeds.textContent = '0';
-          return;
-        }
-        if (!feeds.length) {
-          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No feeds yet. Add one above or enable popular feeds.</div>';
-          if (statFeeds) statFeeds.textContent = '0';
-          return;
-        }
-        if (statFeeds) statFeeds.textContent = feeds.length;
-        if (!container) return;
-        container.innerHTML = feeds.map(f => \`
-          <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-cyan-500/40 transition">
-            <div class="space-y-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
-                <span class="text-[10px] px-2 py-0.5 rounded \${f.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${f.enabled ? 'Enabled' : 'Disabled'}</span>
-              </div>
-              <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(f.url)}</div>
-              <div class="text-[10px] text-gray-500">Delivery: \${f.channelId ? \`Discord Channel (<#\${escapeHtmlAttr(f.channelId)}>)\` : 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <button onclick="toggleFeed(\${f.id}, \${f.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${f.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${f.enabled ? 'Pause' : 'Resume'}</button>
-              <button onclick="pollFeed(\${f.id})" title="Poll now" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid fa-rotate"></i></button>
-              <button onclick="deleteItem('feeds', \${f.id}, 'feed')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          </div>
-        \`).join('');
-      } catch {
-        if (container) container.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load feeds.</div>';
-      }
-    }
-
-    async function fetchStats() {
-      const feed = document.getElementById('activity-feed');
-      try {
-        const res = await fetch('/api/stats');
-        if (res.status === 401 || res.status === 403) {
-          if (feed) feed.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in with Discord to view recent activity.</div>';
-          return;
-        }
+        const res = await fetch('/api/settings', { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return;
         const data = await res.json();
-        if (feed && data.activity && data.activity.length) {
-          feed.innerHTML = data.activity.map(a => \`
-            <div class="p-3 rounded-xl bg-gray-900/90 border border-gray-800/80 flex justify-between items-center hover:border-cyan-500/40 transition">
-              <div class="flex items-center gap-2">
-                <span class="\${a.level === 'error' ? 'text-red-400' : a.level === 'warn' ? 'text-amber-400' : 'text-cyan-400'}"><i class="fa-solid \${a.level === 'error' ? 'fa-circle-exclamation' : a.level === 'warn' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i></span>
-                <span class="text-gray-300">\${escapeHtmlAttr(a.message)}</span>
-              </div>
-              <span class="text-[10px] text-gray-500 shrink-0">\${escapeHtmlAttr(a.ts)}</span>
-            </div>
-          \`).join('');
-        } else if (feed) {
-          feed.innerHTML = '<div class="text-gray-500 py-3 text-center">No activity recorded yet.</div>';
-        }
-      } catch {
-        if (feed) feed.innerHTML = '<div class="text-gray-500 py-3 text-center font-mono text-xs">No activity recorded yet.</div>';
-      }
-    }
-
-    let selectedPollIntervalMs = 3600000;
-
-    function selectPollInterval(ms) {
-      selectedPollIntervalMs = ms;
-      const intervals = [60000, 600000, 1800000, 3600000];
-      const labels = {
-        60000: '1 minute',
-        600000: '10 minutes',
-        1800000: '30 minutes',
-        3600000: '1 hour'
-      };
-      intervals.forEach(val => {
-        const btn = document.getElementById('btn-interval-' + val);
-        if (btn) {
-          if (val === ms) {
-            btn.className = 'interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-cyan-600 text-white border-cyan-500 shadow-sm';
-          } else {
-            btn.className = 'interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700';
-          }
-        }
-      });
-      const badge = document.getElementById('current-interval-badge');
-      if (badge && labels[ms]) {
-        badge.textContent = labels[ms];
-      }
-    }
-
-    async function fetchSettings() {
-      const baseUrlInput = document.getElementById('setting-base-url');
-      if (!baseUrlInput) return;
-      try {
-        const res = await fetch('/api/settings');
-        if (res.status === 401 || res.status === 403) return;
-        const data = await res.json();
-        baseUrlInput.value = data.publicBaseUrl || '';
-        if (data.pollIntervalMs) {
-          selectPollInterval(data.pollIntervalMs);
-        }
-        (data.oauthProviders || []).forEach(p => {
-          const enabledEl = document.getElementById('cfg-' + p.provider + '-enabled');
-          if (enabledEl) enabledEl.checked = p.enabled;
-        });
+        if (baseUrlInput) baseUrlInput.value = data.publicBaseUrl || '';
       } catch {}
     }
 
-    async function fetchAll() {
-      const tasks = [
-        fetchMe(),
-        fetchStats(),
-        fetchFeeds(),
-        fetchDiscordChannels(),
-        fetchPresets(),
-        fetchUserPollInterval(),
-      ];
-      if (document.getElementById('setting-base-url') || document.getElementById('users-table-body')) {
-        tasks.push(fetchSettings());
-        tasks.push(fetchUsers());
-        tasks.push(fetchFeedDiagnostics());
-      }
-      await Promise.allSettled(tasks);
-    }
-
-    async function addFeed() {
-      const nameEl = document.getElementById('feed-name');
-      const urlEl = document.getElementById('feed-url');
-      const destEl = document.getElementById('feed-channel');
-      const name = nameEl ? nameEl.value.trim() : '';
-      const url = urlEl ? urlEl.value.trim() : '';
-      const destination = destEl ? destEl.value : '';
-      if (!name || !url) return alert('Please provide a feed name and URL.');
-      const dest = parseDestinationPayload(destination);
-      try {
-        const res = await fetch('/api/feeds', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, url, feedType: 'rss', ...dest })
-        });
-        if (checkAuthError(res)) return;
-        const data = await res.json();
-        if (res.ok) {
-          if (nameEl) nameEl.value = '';
-          if (urlEl) urlEl.value = '';
-          fetchAll();
-        } else {
-          alert(data.error || 'Failed to add feed');
-        }
-      } catch (err) {
-        alert('Network error while adding feed: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
-    async function toggleFeed(id, enabled) {
-      try {
-        const res = await fetch('/api/feeds/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
-        if (checkAuthError(res)) return;
-        fetchAll();
-      } catch {}
-    }
-
-    async function pollFeed(id) {
-      try {
-        const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
-        if (checkAuthError(res)) return;
-        fetchAll();
-      } catch {}
-    }
-
-    async function pollAllUserFeeds() {
-      const btn = document.getElementById('btn-poll-all');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>Polling...';
-      }
-      try {
-        const res = await fetch('/api/feeds/poll-all', { method: 'POST' });
-        if (checkAuthError(res)) return;
-        const data = await res.json();
-        if (res.ok) {
-          alert('Polled ' + (data.count !== undefined ? data.count : 'all') + ' feed(s) successfully.');
-          fetchAll();
-        } else {
-          alert(data.error || 'Failed to poll feeds');
-        }
-      } catch (err) {
-        alert('Failed to poll feeds: ' + (err && err.message ? err.message : String(err)));
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<i class="fa-solid fa-bolt mr-1.5"></i>Poll Feeds Now';
-        }
-      }
-    }
-
-    async function deleteItem(collection, id, label) {
-      if (!confirm('Delete this ' + label + '?')) return;
-      try {
-        const res = await fetch('/api/' + collection + '/' + id, { method: 'DELETE' });
-        if (checkAuthError(res)) return;
-        fetchAll();
-      } catch {}
-    }
-
-    async function saveSettings() {
-      const baseUrlInput = document.getElementById('setting-base-url');
+    async function saveSystemSettings() {
+      const baseUrlInput = document.getElementById('cfg-base-url');
       const publicBaseUrl = baseUrlInput ? baseUrlInput.value.trim() : '';
       try {
         const res = await fetch('/api/settings', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ publicBaseUrl, pollIntervalMs: selectedPollIntervalMs })
+          body: JSON.stringify({ publicBaseUrl })
         });
-        if (checkAuthError(res)) return;
-        if (res.ok) {
-          alert('Settings saved.');
-        } else {
-          const errData = await res.json().catch(() => ({}));
-          alert(errData.error || 'Failed to save settings.');
-        }
-      } catch (err) {
-        alert('Network error while saving settings: ' + (err && err.message ? err.message : String(err)));
-      }
+        if (!checkAuth(res)) return;
+        if (res.ok) alert('Settings saved successfully.');
+        else alert('Failed to save settings.');
+      } catch {}
     }
 
-    async function fetchUsers() {
-      const container = document.getElementById('users-table-body');
+    async function loadUsersList() {
+      const container = document.getElementById('users-list-container');
       if (!container) return;
       try {
-        const res = await fetch('/api/settings/users');
-        if (res.status === 401 || res.status === 403) return;
+        const res = await fetch('/api/settings/users', { signal: AbortSignal.timeout(5000) });
+        if (!res.ok) return;
         const users = await res.json();
         if (!Array.isArray(users) || !users.length) {
-          container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No registered users found.</div>';
+          container.innerHTML = '<div class="empty-state">No registered users found.</div>';
           return;
         }
         container.innerHTML = users.map(u => {
-          const isTeamMember = u.role === 'owner' || u.role === 'admin';
-          const roleBadge = isTeamMember
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-crown text-amber-400"></i> App Team</span>'
-            : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 flex items-center gap-1 shrink-0"><i class="fa-solid fa-user text-gray-400"></i> Member</span>';
+          const roleBadge = (u.role === 'owner' || u.role === 'admin')
+            ? '<span class="badge badge-amber"><i class="fa-solid fa-crown"></i> App Team</span>'
+            : '<span class="badge badge-gray"><i class="fa-solid fa-user"></i> Member</span>';
 
-          const healthBadge = (u.feedsWithIssuesCount > 0)
-            ? \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950/80 text-amber-300 border border-amber-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i> \${u.feedsWithIssuesCount} issue\${u.feedsWithIssuesCount === 1 ? '' : 's'}</span>\`
-            : (u.feedCount > 0)
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800 flex items-center gap-1 shrink-0"><i class="fa-solid fa-circle-check text-emerald-400"></i> Healthy</span>'
-            : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-500 border border-gray-700 flex items-center gap-1 shrink-0">No feeds</span>';
-
-          const safeUserName = escapeHtmlAttr(u.displayName || 'Discord User').replace(/'/g, "\\\\'");
-
-          return \`
-            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-gray-700 transition">
-              <div class="space-y-1 min-w-0">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(u.displayName || 'Discord User')}</span>
-                  \${roleBadge}
-                  \${healthBadge}
-                </div>
-                <div class="text-[10px] text-gray-500 font-mono">User ID: #\${u.id} · Feeds: \${u.feedCount} · Joined: \${new Date(u.createdAt).toLocaleDateString()}</div>
-              </div>
-              <div class="flex items-center gap-2 flex-wrap shrink-0">
-                <button onclick="inspectUserFeeds(\${u.id}, '\${safeUserName}')" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-cyan-950/80 text-cyan-300 hover:text-cyan-200 text-xs border border-gray-700 hover:border-cyan-700 transition font-semibold flex items-center gap-1.5 shrink-0">
-                  <i class="fa-solid fa-stethoscope text-cyan-400"></i> Inspect Feeds
-                </button>
-              </div>
-            </div>\`;
+          return '<div class="feed-item">' +
+            '<div class="feed-details">' +
+              '<div class="feed-name-row">' +
+                '<span class="feed-name">' + esc(u.displayName || 'Discord User') + '</span>' +
+                roleBadge +
+              '</div>' +
+              '<div class="feed-meta">User ID: #' + u.id + ' &middot; Feeds: ' + u.feedCount + '</div>' +
+            '</div>' +
+          '</div>';
         }).join('');
-      } catch (err) {
-        container.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load users.</div>';
+      } catch {
+        if (container) container.innerHTML = '<div class="empty-state">Failed to load users list.</div>';
       }
     }
 
-    async function inspectUserFeeds(userId, userName) {
-      const modal = document.getElementById('member-feeds-modal');
-      const title = document.getElementById('modal-member-title');
-      const subtitle = document.getElementById('modal-member-subtitle');
-      const body = document.getElementById('modal-member-body');
-      if (!modal || !body) return;
-
-      if (title) title.textContent = 'Member Feeds: ' + userName;
-      if (subtitle) subtitle.textContent = 'User #' + userId + ' · Feeds and channel delivery diagnostics';
-      body.innerHTML = '<div class="text-gray-400 py-6 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading member feeds...</div>';
-      modal.classList.remove('hidden');
-
-      try {
-        const res = await fetch('/api/settings/users/' + userId + '/feeds');
-        if (res.status === 401 || res.status === 403) {
-          body.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">Unauthorized. Admin permissions required.</div>';
-          return;
-        }
-        const data = await res.json();
-        if (!res.ok) {
-          body.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">' + escapeHtmlAttr(data.error || 'Failed to load feeds') + '</div>';
-          return;
-        }
-
-        const feeds = data.feeds || [];
-        if (!feeds.length) {
-          body.innerHTML = '<div class="p-6 rounded-xl bg-gray-900 border border-gray-800 text-gray-400 text-center font-mono text-xs">This member has not configured any feeds yet.</div>';
-          return;
-        }
-
-        body.innerHTML = feeds.map(f => {
-          const statusBadge = f.enabled
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-green-950 text-green-300 border border-green-800">Active</span>'
-            : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700">Paused</span>';
-
-          const channelBadge = !f.channelId
-            ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 flex items-center gap-1"><i class="fa-solid fa-link-slash"></i> No Channel</span>'
-            : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 flex items-center gap-1"><i class="fa-solid fa-link"></i> \${escapeHtmlAttr(f.channelName || '#' + f.channelId)}</span>\`;
-
-          const issuesHtml = (f.issues && f.issues.length)
-            ? \`<div class="p-3 rounded-lg bg-amber-950/40 border border-amber-800/80 text-amber-300 text-xs space-y-1">
-                <div class="font-bold flex items-center gap-1.5"><i class="fa-solid fa-triangle-exclamation"></i> Diagnostics:</div>
-                <ul class="list-disc list-inside space-y-0.5 text-[11px] text-amber-200/90">
-                  \${f.issues.map(iss => \`<li>\${escapeHtmlAttr(iss)}</li>\`).join('')}
-                </ul>
-              </div>\`
-            : '';
-
-          const safeUrl = escapeHtmlAttr(f.url).replace(/'/g, "\\\\'");
-
-          return \`
-            <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-300 border border-gray-700 uppercase">\${escapeHtmlAttr(f.feedType)}</span>
-                  \${statusBadge}
-                  \${channelBadge}
-                </div>
-                <button onclick="testFeedFromModal('\${safeUrl}')" class="px-3 py-1.5 rounded-lg bg-emerald-800/80 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                  <i class="fa-solid fa-stethoscope"></i> Test in Inspector
-                </button>
-              </div>
-              <div class="text-xs text-gray-400 font-mono truncate bg-black/40 p-2 rounded-lg border border-gray-800">\${escapeHtmlAttr(f.url)}</div>
-              <div class="text-[10px] text-gray-500 font-mono">Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled'}</div>
-              \${issuesHtml}
-            </div>\`;
-        }).join('');
-      } catch (err) {
-        body.innerHTML = '<div class="p-4 rounded-xl bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">Failed to fetch member feeds: ' + escapeHtmlAttr(err.message) + '</div>';
-      }
-    }
-
-    function closeMemberFeedsModal() {
-      const modal = document.getElementById('member-feeds-modal');
-      if (modal) modal.classList.add('hidden');
-    }
-
-    function testFeedFromModal(feedUrl) {
-      closeMemberFeedsModal();
-      switchTab('settings');
-      testSpecificFeed(feedUrl);
-    }
-
-    let diagnosticsFeedsCache = [];
-
-    async function fetchFeedDiagnostics() {
-      const issuesBody = document.getElementById('diag-issues-body');
-      if (!issuesBody) return;
-      try {
-        const res = await fetch('/api/settings/diagnostics/feeds');
-        if (res.status === 401 || res.status === 403) return;
-        const data = await res.json();
-        if (!res.ok) return;
-
-        diagnosticsFeedsCache = data.allFeeds || [];
-
-        const totalEl = document.getElementById('diag-total-feeds');
-        const issuesEl = document.getElementById('diag-issues-count');
-        const missingChannelsEl = document.getElementById('diag-missing-channels');
-        const healthyEl = document.getElementById('diag-healthy-count');
-
-        if (totalEl) totalEl.textContent = data.totalFeeds;
-        if (issuesEl) issuesEl.textContent = data.issuesCount;
-        if (missingChannelsEl) missingChannelsEl.textContent = data.stats?.missingChannelCount ?? 0;
-        if (healthyEl) healthyEl.textContent = data.healthyFeedsCount;
-
-        const selectEl = document.getElementById('diag-test-feed-select');
-        if (selectEl && data.allFeeds) {
-          selectEl.innerHTML = '<option value="">-- Quick select a feed (' + data.allFeeds.length + ' total) --</option>' +
-            data.allFeeds.map(f => \`<option value="\${escapeHtmlAttr(f.url)}">\${escapeHtmlAttr(f.name)} (\${escapeHtmlAttr(f.userDisplayName || 'User')})</option>\`).join('');
-        }
-
-        const issues = data.feedsWithIssues || [];
-        if (!issues.length) {
-          issuesBody.innerHTML = \`<div class="p-4 rounded-xl bg-green-950/40 border border-green-800/80 text-green-300 text-xs flex items-center gap-2.5 font-mono"><i class="fa-solid fa-circle-check text-emerald-400 text-base shrink-0"></i><span>All \${data.totalFeeds} member feeds across the system are configured correctly with active channels.</span></div>\`;
-          return;
-        }
-
-        issuesBody.innerHTML = issues.map(item => {
-          const safeUrl = escapeHtmlAttr(item.feedUrl).replace(/'/g, "\\\\'");
-          return \`
-            <div class="p-4 rounded-xl bg-gray-900 border border-amber-900/40 hover:border-amber-700/60 transition space-y-3">
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="font-bold text-white text-sm">\${escapeHtmlAttr(item.feedName)}</span>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-400 border border-gray-700 uppercase">\${escapeHtmlAttr(item.feedType)}</span>
-                  <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950/70 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-user mr-1 text-[9px]"></i>\${escapeHtmlAttr(item.userDisplayName || 'Member')}</span>
-                </div>
-                <button onclick="testSpecificFeed('\${safeUrl}')" class="px-3 py-1.5 rounded-lg bg-emerald-800/70 hover:bg-emerald-700 text-emerald-200 text-xs font-semibold transition border border-emerald-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
-                  <i class="fa-solid fa-stethoscope"></i> Test in Inspector
-                </button>
-              </div>
-              <div class="text-xs text-gray-400 font-mono truncate bg-black/40 p-2 rounded-lg border border-gray-800">\${escapeHtmlAttr(item.feedUrl)}</div>
-              <div class="space-y-2 pt-1">
-                \${item.problems.map(p => {
-                  const badgeClass = p.severity === 'error'
-                    ? 'bg-red-950/80 text-red-300 border-red-800'
-                    : p.severity === 'warning'
-                    ? 'bg-amber-950/80 text-amber-300 border-amber-800'
-                    : 'bg-blue-950/80 text-blue-300 border-blue-800';
-                  return \`
-                    <div class="p-2.5 rounded-lg bg-black/30 border border-gray-800 text-xs space-y-1">
-                      <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-semibold border uppercase \${badgeClass}">\${p.title}</span>
-                        <span class="text-gray-300">\${escapeHtmlAttr(p.description)}</span>
-                      </div>
-                      <div class="text-[11px] text-cyan-300/90 pl-1"><i class="fa-solid fa-arrow-right mr-1 text-[10px]"></i>\${escapeHtmlAttr(p.recommendation)}</div>
-                    </div>\`;
-                }).join('')}
-              </div>
-            </div>\`;
-        }).join('');
-      } catch (err) {
-        issuesBody.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load feed diagnostics.</div>';
-      }
-    }
-
-    function selectDiagnosticFeed(url) {
-      if (url) {
-        const input = document.getElementById('diag-test-url');
-        if (input) input.value = url;
-      }
-    }
-
-    function testSpecificFeed(url) {
-      const input = document.getElementById('diag-test-url');
-      if (input) input.value = url;
-      runLiveFeedDiagnostic();
-    }
-
-    async function runLiveFeedDiagnostic() {
-      const urlInput = document.getElementById('diag-test-url');
-      const outBox = document.getElementById('diag-test-result');
-      if (!urlInput || !outBox) return;
-
-      const url = urlInput.value.trim();
-      if (!url) return alert('Enter or select a feed URL to inspect.');
-
-      outBox.classList.remove('hidden');
-      outBox.innerHTML = '<div class="text-gray-400 py-3 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Testing feed connectivity, Cloudflare challenges, and article parsing...</div>';
-
-      try {
-        const res = await fetch('/api/settings/diagnostics/feed-check', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          outBox.innerHTML = '<div class="p-3 rounded-lg bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>' + escapeHtmlAttr(data.error || 'Diagnostic check failed') + '</div>';
-          return;
-        }
-
-        const statusPill = data.status === 200
-          ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-green-950 text-green-300 border border-green-800 font-bold">200 OK</span>'
-          : \`<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 text-red-300 border border-red-800 font-bold">\${data.status} \${escapeHtmlAttr(data.statusText || 'Error')}</span>\`;
-
-        const challengePill = data.challenged
-          ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-800 flex items-center gap-1 font-bold"><i class="fa-solid fa-shield-virus text-amber-400"></i> Cloudflare Block</span>'
-          : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-800 flex items-center gap-1 font-bold"><i class="fa-solid fa-shield-halved text-emerald-400"></i> Passed (No Block)</span>';
-
-        const parsePill = data.isXml
-          ? '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800">XML RSS/Atom</span>'
-          : '<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-950 text-purple-300 border border-purple-800">HTML Webpage</span>';
-
-        let latestEntryHtml = '';
-        if (data.latestEntry) {
-          latestEntryHtml = \`
-            <div class="p-3 rounded-lg bg-black/40 border border-gray-800 space-y-1">
-              <div class="text-[10px] uppercase font-semibold text-gray-500">Latest Discovered Article:</div>
-              <div class="text-xs font-bold text-white">\${escapeHtmlAttr(data.latestEntry.title || 'Untitled')}</div>
-              <div class="text-[11px] text-gray-400 font-mono truncate">\${escapeHtmlAttr(data.latestEntry.link || '')}</div>
-              \${data.latestEntry.publishedAt ? \`<div class="text-[10px] text-gray-500 font-mono">Published: \${escapeHtmlAttr(data.latestEntry.publishedAt)}</div>\` : ''}
-            </div>\`;
-        }
-
-        let recommendationsHtml = '';
-        if (data.recommendations && data.recommendations.length) {
-          recommendationsHtml = \`
-            <div class="p-3 rounded-lg bg-amber-950/40 border border-amber-800/80 space-y-1 text-xs">
-              <div class="font-bold text-amber-300 flex items-center gap-1.5"><i class="fa-solid fa-lightbulb"></i> Recommendations:</div>
-              <ul class="list-disc list-inside text-amber-200/90 text-[11px] space-y-0.5">
-                \${data.recommendations.map(r => \`<li>\${escapeHtmlAttr(r)}</li>\`).join('')}
-              </ul>
-            </div>\`;
-        }
-
-        outBox.innerHTML = \`
-          <div class="space-y-3">
-            <div class="flex items-center justify-between gap-2 flex-wrap pb-2 border-b border-gray-800">
-              <div class="flex items-center gap-2 flex-wrap">
-                \${statusPill}
-                \${challengePill}
-                \${parsePill}
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-gray-800 text-gray-300 border border-gray-700">\${data.entriesCount} article\${data.entriesCount === 1 ? '' : 's'} parsed</span>
-              </div>
-              <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(data.contentType || 'unknown')}</div>
-            </div>
-            \${data.feedTitle ? \`<div class="text-xs font-bold text-white"><span class="text-gray-400 font-normal">Feed Title:</span> \${escapeHtmlAttr(data.feedTitle)}</div>\` : ''}
-            \${data.parseError ? \`<div class="p-2.5 rounded-lg bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono"><i class="fa-solid fa-circle-exclamation mr-1.5"></i>Parse Warning: \${escapeHtmlAttr(data.parseError)}</div>\` : ''}
-            \${latestEntryHtml}
-            \${recommendationsHtml}
-          </div>\`;
-      } catch (err) {
-        outBox.innerHTML = '<div class="p-3 rounded-lg bg-red-950/60 border border-red-800 text-red-300 text-xs font-mono">Diagnostic request failed: ' + escapeHtmlAttr(err.message) + '</div>';
-      }
-    }
-
-    ${renderDevToolsScript()}
-
+    // Initialize on page load
     initTheme();
-    fetchAll();
-    const urlTab = new URLSearchParams(window.location.search).get('tab');
-    if (urlTab) switchTab(urlTab);
-    setInterval(fetchStats, 10000);
+    loadUserProfile();
+    loadOverviewTab();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTab = urlParams.get('tab');
+    if (initialTab && initialTab !== 'overview') {
+      switchTab(initialTab);
+    }
   </script>
 </body>
 </html>`;
