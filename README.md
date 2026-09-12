@@ -116,12 +116,6 @@ services:
     restart: unless-stopped
 ```
 
-### One-Click Heroku Deployment
-
-Deploy instantly to Heroku with one click:
-
-[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS)
-
 ### Linux systemd Service
 
 Install HELIX RSS as a managed 24/7 background systemd service:
