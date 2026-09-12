@@ -78,6 +78,7 @@ export class FeedRepository {
     fields: {
       name?: string;
       url?: string;
+      feedType?: FeedType;
       channelId?: string | null;
       guildId?: string | null;
       enabled?: number;
@@ -89,15 +90,25 @@ export class FeedRepository {
       ...current,
       name: fields.name ?? current.name,
       url: fields.url ?? current.url,
+      feedType: fields.feedType ?? current.feedType,
       channelId: fields.channelId !== undefined ? fields.channelId : current.channelId,
       guildId: fields.guildId !== undefined ? fields.guildId : current.guildId,
       enabled: fields.enabled ?? current.enabled,
     };
     this.db.raw
       .prepare(
-        'UPDATE feeds SET name = ?, url = ?, channel_id = ?, guild_id = ?, enabled = ? WHERE id = ? AND user_id = ?',
+        'UPDATE feeds SET name = ?, url = ?, feed_type = ?, channel_id = ?, guild_id = ?, enabled = ? WHERE id = ? AND user_id = ?',
       )
-      .run(updated.name, updated.url, updated.channelId ?? null, updated.guildId ?? null, updated.enabled, id, userId);
+      .run(
+        updated.name,
+        updated.url,
+        updated.feedType,
+        updated.channelId ?? null,
+        updated.guildId ?? null,
+        updated.enabled,
+        id,
+        userId,
+      );
     this.state.putFeed(updated);
     return updated;
   }

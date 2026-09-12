@@ -164,6 +164,7 @@ export class Repository {
     fields: {
       name?: string;
       url?: string;
+      feedType?: FeedType;
       channelId?: string | null;
       guildId?: string | null;
       enabled?: number;

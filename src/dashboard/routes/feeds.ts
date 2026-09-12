@@ -127,6 +127,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const body = (await readBodyJson(req)) as {
       name?: string;
       url?: string;
+      feedType?: FeedType;
       channelId?: string | null;
       enabled?: boolean;
     };
@@ -154,6 +155,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const feed = d.repo.updateFeed(userId, id, {
       name: body.name?.trim(),
       url: body.url?.trim(),
+      feedType: body.feedType,
       channelId: body.channelId !== undefined ? body.channelId?.trim() || null : undefined,
       guildId,
       enabled: body.enabled === undefined ? undefined : body.enabled ? 1 : 0,
