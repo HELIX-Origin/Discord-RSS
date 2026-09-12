@@ -230,8 +230,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <button onclick="switchTab('freegames')" id="tab-btn-freegames" class="tab-btn">
           <i class="fa-solid fa-gift" style="color: #10b981;"></i> Free Games Feeds
         </button>
-        <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn">
-          <i class="fa-solid fa-star"></i> Popular Feeds
+        <button onclick="switchTab('news')" id="tab-btn-news" class="tab-btn">
+          <i class="fa-solid fa-newspaper" style="color: var(--amber);"></i> News Feeds
         </button>
         ${
           isHost
@@ -499,15 +499,15 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-      <!-- TAB 4: POPULAR FEEDS CATALOG -->
-      <section id="tab-popular" class="tab-pane">
+      <!-- TAB 4: NEWS FEEDS CATALOG -->
+      <section id="tab-news" class="tab-pane">
         <div class="card">
           <div>
-            <div class="card-title"><i class="fa-solid fa-star" style="color: var(--amber);"></i> Popular Feeds Catalog</div>
-            <div class="card-desc">One-click subscribe to top news, tech, science, gaming, and developer feeds directly into any Discord channel.</div>
+            <div class="card-title"><i class="fa-solid fa-newspaper" style="color: var(--amber);"></i> News Feeds Catalog</div>
+            <div class="card-desc">One-click subscribe to top news, tech, gaming, science, and developer feeds directly into any Discord channel.</div>
           </div>
           <div id="presets-list-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
-            <div class="empty-state">Loading popular feeds catalog...</div>
+            <div class="empty-state">Loading news feeds catalog...</div>
           </div>
         </div>
       </section>
@@ -578,7 +578,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       else if (tabId === 'feeds') loadFeedsTab();
       else if (tabId === 'reddit') loadRedditTab();
       else if (tabId === 'freegames') loadFreeGamesTab();
-      else if (tabId === 'popular') loadPopularTab();
+      else if (tabId === 'news' || tabId === 'popular') loadNewsTab();
       else if (tabId === 'settings') loadSettingsTab();
     }
 
@@ -729,7 +729,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         }
         const feeds = await res.json();
         if (!Array.isArray(feeds) || !feeds.length) {
-          if (container) container.innerHTML = '<div class="empty-state">No feeds added yet. Add a feed above or enable popular feeds.</div>';
+          if (container) container.innerHTML = '<div class="empty-state">No feeds added yet. Add a feed above or explore News Feeds presets.</div>';
           if (feedsCountEl) feedsCountEl.textContent = '0';
           return;
         }
@@ -1304,8 +1304,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    // TAB 4: POPULAR FEEDS
-    async function loadPopularTab() {
+    // TAB 4: NEWS FEEDS
+    async function loadNewsTab() {
       const container = document.getElementById('presets-list-container');
       if (!container) return;
 
@@ -1315,7 +1315,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       try {
         const res = await fetch('/api/presets', { signal: AbortSignal.timeout(6000) });
         if (!res.ok) {
-          container.innerHTML = '<div class="empty-state">Could not load popular feeds catalog.</div>';
+          container.innerHTML = '<div class="empty-state">Could not load news feeds catalog.</div>';
           return;
         }
         const presets = await res.json();
@@ -1338,10 +1338,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           for (const p of items) {
             const addedBadge = p.alreadyAdded
               ? '<span class="badge badge-green">Added</span>'
-              : '<span class="badge badge-amber">Popular</span>';
+              : '<span class="badge badge-amber">Preset</span>';
             const btnHtml = p.alreadyAdded
               ? '<button disabled class="btn btn-ghost btn-sm" style="opacity: 0.6; cursor: default;"><i class="fa-solid fa-check"></i> Added</button>'
-              : '<button onclick="enablePreset(\\'' + esc(p.id) + '\\', this)" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Enable</button>';
+              : '<button data-preset-id="' + esc(p.id) + '" onclick="enablePreset(this.dataset.presetId, this)" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Enable</button>';
 
             itemsHtml += '<div class="feed-item">' +
               '<div class="feed-details">' +
@@ -1369,7 +1369,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
         container.innerHTML = fullHtml;
       } catch {
-        container.innerHTML = '<div class="empty-state">Failed to load popular feeds catalog.</div>';
+        container.innerHTML = '<div class="empty-state">Failed to load news feeds catalog.</div>';
       }
     }
 

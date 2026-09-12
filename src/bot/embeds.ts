@@ -211,7 +211,7 @@ export function feedEmbed(args: {
   const fields: Array<{ name: string; value: string; inline?: boolean }> = [];
 
   // For pure Reddit image feeds (feedType === 'reddit'), suppress HTML description text so only image & title show.
-  // For standard RSS feeds (including Popular Feeds catalog and Reddit text feeds), format clean prose and put links in dedicated fields.
+  // For standard RSS feeds (including News Feeds catalog and Reddit text feeds), format clean prose and put links in dedicated fields.
   if (!isRedditImageFeed) {
     const { description: cleanDesc, links } = extractDescriptionAndLinks(description ?? null, STANDARD_DESC_LENGTH);
     if (cleanDesc) {

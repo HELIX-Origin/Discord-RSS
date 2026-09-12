@@ -38,9 +38,9 @@ For websites without an RSS feed (e.g. documentation updates, store restocks, st
 
 ---
 
-## 🌟 Popular Feed Presets
+## 📰 News Feed Presets
 
-The **Popular Feeds** tab provides one-click templates:
+The **News Feeds** tab provides one-click templates:
 
 - **GitHub Releases**: Track releases for any repository (`https://github.com/:owner/:repo/releases.atom`).
 - **YouTube Channels**: Monitor new videos for any channel (`https://www.youtube.com/feeds/videos.xml?channel_id=:id`).
