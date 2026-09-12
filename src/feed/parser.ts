@@ -41,7 +41,7 @@ function isLikelyImageUrl(url: string): boolean {
   return /\.(jpe?g|png|webp|gif|svg|avif)($|\?)/i.test(clean);
 }
 
-function isTrackingPixel(url: string): boolean {
+export function isTrackingPixel(url: string): boolean {
   const lower = url.toLowerCase();
   return (
     lower.includes('1x1') ||

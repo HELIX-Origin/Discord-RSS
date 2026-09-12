@@ -1,4 +1,4 @@
-import { decodeHtmlEntities, extractImageFromHtml } from '../feed/parser.js';
+import { decodeHtmlEntities, extractImageFromHtml, isTrackingPixel } from '../feed/parser.js';
 import type { DiscordEmbed } from './types.js';
 
 export type Embed = DiscordEmbed;
@@ -64,8 +64,19 @@ export function isValidEmbedImageUrl(url: string | null | undefined): boolean {
   return true;
 }
 
-export function formatMessageDescription(raw: string | null, targetLength = STANDARD_DESC_LENGTH): string | null {
-  if (!raw) return null;
+export interface ExtractedLink {
+  label: string;
+  url: string;
+}
+
+export function extractDescriptionAndLinks(
+  raw: string | null,
+  targetLength = STANDARD_DESC_LENGTH,
+): { description: string | null; links: ExtractedLink[] } {
+  if (!raw) return { description: null, links: [] };
+
+  const links: ExtractedLink[] = [];
+  const seenUrls = new Set<string>();
 
   // 1. Remove style, script, noscript, svg, iframe, video, audio
   let text = raw
@@ -80,24 +91,42 @@ export function formatMessageDescription(raw: string | null, targetLength = STAN
   // 2. Remove tracking pixels / 1x1 images
   text = text.replace(/<img[^>]*?(?:width=["']1["']|height=["']1["']|tracking|feedburner)[^>]*>/gi, '');
 
-  // 3. Convert HTML links <a href="url">text</a> to clean markdown [label](url)
+  // 3. Extract <a> links and clean them out of the message body prose into structured fields
   text = text.replace(
     /<a\s+[^>]*?href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi,
     (_match, href: string, inner: string) => {
-      const url = href.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) return '';
+      const cleanUrl = href.trim();
+      if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) return '';
+
       const cleanInner = inner
         .replace(/<[^>]+>/g, '')
         .replace(/\s+/g, ' ')
         .trim();
       const decodedInner = decodeHtmlEntities(cleanInner);
-      let label = decodedInner;
-      if (!label || label.startsWith('http://') || label.startsWith('https://') || label === url) {
-        label = formatReadableUrlLabel(url);
-      } else if (label.length > 50) {
-        label = `${label.slice(0, 47).trimEnd()}...`;
+
+      const lowerInner = decodedInner.toLowerCase();
+      const isBoilerplate =
+        lowerInner === '[link]' ||
+        lowerInner === '[comments]' ||
+        lowerInner === 'link' ||
+        lowerInner === 'comments' ||
+        lowerInner === 'read more' ||
+        lowerInner === 'continue reading' ||
+        lowerInner.startsWith('http://') ||
+        lowerInner.startsWith('https://');
+
+      let label = isBoilerplate || !decodedInner ? formatReadableUrlLabel(cleanUrl) : decodedInner;
+      if (label.length > 45) {
+        label = `${label.slice(0, 42).trimEnd()}...`;
       }
-      return `[${label}](${url})`;
+
+      if (!seenUrls.has(cleanUrl) && !isTrackingPixel(cleanUrl)) {
+        seenUrls.add(cleanUrl);
+        links.push({ label, url: cleanUrl });
+      }
+
+      // If it was boilerplate like "[comments]" or raw URL, remove from prose; else keep the clean inner words
+      return isBoilerplate ? ' ' : decodedInner;
     },
   );
 
@@ -114,17 +143,18 @@ export function formatMessageDescription(raw: string | null, targetLength = STAN
   // 6. Decode HTML entities
   text = decodeHtmlEntities(text);
 
-  // 7. Convert standalone plain-text URLs to readable markdown links
-  text = text.replace(/(^|[^\](])(https?:\/\/[^\s<>)\]]+)/gi, (_match, prefix: string, rawUrl: string) => {
+  // 7. Remove standalone raw URLs from the prose text (so links only live in dedicated fields)
+  text = text.replace(/https?:\/\/[^\s<>)\]]+/gi, (rawUrl) => {
     let cleanUrl = rawUrl;
-    let trailing = '';
     const punctMatch = cleanUrl.match(/[.,;:!?)]+$/);
     if (punctMatch) {
-      trailing = punctMatch[0];
-      cleanUrl = cleanUrl.slice(0, -trailing.length);
+      cleanUrl = cleanUrl.slice(0, -punctMatch[0].length);
     }
-    const label = formatReadableUrlLabel(cleanUrl);
-    return `${prefix}[${label}](${cleanUrl})${trailing}`;
+    if (!seenUrls.has(cleanUrl) && !isTrackingPixel(cleanUrl)) {
+      seenUrls.add(cleanUrl);
+      links.push({ label: formatReadableUrlLabel(cleanUrl), url: cleanUrl });
+    }
+    return '';
   });
 
   // 8. Clean boilerplate & whitespace
@@ -137,27 +167,19 @@ export function formatMessageDescription(raw: string | null, targetLength = STAN
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  if (!text) return null;
+  if (!text) return { description: null, links };
 
   // 9. Standardize description length to achieve uniform embed card sizes
   if (text.length > targetLength) {
     const cutoff = text.lastIndexOf(' ', targetLength);
     text = `${text.slice(0, cutoff > targetLength * 0.6 ? cutoff : targetLength).trimEnd()}…`;
-
-    // Balance markdown link brackets if truncated mid-link
-    const openBrackets = (text.match(/\[/g) || []).length;
-    const closeBrackets = (text.match(/\]/g) || []).length;
-    if (openBrackets > closeBrackets) {
-      text += ']';
-    }
-    const openParens = (text.match(/\(/g) || []).length;
-    const closeParens = (text.match(/\)/g) || []).length;
-    if (openParens > closeParens) {
-      text += ')';
-    }
   }
 
-  return text;
+  return { description: text || null, links };
+}
+
+export function formatMessageDescription(raw: string | null, targetLength = STANDARD_DESC_LENGTH): string | null {
+  return extractDescriptionAndLinks(raw, targetLength).description;
 }
 
 export const REDDIT_EMBED_COLOR = 0xff4500; // Reddit Orangered
@@ -185,13 +207,39 @@ export function feedEmbed(args: {
     color,
   };
 
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = [];
+
   // For pure Reddit image feeds (feedType === 'reddit'), suppress HTML description text so only image & title show.
-  // For standard RSS feeds (including Reddit text/discussion feeds with feedType === 'rss'), format and show description.
+  // For standard RSS feeds (including Popular Feeds catalog and Reddit text feeds), format clean prose and put links in dedicated fields.
   if (!isRedditImageFeed) {
-    const cleanDesc = formatMessageDescription(description ?? null, STANDARD_DESC_LENGTH);
+    const { description: cleanDesc, links } = extractDescriptionAndLinks(description ?? null, STANDARD_DESC_LENGTH);
     if (cleanDesc) {
       embed.description = cleanDesc;
     }
+
+    // 1. Primary Source / Link Field (Placed in its own field rather than inside the message prose)
+    if (url) {
+      const linkLabel = isRedditDomain ? 'View on Reddit 💬' : `${formatReadableUrlLabel(url)} ↗`;
+      fields.push({
+        name: isRedditDomain ? '💬 Discussion' : '🔗 Source Link',
+        value: `[${linkLabel}](${url})`,
+        inline: true,
+      });
+    }
+
+    // 2. Extra Reference Links (if any other distinct links were found in the entry content)
+    const extraLinks = links.filter((l) => l.url !== url && !url.includes(l.url) && !l.url.includes(url)).slice(0, 3);
+    if (extraLinks.length > 0) {
+      fields.push({
+        name: '📎 Related Links',
+        value: extraLinks.map((l) => `• [${l.label}](${l.url})`).join('\n'),
+        inline: extraLinks.length === 1,
+      });
+    }
+  }
+
+  if (fields.length > 0) {
+    embed.fields = fields;
   }
 
   if (author) {
@@ -209,7 +257,7 @@ export function feedEmbed(args: {
     embed.timestamp = normalizeTimestamp(publishedAt);
   }
 
-  // Standardize full-width images: Discord `image` spans the entire 100% width of the embed card
+  // Standardize single shared full-width image scaling: Discord `image` spans 100% full width of the embed card
   const primaryImage = imageUrl ?? extractImageFromHtml(description ?? null);
   if (primaryImage && isValidEmbedImageUrl(primaryImage)) {
     embed.image = { url: primaryImage.trim() };
