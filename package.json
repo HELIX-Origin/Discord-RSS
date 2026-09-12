@@ -1,6 +1,6 @@
 {
   "name": "helix-rss",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Self-hosted RSS/Atom-to-Discord service for Discord communities. Built entirely in TypeScript ESM with zero runtime dependencies (native http, node:sqlite, built-in web dashboard, Discord bot, and API). Posts directly to Discord channels.",
   "type": "module",
   "main": "dist/index.js",
