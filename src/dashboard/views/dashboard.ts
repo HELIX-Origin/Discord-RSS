@@ -697,10 +697,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           <div class="card-header">
             <div>
               <div class="card-title"><i class="fa-solid fa-list" style="color: var(--primary);"></i> My Subscribed Feeds</div>
-              <div class="card-desc">Manage, pause, poll, or remove your active feed syndications.</div>
+              <div class="card-desc">Manage, pause, or remove your active feed syndications.</div>
             </div>
             <div style="display: flex; gap: 0.5rem;">
-              <button onclick="pollAllFeeds()" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Poll Feeds Now</button>
               <button onclick="loadFeedsTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
             </div>
           </div>
@@ -793,7 +792,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               <div class="card-desc">Automatically tracks and delivers 100% OFF free-to-keep game promotions and giveaways directly to your Discord channels.</div>
             </div>
             <span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 0.75rem;">
-              <i class="fa-solid fa-calendar-week"></i> Weekly Poll: Every Monday
+              <i class="fa-solid fa-calendar-day"></i> Daily Poll
             </span>
           </div>
 
@@ -850,12 +849,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           <div class="card-header">
             <div>
               <div class="card-title"><i class="fa-solid fa-list-check" style="color: #10b981;"></i> My Free Games Feeds</div>
-              <div class="card-desc">Active free games subscriptions delivering weekly Monday drops to your server.</div>
+              <div class="card-desc">Active free games subscriptions delivering new giveaways as they are discovered.</div>
             </div>
             <div style="display: flex; gap: 0.5rem;">
-              <button onclick="triggerFreeGamesPollNow()" class="btn btn-primary btn-sm" style="background: #10b981; border-color: #10b981;">
-                <i class="fa-solid fa-bolt"></i> Poll Free Games Now
-              </button>
               <button onclick="loadFreeGamesTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
             </div>
           </div>
@@ -952,7 +948,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </div>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-            <button onclick="triggerFeedPoll()" class="btn btn-primary btn-sm"><i class="fa-solid fa-rotate"></i> Poll All Feeds Now</button>
             <button onclick="syncDiscordCommands()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-right-arrow-left"></i> Sync Discord Slash Commands</button>
             <button onclick="optimizeDatabase()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-database"></i> Optimize SQLite DB</button>
           </div>
@@ -1202,11 +1197,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
             '</div>' +
             '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
-              '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
-                '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
-              '</button>' +
-              '<button onclick="pollSingleFeed(' + f.id + ')" class="btn btn-ghost btn-sm" title="Poll now"><i class="fa-solid fa-rotate"></i></button>' +
-              '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
+                '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
+                  '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
+                '</button>' +
+                '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
             '</div>' +
           '</div>';
         }).join('');
@@ -1385,28 +1379,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           body: JSON.stringify({ enabled })
         });
         if (!checkAuth(res)) return;
-        if (activeTabName === 'reddit') loadRedditTab();
-        else if (activeTabName === 'freegames') loadFreeGamesTab();
-        else loadFeedsTab();
-      } catch {}
-    }
-
-    async function pollSingleFeed(id) {
-      try {
-        const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
-        if (!checkAuth(res)) return;
-        alert('Feed poll initiated.');
-        if (activeTabName === 'reddit') loadRedditTab();
-        else if (activeTabName === 'freegames') loadFreeGamesTab();
-        else loadFeedsTab();
-      } catch {}
-    }
-
-    async function pollAllFeeds() {
-      try {
-        const res = await fetch('/api/feeds/poll-all', { method: 'POST' });
-        if (!checkAuth(res)) return;
-        alert('Polled all feeds successfully.');
         if (activeTabName === 'reddit') loadRedditTab();
         else if (activeTabName === 'freegames') loadFreeGamesTab();
         else loadFeedsTab();
@@ -1778,7 +1750,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               '<div class="feed-details">' +
                 '<div class="feed-name-row">' +
                   '<span class="feed-name" style="color: #10b981;"><i class="fa-solid fa-gift"></i> ' + esc(f.name) + '</span>' +
-                  '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-calendar-week"></i> Weekly Monday</span>' +
+                  '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-calendar-day"></i> Daily</span>' +
                   statusBadge +
                 '</div>' +
                 '<div class="feed-url">' + esc(f.url) + '</div>' +
@@ -1870,17 +1842,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         }
       } catch (err) {
         alert('Network error enabling Free Games feed: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
-    async function triggerFreeGamesPollNow() {
-      try {
-        const res = await fetch('/api/feeds/freegames/poll', { method: 'POST' });
-        if (!checkAuth(res)) return;
-        alert('Free Games polling triggered! Check your Discord channel(s).');
-        loadFreeGamesTab();
-      } catch (err) {
-        alert('Error triggering poll: ' + (err && err.message ? err.message : String(err)));
       }
     }
 
@@ -2131,10 +2092,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       } catch {
         alert(failMsg);
       }
-    }
-
-    function triggerFeedPoll() {
-      postDevToolAction('/api/admin/trigger-feeds', 'Feed poll triggered. It will run in the background.', 'Failed to trigger feed poll.');
     }
 
     function syncDiscordCommands() {

@@ -78,9 +78,9 @@ flowchart TD
 **Symptoms**: A new free game promotion is live on Epic Games Store or Steam, but no message has been sent.
 
 **Solutions**:
-1. Free Games feeds run on an automated **weekly Monday cron** schedule (`now.getUTCDay() === 1`).
-2. To force an immediate poll, click **Trigger Poll** in the Free Games tab or send `POST /api/feeds/freegames/poll`.
-3. Verify that `FREE_GAMES_MIN_PRICE=0` in `.env` (if set higher, deals below that original retail price are filtered out).
+1. Free Games feeds run on an automated **daily** polling schedule.
+2. Verify that `FREE_GAMES_MIN_PRICE=0` in `.env` (if set higher, deals below that original retail price are filtered out).
+3. Check the Service Logs for any source errors or rate-limit responses.
 
 ---
 

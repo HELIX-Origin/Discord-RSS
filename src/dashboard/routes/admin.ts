@@ -101,20 +101,6 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
     sendJson(res, 200, activity);
   });
 
-  router.add('POST', '/api/admin/trigger-feeds', async (req, res, _ctx, deps) => {
-    const userId = await requireOwner(req, res, deps);
-    if (userId === null) return;
-
-    deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual feed poll triggered');
-    deps.feeds
-      .pollAllFeeds(true)
-      .then(() => deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual feed poll completed'))
-      .catch((err) =>
-        deps.repo.logActivity(userId, 'error', 'dev-tools', err instanceof Error ? err.message : String(err)),
-      );
-    sendJson(res, 202, { ok: true });
-  });
-
   router.add('GET', '/api/admin/config', async (req, res, _ctx, deps) => {
     if ((await requireOwner(req, res, deps)) === null) return;
     const cfg = deps.config;

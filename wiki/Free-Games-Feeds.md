@@ -26,25 +26,10 @@ The Free Games engine integrates with the official **Epic Games Store Promotions
 
 ## ⏰ Polling Schedule & Delivery Mechanism
 
-### 1. Weekly Monday Automated Cron Schedule
-Most digital PC storefronts (including Epic Games, GOG, and Steam publisher promotions) rotate their weekly giveaways at the start of the week.
-- The background feed watcher inspects active `freegames` feeds every minute.
-- A weekly check triggers automatically when UTC day equals **Monday** (`now.getUTCDay() === 1`), ensuring your Discord server is notified of fresh weekly drops without duplicate spam.
-
-### 2. Manual On-Demand Poll Trigger
-Server administrators can trigger an immediate poll of free game feeds via the REST API or Web Dashboard:
-```http
-POST /api/feeds/freegames/poll
-```
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Free games poll triggered successfully",
-  "dealsFound": 4,
-  "newDealsDispatched": 2
-}
-```
+### 1. Daily Automated Polling
+Free game giveaways are often time-limited, so HELIX RSS polls active `freegames` feeds **daily** instead of only once a week.
+- The background feed watcher inspects active `freegames` feeds on a daily schedule.
+- Only genuinely new giveaways are announced; duplicates are suppressed by the composite deduplication engine.
 
 ---
 

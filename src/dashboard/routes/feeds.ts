@@ -171,26 +171,4 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     d.repo.deleteFeed(userId, Number(ctx.params['id']));
     sendJson(res, 200, { ok: true });
   });
-
-  router.add('POST', '/api/feeds/poll-all', async (req, res, _ctx, d) => {
-    const userId = await requireDashboardUser(req, res, d);
-    if (userId === null) return;
-    const userFeeds = d.repo.listFeeds(userId);
-    await Promise.all(userFeeds.map((f) => d.feeds.pollFeed(userId, f.id, true)));
-    sendJson(res, 200, { ok: true, count: userFeeds.length });
-  });
-
-  router.add('POST', '/api/feeds/:id/poll', async (req, res, ctx, d) => {
-    const userId = await requireDashboardUser(req, res, d);
-    if (userId === null) return;
-    await d.feeds.pollFeed(userId, Number(ctx.params['id']), true);
-    sendJson(res, 200, { ok: true });
-  });
-
-  router.add('POST', '/api/feeds/freegames/poll', async (req, res, _ctx, d) => {
-    const userId = await requireDashboardUser(req, res, d);
-    if (userId === null) return;
-    await d.feeds.pollFreeGamesFeeds(userId, true);
-    sendJson(res, 200, { ok: true });
-  });
 }

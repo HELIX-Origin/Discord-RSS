@@ -13,7 +13,6 @@ All commands register through Discord's native interaction model and use ephemer
 | `/feed add` | `url: <string>`, `channel: <channel>`, `role: <role?>`, `color: <hex?>` | `Manage Channels` or `Administrator` | Adds a new feed subscription to a channel. |
 | `/feed list` | `channel: <channel?>` | `Manage Channels` or `Administrator` | Displays all active feed subscriptions on the server. |
 | `/feed remove` | `id: <feed_id>` | `Manage Channels` or `Administrator` | Removes an existing feed subscription by ID. |
-| `/feed test` | `id: <feed_id>` | `Manage Channels` or `Administrator` | Dispatches a sample notification to verify permissions & format. |
 | `/stats` | *None* | Everyone | Displays bot uptime, memory usage, and delivery analytics. |
 | `/about` | *None* | Everyone | Shows version info, repository links, and developer credits. |
 | `/help` | `topic: <string?>` | Everyone | Interactive documentation browser with command usage tips. |

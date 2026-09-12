@@ -68,19 +68,6 @@ export const feedCommandDef: ApplicationCommand = {
       ],
     },
     {
-      name: 'poll',
-      description: 'Trigger an immediate poll of a feed',
-      type: ApplicationCommandOptionType.SUB_COMMAND,
-      options: [
-        {
-          name: 'id',
-          description: 'The numeric ID or exact name of the feed to poll',
-          type: ApplicationCommandOptionType.STRING,
-          required: true,
-        },
-      ],
-    },
-    {
       name: 'toggle',
       description: 'Enable or pause automatic polling for a feed',
       type: ApplicationCommandOptionType.SUB_COMMAND,
@@ -134,8 +121,6 @@ export async function handleFeedCommand(
       return handleList(user.id, deps);
     case 'remove':
       return handleRemove(subCommand.options ?? [], user.id, deps);
-    case 'poll':
-      return handlePoll(subCommand.options ?? [], user.id, deps);
     case 'toggle':
       return handleToggle(subCommand.options ?? [], user.id, deps);
     default:
@@ -248,7 +233,7 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
           title: `📡 Feeds for this Server (${feeds.length})`,
           fields,
           color: 0x06b6d4,
-          footer: { text: `${appDisplayName(deps)} • Use /feed poll or /feed remove` },
+          footer: { text: `${appDisplayName(deps)} • Use /feed remove or /feed toggle` },
           timestamp: new Date().toISOString(),
         },
       ],
@@ -283,56 +268,6 @@ function handleRemove(options: InteractionOption[], userId: number, deps: AppDep
       ],
     },
   };
-}
-
-async function handlePoll(options: InteractionOption[], userId: number, deps: AppDeps): Promise<InteractionResponse> {
-  const identifier = String(options.find((o) => o.name === 'id')?.value ?? '').trim();
-  const feeds = deps.repo.listFeeds(userId);
-  const feed = feeds.find((f) => String(f.id) === identifier || f.name.toLowerCase() === identifier.toLowerCase());
-
-  if (!feed) {
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: { flags: 64, content: `❌ Feed "${identifier}" not found in this server.` },
-    };
-  }
-
-  try {
-    await deps.feeds.pollFeed(userId, feed.id, true);
-    const updated = deps.repo.getFeed(userId, feed.id);
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        embeds: [
-          {
-            title: `🔄 Polled Feed: ${feed.name}`,
-            color: 0x06b6d4,
-            fields: [
-              { name: 'Feed URL', value: feed.url, inline: true },
-              {
-                name: 'Last Checked',
-                value: updated?.lastCheckedAt
-                  ? `<t:${Math.floor(new Date(updated.lastCheckedAt).getTime() / 1000)}:R>`
-                  : 'Just now',
-                inline: true,
-              },
-              { name: 'Status', value: updated?.enabled ? '🟢 Enabled' : '⏸️ Disabled', inline: true },
-            ],
-            footer: { text: appDisplayName(deps) },
-            timestamp: new Date().toISOString(),
-          },
-        ],
-      },
-    };
-  } catch (err) {
-    return {
-      type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
-      data: {
-        flags: 64,
-        content: `❌ Error polling feed: ${(err as Error).message}`,
-      },
-    };
-  }
 }
 
 function handleToggle(options: InteractionOption[], userId: number, deps: AppDeps): InteractionResponse {

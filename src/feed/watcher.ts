@@ -340,16 +340,6 @@ export class FeedWatcher {
     this.logger.info('Free games feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
   }
 
-  async pollFreeGamesFeeds(userId?: number, force = true): Promise<void> {
-    const feeds = this.repo.listFeedsForAllUsers().filter((f) => {
-      if (userId !== undefined && f.userId !== userId) return false;
-      if (f.enabled !== 1) return false;
-      return f.feedType === 'free_games' || f.feedType?.startsWith('free_games');
-    });
-
-    await Promise.all(feeds.map((f) => this.pollFeed(f.userId, f.id, force)));
-  }
-
   async pollAllFeeds(force = false): Promise<void> {
     const userIds = new Set<number>();
     const allFeeds: Array<{ userId: number; id: number }> = [];

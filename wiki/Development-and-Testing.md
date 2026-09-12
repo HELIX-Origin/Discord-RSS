@@ -21,30 +21,22 @@ This guide covers local development workflows, debugging techniques, TypeScript 
 | `npm run check` | Executes `tsc --noEmit` to validate all TypeScript types and exports. |
 | `npm run lint` | Runs ESLint across the codebase for static code analysis. |
 | `npm run format` | Runs Prettier to automatically format code according to standards. |
-| `npm test` | Runs the test suite using Vitest / Jest. |
+| `npm test` | No in-repo test suite. Integration tests are maintained in a dedicated Vitest repository. |
 
 ---
 
 ## 🧪 Testing Strategies
 
-### 1. Feed Parser & Scraper Unit Tests
-Unit tests validate parsing against mock RSS feeds, Atom XML payloads, malformed feeds, and social media scraper responses:
+The main HELIX RSS repository does not contain an in-repo test suite. Integration and regression tests are maintained in a separate dedicated Vitest repository.
+
+When contributing core logic changes, validate them with:
+
 ```bash
-npm test -- src/feed/parser.test.ts
-npm test -- src/feed/freegames.test.ts
+npm run check   # typecheck + format check + lint
+npm run build   # compile the production bundle
 ```
 
-### 2. Deduplication Engine Tests
-Verifies that GUID matching, canonical link stripping, and content hashing prevent duplicate notifications across multiple poll cycles:
-```bash
-npm test -- src/feed/deduplication.test.ts
-```
-
-### 3. Embed Builder Tests
-Validates character limit truncation, author icon resolution, platform color matching, and role mention strings:
-```bash
-npm test -- src/bot/embeds.test.ts
-```
+For local manual verification, set `LOG_LEVEL=debug` in `.env` and inspect the Service Logs in the dashboard.
 
 ---
 
@@ -54,4 +46,4 @@ npm test -- src/bot/embeds.test.ts
 Set `LOG_LEVEL=debug` in your `.env` to output detailed payload dumps, HTTP headers, ETag matches, and Discord REST response statuses to stdout.
 
 ### Web Dashboard Diagnostics
-For Discord bot owners/team members, the **Developer Tools** tab in the dashboard provides a **Service Logs** page (full activity log with level filtering) plus runtime diagnostics, live uptime, memory usage, and manual triggers.
+For Discord bot owners/team members, the **Developer Tools** tab in the dashboard provides a **Service Logs** page (full activity log with level filtering) plus runtime diagnostics, live uptime, and memory usage.

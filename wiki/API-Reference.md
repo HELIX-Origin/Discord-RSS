@@ -98,38 +98,6 @@ DELETE /api/feeds/:id
 
 ---
 
-### 5. Send Test Feed Embed
-Dispatches a sample embed from the feed directly to the assigned Discord channel.
-```http
-POST /api/feeds/:id/test
-```
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Test notification dispatched to channel"
-}
-```
-
----
-
-### 6. Trigger Free Games Poll
-Forces an immediate on-demand scan of all configured Free Games platforms.
-```http
-POST /api/feeds/freegames/poll
-```
-**Response**:
-```json
-{
-  "success": true,
-  "message": "Free games poll triggered successfully",
-  "dealsFound": 5,
-  "newDealsDispatched": 1
-}
-```
-
----
-
 ## 📚 News Feeds Presets Catalog
 
 ### 1. Fetch Verified Presets
