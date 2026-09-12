@@ -55,10 +55,23 @@ function isTrackingPixel(url: string): boolean {
 
 export function extractImageFromHtml(html: string | null): string | null {
   if (!html) return null;
-  const matches = html.matchAll(/<img\s+[^>]*?src=["'](https?:\/\/[^"'\s>]+)["'][^>]*>/gi);
-  for (const match of matches) {
+
+  // 1. Check for full-res image links in <a> tags (common in Reddit feeds: <a href="https://i.redd.it/...">[link]</a>)
+  const aMatches = html.matchAll(
+    /<a\s+[^>]*?href=["'](https?:\/\/(?:i\.redd\.it|i\.imgur\.com|[^\s"'>]+\.(?:jpe?g|png|webp|gif|avif))(?:\?[^"'\s>]*)?)["'][^>]*>/gi,
+  );
+  for (const match of aMatches) {
+    const url = decodeHtmlEntities(match[1]);
+    if (!isTrackingPixel(url) && !url.includes('/avatar/') && !url.includes('/emojis/')) {
+      return url;
+    }
+  }
+
+  // 2. Check <img> tags
+  const imgMatches = html.matchAll(/<img\s+[^>]*?src=["'](https?:\/\/[^"'\s>]+)["'][^>]*>/gi);
+  for (const match of imgMatches) {
     const fullTag = match[0].toLowerCase();
-    const url = match[1];
+    const url = decodeHtmlEntities(match[1]);
     if (
       fullTag.includes('width="1"') ||
       fullTag.includes("width='1'") ||

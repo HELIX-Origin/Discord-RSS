@@ -142,7 +142,7 @@ export class Repository {
     name: string,
     url: string,
     channelId: string | null,
-    feedType: 'rss' | 'scrape',
+    feedType: 'rss' | 'scrape' | 'reddit',
     scrape: Feed['scrape'],
     guildId?: string | null,
   ): Feed {

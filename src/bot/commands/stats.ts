@@ -30,13 +30,15 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
 
   const dashboardUrl = deps.config.publicBaseUrl || `http://${deps.config.host}:${deps.config.port}`;
 
+  const appName = deps.bot?.getAppName() || 'HELIX RSS';
+
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
       embeds: [
         {
-          title: '📊 HELIX RSS Service Status',
-          color: 0x5865f2,
+          title: `📊 ${appName} Service Status`,
+          color: 0x06b6d4,
           fields: [
             {
               name: '📡 This Server',
@@ -67,7 +69,7 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
               inline: true,
             },
           ],
-          footer: { text: 'HELIX RSS • Native TypeScript ESM' },
+          footer: { text: `${appName} • Service Status` },
           timestamp: new Date().toISOString(),
         },
       ],

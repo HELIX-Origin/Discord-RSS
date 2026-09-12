@@ -142,7 +142,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       feedId: number;
       feedName: string;
       feedUrl: string;
-      feedType: 'rss' | 'scrape';
+      feedType: 'rss' | 'scrape' | 'reddit';
       userId: number;
       userEmail: string;
       userDisplayName: string;

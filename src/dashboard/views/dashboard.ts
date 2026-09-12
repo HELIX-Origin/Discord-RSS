@@ -224,6 +224,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <button onclick="switchTab('feeds')" id="tab-btn-feeds" class="tab-btn">
           <i class="fa-solid fa-list"></i> Feeds
         </button>
+        <button onclick="switchTab('reddit')" id="tab-btn-reddit" class="tab-btn">
+          <i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Reddit Image Feeds
+        </button>
         <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn">
           <i class="fa-solid fa-star"></i> Popular Feeds
         </button>
@@ -345,7 +348,73 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-      <!-- TAB 3: POPULAR FEEDS CATALOG -->
+      <!-- TAB 3: REDDIT IMAGE FEEDS -->
+      <section id="tab-reddit" class="tab-pane">
+        <!-- Add Reddit Feed Card -->
+        <div class="card" style="border-left: 4px solid #ff4500;">
+          <div>
+            <div class="card-title" style="color: #ff4500;"><i class="fa-brands fa-reddit" style="font-size: 1.25rem;"></i> Custom Reddit Image Feeds</div>
+            <div class="card-desc">Clean image feeds built specifically for Reddit. Delivers post titles and full-width high-resolution images while stripping out comment text and message bodies.</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Subreddit or Reddit RSS URL</label>
+              <input type="text" id="add-reddit-sub" placeholder="e.g. wallpapers, r/EarthPorn, or https://www.reddit.com/r/art/.rss" oninput="handleRedditSubInput(this.value)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Custom Display Name</label>
+              <input type="text" id="add-reddit-name" placeholder="Leave empty for auto (e.g. Reddit · r/wallpapers)">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Destination Discord Channel</label>
+              <select id="add-reddit-channel">
+                <option value="">-- Select Discord Channel --</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.25rem;">
+            <div style="display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
+              <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-dim); margin-right: 0.25rem;">Filter:</span>
+              <button type="button" onclick="setRedditSort('hot')" id="reddit-sort-hot" class="btn btn-ghost btn-sm active" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Hot</button>
+              <button type="button" onclick="setRedditSort('top-day')" id="reddit-sort-top-day" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Top (Day)</button>
+              <button type="button" onclick="setRedditSort('top-week')" id="reddit-sort-top-week" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Top (Week)</button>
+              <button type="button" onclick="setRedditSort('new')" id="reddit-sort-new" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">New</button>
+            </div>
+            <button onclick="submitAddRedditFeed()" class="btn btn-primary" style="background: #ff4500; border-color: #ff4500; box-shadow: 0 4px 12px rgba(255,69,0,0.25);">
+              <i class="fa-brands fa-reddit"></i> Add Reddit Image Feed
+            </button>
+          </div>
+        </div>
+
+        <!-- Curated Popular Reddit Image Feeds -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-camera-retro" style="color: #ff4500;"></i> Popular Image Subreddits</div>
+              <div class="card-desc">Curated high-resolution photography, wallpapers, art, and meme feeds ready to sync in one click.</div>
+            </div>
+          </div>
+          <div id="reddit-curated-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.875rem;">
+            <div class="empty-state">Loading curated subreddits...</div>
+          </div>
+        </div>
+
+        <!-- Active Reddit Feeds List Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-brands fa-reddit" style="color: #ff4500;"></i> My Reddit Image Feeds</div>
+              <div class="card-desc">Active image feeds sending image embeds to your Discord server.</div>
+            </div>
+            <button onclick="loadRedditTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+          <div id="reddit-feeds-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div class="empty-state">Loading Reddit feeds...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: POPULAR FEEDS CATALOG -->
       <section id="tab-popular" class="tab-pane">
         <div class="card">
           <div>
@@ -422,6 +491,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       // Lazy-load data when switching to a tab
       if (tabId === 'overview') loadOverviewTab();
       else if (tabId === 'feeds') loadFeedsTab();
+      else if (tabId === 'reddit') loadRedditTab();
       else if (tabId === 'popular') loadPopularTab();
       else if (tabId === 'settings') loadSettingsTab();
     }
@@ -501,6 +571,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const sel = document.getElementById('add-feed-channel');
         if (sel) sel.innerHTML = buildChannelOptionsHtml(sel.value);
 
+        // Populate Add Reddit dropdown
+        const redditSel = document.getElementById('add-reddit-channel');
+        if (redditSel) redditSel.innerHTML = buildChannelOptionsHtml(redditSel.value);
+
         // Update connected channels count on overview
         const chCountEl = document.getElementById('stat-channels-count');
         if (chCountEl) {
@@ -509,7 +583,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         }
 
         // Refresh any preset channel selects
-        document.querySelectorAll('select[data-preset-channel]').forEach(s => {
+        document.querySelectorAll('select[data-preset-channel], select[data-reddit-preset-channel]').forEach(s => {
           s.innerHTML = buildChannelOptionsHtml(s.value);
         });
       } catch {}
@@ -574,6 +648,12 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         if (!container) return;
 
         container.innerHTML = feeds.map(f => {
+          const isReddit = f.feedType === 'reddit' || (f.url && f.url.includes('reddit.com'));
+          const typeBadge = isReddit
+            ? '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-brands fa-reddit"></i> Reddit Image</span>'
+            : f.feedType === 'scrape'
+              ? '<span class="badge badge-amber"><i class="fa-solid fa-code"></i> Scraper</span>'
+              : '<span class="badge badge-gray"><i class="fa-solid fa-rss"></i> RSS</span>';
           const statusBadge = f.enabled
             ? '<span class="badge badge-green">Active</span>'
             : '<span class="badge badge-gray">Paused</span>';
@@ -583,6 +663,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             '<div class="feed-details">' +
               '<div class="feed-name-row">' +
                 '<span class="feed-name">' + esc(f.name) + '</span>' +
+                typeBadge +
                 statusBadge +
               '</div>' +
               '<div class="feed-url">' + esc(f.url) + '</div>' +
@@ -682,7 +763,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           body: JSON.stringify({ enabled })
         });
         if (!checkAuth(res)) return;
-        loadFeedsTab();
+        if (activeTabName === 'reddit') loadRedditTab();
+        else loadFeedsTab();
       } catch {}
     }
 
@@ -691,7 +773,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
         if (!checkAuth(res)) return;
         alert('Feed poll initiated.');
-        loadFeedsTab();
+        if (activeTabName === 'reddit') loadRedditTab();
+        else loadFeedsTab();
       } catch {}
     }
 
@@ -700,7 +783,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/feeds/poll-all', { method: 'POST' });
         if (!checkAuth(res)) return;
         alert('Polled all feeds successfully.');
-        loadFeedsTab();
+        if (activeTabName === 'reddit') loadRedditTab();
+        else loadFeedsTab();
       } catch {}
     }
 
@@ -709,8 +793,232 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       try {
         const res = await fetch('/api/feeds/' + id, { method: 'DELETE' });
         if (!checkAuth(res)) return;
-        loadFeedsTab();
+        if (activeTabName === 'reddit') loadRedditTab();
+        else loadFeedsTab();
       } catch {}
+    }
+
+    // ==================== REDDIT IMAGE FEEDS CONTROLLER ====================
+    let currentRedditSort = 'hot';
+
+    const CURATED_REDDIT_SUBS = [
+      { sub: 'EarthPorn', name: 'Reddit · r/EarthPorn', desc: 'Breathtaking landscape and wild nature photography', tag: 'Photography' },
+      { sub: 'wallpapers', name: 'Reddit · r/wallpapers', desc: 'High-definition digital wallpapers for desktop and mobile', tag: 'Wallpapers' },
+      { sub: 'Art', name: 'Reddit · r/Art', desc: 'Original artwork, illustrations, sculptures, and concept art', tag: 'Art' },
+      { sub: 'spaceporn', name: 'Reddit · r/spaceporn', desc: 'Deep space telescopes, galaxies, nebulas, and astronomy', tag: 'Space' },
+      { sub: 'NatureIsFuckingLit', name: 'Reddit · r/NatureIsFuckingLit', desc: 'Mindblowing wildlife behavior and nature moments', tag: 'Nature' },
+      { sub: 'ArchitecturePorn', name: 'Reddit · r/ArchitecturePorn', desc: 'Stunning architectural design, structures, and skylines', tag: 'Design' },
+      { sub: 'Aww', name: 'Reddit · r/Aww', desc: 'Adorable animals, cute puppies, kittens, and heartwarming pets', tag: 'Animals' },
+      { sub: 'Memes', name: 'Reddit · r/Memes', desc: 'Trending community humor and top viral memes', tag: 'Memes' }
+    ];
+
+    function setRedditSort(sort) {
+      currentRedditSort = sort;
+      ['hot', 'top-day', 'top-week', 'new'].forEach(s => {
+        const btn = document.getElementById('reddit-sort-' + s);
+        if (btn) {
+          if (s === sort) {
+            btn.style.background = '#ff4500';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = '#ff4500';
+          } else {
+            btn.style.background = 'var(--card-inner)';
+            btn.style.color = 'var(--text-muted)';
+            btn.style.borderColor = 'var(--border)';
+          }
+        }
+      });
+    }
+
+    function cleanSubredditName(raw) {
+      let s = (raw || '').trim();
+      if (s.includes('reddit.com/r/')) s = s.split('reddit.com/r/')[1];
+      else if (s.includes('reddit.com/user/')) s = s.split('reddit.com/user/')[1];
+      s = s.split('?')[0].split('#')[0].split('/')[0].split('.')[0];
+      if (s.startsWith('r/')) s = s.slice(2);
+      if (s.startsWith('u/')) s = s.slice(2);
+      return s.trim();
+    }
+
+    function handleRedditSubInput(val) {
+      const nameInput = document.getElementById('add-reddit-name');
+      if (!nameInput) return;
+      const clean = cleanSubredditName(val);
+      if (clean && (!nameInput.value || nameInput.value.startsWith('Reddit · r/'))) {
+        nameInput.placeholder = 'Reddit · r/' + clean;
+      }
+    }
+
+    function buildRedditUrl(rawInput, sort) {
+      const trimmed = (rawInput || '').trim();
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        if (trimmed.includes('reddit.com')) {
+          if (trimmed.includes('.rss')) return trimmed;
+          const noTrailing = trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
+          return noTrailing + '/.rss';
+        }
+        return trimmed;
+      }
+
+      const clean = cleanSubredditName(trimmed);
+      if (trimmed.startsWith('u/') || trimmed.startsWith('user/')) {
+        return 'https://www.reddit.com/user/' + clean + '/.rss';
+      }
+
+      if (sort === 'top-day') return 'https://www.reddit.com/r/' + clean + '/top/.rss?t=day';
+      if (sort === 'top-week') return 'https://www.reddit.com/r/' + clean + '/top/.rss?t=week';
+      if (sort === 'new') return 'https://www.reddit.com/r/' + clean + '/new/.rss';
+      return 'https://www.reddit.com/r/' + clean + '/.rss';
+    }
+
+    async function loadRedditTab() {
+      loadDiscordChannels();
+      setRedditSort(currentRedditSort);
+
+      // 1. Render Curated Subreddits Grid
+      const curatedContainer = document.getElementById('reddit-curated-container');
+      if (curatedContainer) {
+        curatedContainer.innerHTML = CURATED_REDDIT_SUBS.map(item => {
+          return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">' +
+            '<div style="display: flex; flex-direction: column; gap: 0.25rem;">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                '<span style="font-weight: 700; font-size: 0.9375rem; color: #ff4500; display: flex; align-items: center; gap: 0.375rem;"><i class="fa-brands fa-reddit"></i> r/' + esc(item.sub) + '</span>' +
+                '<span class="badge badge-gray">' + esc(item.tag) + '</span>' +
+              '</div>' +
+              '<div style="font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4;">' + esc(item.desc) + '</div>' +
+            '</div>' +
+            '<div style="display: flex; gap: 0.5rem; align-items: center;">' +
+              '<select data-reddit-preset-channel style="font-size: 0.75rem; padding: 0.4rem 0.6rem; flex: 1;">' +
+                buildChannelOptionsHtml('') +
+              '</select>' +
+              '<button onclick="enableRedditPreset(\\'' + esc(item.sub) + '\\', \\'' + esc(item.name) + '\\', this)" class="btn btn-sm" style="background: #ff4500; color: #fff; white-space: nowrap;">' +
+                '<i class="fa-solid fa-plus"></i> Add' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      // 2. Load User's Reddit Feeds
+      const feedsContainer = document.getElementById('reddit-feeds-list-container');
+      try {
+        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
+        if (res.status === 401 || res.status === 403) {
+          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Sign in with Discord to view and manage your Reddit image feeds.</div>';
+          return;
+        }
+        const feeds = await res.json();
+        const redditFeeds = Array.isArray(feeds) ? feeds.filter(f => f.feedType === 'reddit' || (f.url && f.url.includes('reddit.com'))) : [];
+
+        if (!redditFeeds.length) {
+          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">No Reddit image feeds added yet. Add a custom subreddit above or choose from the popular ones!</div>';
+          return;
+        }
+
+        if (feedsContainer) {
+          feedsContainer.innerHTML = redditFeeds.map(f => {
+            const statusBadge = f.enabled
+              ? '<span class="badge badge-green">Active</span>'
+              : '<span class="badge badge-gray">Paused</span>';
+            const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
+
+            return '<div class="feed-item" style="border-left: 3px solid #ff4500;">' +
+              '<div class="feed-details">' +
+                '<div class="feed-name-row">' +
+                  '<span class="feed-name" style="color: #ff4500;"><i class="fa-brands fa-reddit"></i> ' + esc(f.name) + '</span>' +
+                  '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);">Image Only</span>' +
+                  statusBadge +
+                '</div>' +
+                '<div class="feed-url">' + esc(f.url) + '</div>' +
+                '<div class="feed-meta">Channel: ' + (f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked') + ' &middot; Checked: ' + lastPolled + '</div>' +
+              '</div>' +
+              '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
+                '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
+                  '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
+                '</button>' +
+                '<button onclick="pollSingleFeed(' + f.id + ')" class="btn btn-ghost btn-sm" title="Poll now"><i class="fa-solid fa-rotate"></i></button>' +
+                '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+      } catch {
+        if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Failed to load Reddit feeds.</div>';
+      }
+    }
+
+    async function submitAddRedditFeed() {
+      const subInput = document.getElementById('add-reddit-sub');
+      const nameInput = document.getElementById('add-reddit-name');
+      const chanInput = document.getElementById('add-reddit-channel');
+
+      const rawSub = subInput ? subInput.value.trim() : '';
+      if (!rawSub) return alert('Please enter a subreddit name or Reddit RSS URL (e.g. wallpapers or r/EarthPorn).');
+
+      const url = buildRedditUrl(rawSub, currentRedditSort);
+      let name = nameInput ? nameInput.value.trim() : '';
+      if (!name) {
+        const cleanSub = cleanSubredditName(rawSub);
+        name = 'Reddit · r/' + cleanSub;
+      }
+
+      const channelVal = chanInput ? chanInput.value : '';
+      let channelId = null;
+      if (channelVal.startsWith('channel:')) channelId = channelVal.replace('channel:', '');
+      else if (/^[0-9]+$/.test(channelVal)) channelId = channelVal;
+
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url, channelId, feedType: 'reddit' })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          if (subInput) subInput.value = '';
+          if (nameInput) nameInput.value = '';
+          loadRedditTab();
+        } else {
+          alert(data.error || 'Failed to add Reddit feed');
+        }
+      } catch (err) {
+        alert('Network error adding Reddit feed: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    async function enableRedditPreset(sub, defaultName, btn) {
+      const row = btn.closest('div');
+      const sel = row ? row.querySelector('select[data-reddit-preset-channel]') : null;
+      const rawVal = sel ? sel.value : '';
+
+      if (!rawVal) {
+        return alert('Please select a destination Discord channel for "r/' + sub + '".');
+      }
+
+      let channelId = null;
+      if (rawVal.startsWith('channel:')) channelId = rawVal.replace('channel:', '');
+      else if (/^[0-9]+$/.test(rawVal)) channelId = rawVal;
+
+      const url = 'https://www.reddit.com/r/' + sub + '/.rss';
+
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: defaultName, url, channelId, feedType: 'reddit' })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          alert('Enabled Reddit Image Feed for "r/' + sub + '".');
+          loadRedditTab();
+        } else {
+          alert(data.error || 'Failed to enable Reddit feed');
+        }
+      } catch (err) {
+        alert('Network error enabling Reddit feed: ' + (err && err.message ? err.message : String(err)));
+      }
     }
 
     // TAB 3: POPULAR FEEDS

@@ -65,7 +65,7 @@ function buildCommandDetailEmbed(command: ApplicationCommand): DiscordEmbed {
   return {
     title: `📖 Command: /${command.name}`,
     description: `**${command.description}**\n\n**Syntax:** ${usageHint}`,
-    color: 0x5865f2,
+    color: 0x06b6d4,
     fields,
     footer: { text: 'HELIX RSS • Slash Command Reference' },
     timestamp: new Date().toISOString(),
@@ -96,7 +96,7 @@ function buildAllCommandsEmbed(commands: ApplicationCommand[]): DiscordEmbed {
     title: '📖 HELIX RSS Slash Commands',
     description:
       'Here is a list of all available slash commands. Use `/help <command>` for detailed options and syntax.',
-    color: 0x5865f2,
+    color: 0x06b6d4,
     fields,
     footer: { text: 'HELIX RSS • Type / in chat to run any command' },
     timestamp: new Date().toISOString(),
@@ -130,7 +130,7 @@ export async function handleHelpCommand(
           {
             title: '❓ Command Not Found',
             description: `Could not find a command named \`/${query}\`.\n\n**Available commands:** ${availableNames}\n\nUse \`/help\` to view all commands.`,
-            color: 0xed4245,
+            color: 0xef4444,
             footer: { text: 'HELIX RSS • Slash Command Reference' },
             timestamp: new Date().toISOString(),
           },

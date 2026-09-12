@@ -68,17 +68,18 @@ export async function handleAboutCommand(
     });
   }
 
+  const appName = deps.bot?.getAppName() || 'HELIX RSS';
+
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
       embeds: [
         {
-          title: '⚡ About HELIX RSS',
-          description:
-            '**HELIX RSS** is a modern, lightweight, self-hosted RSS/Atom feed syndication service built specifically for Discord.',
-          color: 0x5865f2,
+          title: `⚡ About ${appName}`,
+          description: `**${appName}** is a modern, lightweight RSS/Atom feed syndication service built specifically for Discord.`,
+          color: 0x06b6d4,
           fields,
-          footer: { text: 'HELIX RSS • Native TypeScript ESM' },
+          footer: { text: `${appName} • Feed Syndication` },
           timestamp: new Date().toISOString(),
         },
       ],

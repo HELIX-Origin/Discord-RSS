@@ -168,8 +168,8 @@ export class FeedWatcher {
         author: entry.author,
         publishedAt: entry.publishedAt,
         feedTitle: feed.name,
-        color: 0x06b6d4,
         imageUrl: entry.imageUrl,
+        feedType: feed.feedType,
       });
 
       let delivered = false;

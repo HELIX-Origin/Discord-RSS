@@ -56,7 +56,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
       name?: string;
       url?: string;
       channelId?: string | null;
-      feedType?: 'rss' | 'scrape';
+      feedType?: 'rss' | 'scrape' | 'reddit';
       scrape?: { item?: string; title?: string; link?: string; description?: string } | null;
     };
     const name = body.name?.trim();
@@ -83,7 +83,12 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     }
 
     try {
-      const feedType = body.feedType === 'scrape' ? 'scrape' : 'rss';
+      const feedType =
+        body.feedType === 'scrape'
+          ? 'scrape'
+          : body.feedType === 'reddit' || /reddit\.com\/(?:r|user)\//i.test(url)
+            ? 'reddit'
+            : 'rss';
       const scrape =
         body.scrape && body.scrape.item && body.scrape.title && body.scrape.link
           ? {
@@ -94,7 +99,8 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
             }
           : null;
       const feed = d.repo.addFeed(userId, name, url, channelId, feedType, scrape, guildId);
-      d.repo.logActivity(userId, 'info', 'feeds', `Added ${feedType === 'scrape' ? 'scrape ' : ''}feed "${feed.name}"`);
+      const typeLabel = feedType === 'reddit' ? 'Reddit image ' : feedType === 'scrape' ? 'scrape ' : '';
+      d.repo.logActivity(userId, 'info', 'feeds', `Added ${typeLabel}feed "${feed.name}"`);
       sendJson(res, 201, feed);
     } catch (err) {
       sendError(res, 409, err instanceof Error ? err.message : 'Failed to add feed');

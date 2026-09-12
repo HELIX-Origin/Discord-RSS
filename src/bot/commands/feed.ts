@@ -43,6 +43,7 @@ export const feedCommandDef: ApplicationCommand = {
           required: false,
           choices: [
             { name: 'RSS / Atom Feed', value: 'rss' },
+            { name: 'Reddit Image Feed', value: 'reddit' },
             { name: 'Webpage Scraper', value: 'scrape' },
           ],
         },
@@ -157,7 +158,9 @@ async function handleAdd(
   const url = String(options.find((o) => o.name === 'url')?.value ?? '').trim();
   const channelOption = options.find((o) => o.name === 'channel')?.value as string | undefined;
   const targetChannelId = channelOption || interaction.channel_id || null;
-  const feedType = (options.find((o) => o.name === 'feed_type')?.value as 'rss' | 'scrape') ?? 'rss';
+  const rawType = options.find((o) => o.name === 'feed_type')?.value as string | undefined;
+  const feedType =
+    rawType === 'scrape' ? 'scrape' : rawType === 'reddit' || /reddit\.com\/(?:r|user)\//i.test(url) ? 'reddit' : 'rss';
 
   if (!name || !url) {
     return {
@@ -168,7 +171,12 @@ async function handleAdd(
 
   try {
     const feed = deps.repo.addFeed(userId, name, url, targetChannelId, feedType, null, guildId);
-    deps.repo.logActivity(userId, 'info', 'bot', `Added feed "${name}" via Discord bot`);
+    deps.repo.logActivity(
+      userId,
+      'info',
+      'bot',
+      `Added ${feedType === 'reddit' ? 'Reddit image ' : ''}feed "${name}" via Discord bot`,
+    );
 
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
@@ -176,7 +184,7 @@ async function handleAdd(
         embeds: [
           {
             title: '✅ Feed Added Successfully',
-            color: 0x57f287,
+            color: 0x10b981,
             fields: [
               { name: 'Feed Name', value: feed.name, inline: true },
               { name: 'Feed ID', value: `#${feed.id}`, inline: true },
@@ -215,7 +223,7 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
           {
             title: '📡 Feeds for this Server',
             description: 'No feeds configured yet. Use `/feed add` to configure your first RSS feed!',
-            color: 0x5865f2,
+            color: 0x06b6d4,
           },
         ],
       },
@@ -240,7 +248,7 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
         {
           title: `📡 Feeds for this Server (${feeds.length})`,
           fields,
-          color: 0x5865f2,
+          color: 0x06b6d4,
           footer: { text: 'HELIX RSS • Use /feed poll or /feed remove' },
           timestamp: new Date().toISOString(),
         },
@@ -271,7 +279,7 @@ function handleRemove(options: InteractionOption[], userId: number, deps: AppDep
         {
           title: '🗑️ Feed Deleted',
           description: `Removed feed **${feed.name}** (\`#${feed.id}\`).`,
-          color: 0xed4245,
+          color: 0xef4444,
         },
       ],
     },
@@ -299,7 +307,7 @@ async function handlePoll(options: InteractionOption[], userId: number, deps: Ap
         embeds: [
           {
             title: `🔄 Polled Feed: ${feed.name}`,
-            color: 0x5865f2,
+            color: 0x06b6d4,
             fields: [
               { name: 'Feed URL', value: feed.url, inline: false },
               {
@@ -352,7 +360,7 @@ function handleToggle(options: InteractionOption[], userId: number, deps: AppDep
         {
           title: enabled ? '▶️ Feed Resumed' : '⏸️ Feed Paused',
           description: `Feed **${feed.name}** (\`#${feed.id}\`) is now ${enabled ? '**enabled** and will be polled automatically.' : '**paused**.'}`,
-          color: enabled ? 0x57f287 : 0xfee75c,
+          color: enabled ? 0x10b981 : 0xf59e0b,
         },
       ],
     },

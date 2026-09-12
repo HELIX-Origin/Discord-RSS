@@ -28,7 +28,7 @@ export class FeedRepository {
     name: string,
     url: string,
     channelId: string | null,
-    feedType: 'rss' | 'scrape',
+    feedType: 'rss' | 'scrape' | 'reddit',
     scrape: Feed['scrape'],
     guildId?: string | null,
   ): Feed {
