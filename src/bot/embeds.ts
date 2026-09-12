@@ -376,3 +376,93 @@ function normalizeTimestamp(value: string): string | undefined {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
+
+export function streamAlertEmbed(args: {
+  title: string;
+  url: string;
+  description?: string | null;
+  author?: string | null;
+  publishedAt?: string | null;
+  feedTitle: string;
+  color?: number;
+  imageUrl?: string | null;
+  feedType?: string;
+  brandIconUrl?: string | null;
+}): DiscordEmbed {
+  const { title, url, description, author, publishedAt, feedTitle, imageUrl, feedType, brandIconUrl } = args;
+  const isYouTube = feedType === 'youtube';
+  const isTwitch = feedType === 'twitch';
+  const color = isTwitch ? 0x9146ff : isYouTube ? 0xff0000 : 0x06b6d4;
+  const cleanT = cleanTitle(title);
+  const embedIcon = brandIconUrl ?? null;
+
+  const embed: DiscordEmbed = {
+    title: cleanT,
+    url,
+    color,
+  };
+
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = [];
+
+  if (isTwitch) {
+    fields.push(
+      { name: '🎮 Category', value: args.description || 'Live', inline: true },
+      { name: '👥 Viewers', value: args.description ? 'Live' : 'Unknown', inline: true },
+    );
+  } else if (isYouTube) {
+    fields.push({ name: '▶️ Type', value: args.publishedAt?.includes('T') ? 'Video Upload' : 'Video', inline: true });
+  }
+
+  const { description: cleanDesc, links } = extractDescriptionAndLinks(description ?? null, STANDARD_DESC_LENGTH);
+  if (cleanDesc) {
+    embed.description = cleanDesc;
+  }
+
+  if (links.length > 0) {
+    fields.push({
+      name: '🔗 Links',
+      value: links.map((l) => `• [${l.label}](${l.url})`).join('\n'),
+      inline: false,
+    });
+  }
+
+  const extraLinks = links.filter((l) => l.url !== url && !url.includes(l.url) && !l.url.includes(url)).slice(0, 3);
+  if (extraLinks.length > 0) {
+    fields.push({
+      name: '📎 Related Links',
+      value: extraLinks.map((l) => `• [${l.label}](${l.url})`).join('\n'),
+      inline: extraLinks.length === 1,
+    });
+  }
+
+  if (fields.length > 0) {
+    embed.fields = fields;
+  }
+
+  if (author) {
+    let authorName = cleanTitle(author, 100);
+    if (isYouTube) {
+      authorName = `📺 ${authorName}`;
+    } else if (isTwitch) {
+      authorName = `🟣 ${authorName}`;
+    }
+    embed.author = { name: authorName };
+    if (embedIcon) {
+      embed.author.icon_url = embedIcon;
+    }
+  }
+
+  embed.footer = { text: feedTitle };
+
+  if (publishedAt) {
+    embed.timestamp = normalizeTimestamp(publishedAt);
+  }
+
+  const rawImage = imageUrl ?? extractImageFromHtml(description ?? null);
+  const primaryImage = normalizeImageUrl(rawImage);
+  if (primaryImage && isValidEmbedImageUrl(primaryImage)) {
+    embed.image = { url: primaryImage.trim() };
+  }
+
+  return embed;
+}

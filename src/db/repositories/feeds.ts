@@ -167,4 +167,9 @@ export class FeedRepository {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
       .slice(0, limit);
   }
+
+  getFeedByUrl(url: string): Feed | null {
+    const allFeeds = this.state.allFeeds();
+    return allFeeds.find((f) => f.url === url) || null;
+  }
 }

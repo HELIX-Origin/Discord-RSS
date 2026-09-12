@@ -34,6 +34,9 @@ export interface AppConfig {
   threadKeepaliveIntervalMs: number;
   threadKeepaliveGraceMs: number;
   threadMaxMessages: number;
+  youtubeApiKey: string | null;
+  twitchClientId: string | null;
+  twitchClientSecret: string | null;
 }
 
 export function defaultConfig(): AppConfig {
@@ -189,6 +192,10 @@ export function defaultConfig(): AppConfig {
     process.env['THREAD_KEEPALIVE_ENABLED']?.toLowerCase() !== 'false' &&
     process.env['KEEP_THREADS_OPEN']?.toLowerCase() !== 'false';
 
+  const youtubeApiKey = process.env['YOUTUBE_API_KEY']?.trim() || null;
+  const twitchClientId = process.env['TWITCH_CLIENT_ID']?.trim() || null;
+  const twitchClientSecret = process.env['TWITCH_CLIENT_SECRET']?.trim() || null;
+
   return {
     host,
     port,
@@ -221,6 +228,9 @@ export function defaultConfig(): AppConfig {
     threadKeepaliveIntervalMs: parsePositiveInt(process.env['THREAD_KEEPALIVE_INTERVAL_MS'], 6 * 3600 * 1000),
     threadKeepaliveGraceMs: parsePositiveInt(process.env['THREAD_KEEPALIVE_GRACE_MS'], 24 * 3600 * 1000),
     threadMaxMessages: parsePositiveInt(process.env['THREAD_MAX_MESSAGES'], 100),
+    youtubeApiKey,
+    twitchClientId,
+    twitchClientSecret,
   };
 }
 

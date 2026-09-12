@@ -218,6 +218,10 @@ export class Repository {
     return this.guildCategories.setCategoryTarget(guildId, category, channelId, threadChannelId);
   }
 
+  getFeedByUrl(url: string): Feed | null {
+    return this.feeds.getFeedByUrl(url);
+  }
+
   deleteGuildData(guildId: string): { feedsDeleted: number; guildsDeleted: number } {
     const feedsToDelete = this.state.allFeeds().filter((f) => f.guildId === guildId);
 

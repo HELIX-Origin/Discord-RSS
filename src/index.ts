@@ -10,6 +10,7 @@ import { createLogger } from './util/logger.js';
 import { clearPorts } from './util/ports.js';
 import { KeepAlivePing } from './util/keep-alive.js';
 import { DiscordBot } from './bot/bot.js';
+import { WebhookRouter } from './webhook/router.js';
 
 export async function main(): Promise<void> {
   const config = defaultConfig();
@@ -31,9 +32,15 @@ export async function main(): Promise<void> {
   scheduler.schedule('feed-poll', initialInterval, () => feeds.pollAllFeeds());
   scheduler.start();
 
+  // Initialize webhook router for real-time feed updates
+  const webhookRouter = new WebhookRouter(
+    { config, db, repo, oauth, feeds, redis, scheduler, bot: null },
+    config.logLevel,
+  );
+
   // 4. Create Discord Bot as primary application process
   const bot = new DiscordBot(
-    { config, db, repo, oauth, feeds, redis, scheduler },
+    { config, db, repo, oauth, feeds, redis, scheduler, webhookRouter },
     {
       token: config.botToken || '',
       clientId: config.clientId,
@@ -46,6 +53,7 @@ export async function main(): Promise<void> {
     },
   );
   feeds.setBot(bot);
+  webhookRouter.subscribeToAllFeeds();
 
   // 4b. Wire optional per-guild forum thread delivery (one thread per feed).
   const threads = new FeedThreadManager(repo, bot, config, config.logLevel);

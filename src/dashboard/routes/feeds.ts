@@ -64,7 +64,13 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const name = body.name?.trim();
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
-    if (!isValidHttpUrl(url) && !url.startsWith('freegames://') && !url.startsWith('https://')) {
+
+    // Support YouTube and Twitch URLs
+    const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+    const isTwitch = url.includes('twitch.tv');
+    const isValidUrl = isValidHttpUrl(url) || url.startsWith('freegames://') || isYoutube || isTwitch;
+
+    if (!isValidUrl) {
       return sendError(res, 400, 'Invalid URL');
     }
 
@@ -93,15 +99,29 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     }
 
     try {
-      const rawType = body.feedType || 'rss';
+      let rawType = body.feedType || 'rss';
+
+      // Auto-detect YouTube and Twitch from URL
+      if (!body.feedType) {
+        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+          rawType = 'youtube';
+        } else if (url.includes('twitch.tv')) {
+          rawType = 'twitch';
+        }
+      }
+
       const feedType: FeedType =
         rawType === 'scrape'
           ? 'scrape'
           : rawType === 'reddit'
             ? 'reddit'
-            : rawType.startsWith('free_games')
-              ? (rawType as FeedType)
-              : 'rss';
+            : rawType === 'youtube'
+              ? 'youtube'
+              : rawType === 'twitch'
+                ? 'twitch'
+                : rawType.startsWith('free_games')
+                  ? (rawType as FeedType)
+                  : 'rss';
       const scrape =
         body.scrape && body.scrape.item && body.scrape.title && body.scrape.link
           ? {

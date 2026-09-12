@@ -16,6 +16,7 @@ import { registerDiscordRoutes } from './routes/discord.js';
 import { registerGuildRoutes } from './routes/guilds.js';
 import { registerSettingsRoutes } from './routes/settings.js';
 import { registerStatsRoutes } from './routes/stats.js';
+import { registerWebhookRoutes, initWebhookRouter } from './routes/webhooks.js';
 import { authedUserId, isAdminOrOwner } from './routes/shared.js';
 import { createLogger } from '../util/logger.js';
 import { dispatchInteraction } from '../bot/commands/index.js';
@@ -191,6 +192,8 @@ export function createHelixRssServer(deps: AppDeps): Server {
   registerSettingsRoutes(router);
   registerStatsRoutes(router);
   registerAdminRoutes(router);
+  registerWebhookRoutes(router);
+  initWebhookRouter(deps);
 
   const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
     const baseUrl = getRequestBaseUrl(req, deps.config.publicBaseUrl, `${deps.config.host}:${deps.config.port}`);

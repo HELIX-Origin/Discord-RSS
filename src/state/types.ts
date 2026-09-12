@@ -35,7 +35,7 @@ export interface OAuthState {
   createdAt: string;
 }
 
-export type FeedCategory = 'rss' | 'reddit' | 'freegames';
+export type FeedCategory = 'rss' | 'reddit' | 'freegames' | 'streamalerts';
 
 export interface GuildCategory {
   guildId: string;
@@ -59,7 +59,9 @@ export type FeedType =
   | 'free_games_ubisoft'
   | 'free_games_ea'
   | 'free_games_prime'
-  | 'free_games_battlenet';
+  | 'free_games_battlenet'
+  | 'youtube'
+  | 'twitch';
 
 export interface Feed {
   id: number;
@@ -210,7 +212,8 @@ export const rowToDiscordGuild = (r: Row | undefined): DiscordGuild | null => {
 export const rowToGuildCategory = (r: Row | undefined): GuildCategory | null => {
   if (!r) return null;
   const category = String(r.category);
-  if (category !== 'rss' && category !== 'reddit' && category !== 'freegames') return null;
+  if (category !== 'rss' && category !== 'reddit' && category !== 'freegames' && category !== 'streamalerts')
+    return null;
   return {
     guildId: String(r.guild_id),
     category,
@@ -225,5 +228,6 @@ export function feedCategory(feedType: FeedType): FeedCategory | null {
   if (feedType === 'reddit') return 'reddit';
   if (feedType === 'rss' || feedType === 'scrape') return 'rss';
   if (feedType.startsWith('free_games')) return 'freegames';
+  if (feedType === 'youtube' || feedType === 'twitch') return 'streamalerts';
   return null;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-assignment -- accessToken and accessTokenSet are used in template literals */
 import type { Repository } from '../db/repository.js';
 import type { RedisCoordinator } from '../state/redis.js';
 import { feedCategory, type Feed, type FeedCategory } from '../state/types.js';
@@ -6,9 +7,23 @@ import { fetchFreeGames, type FreeGameItem, type FreeGamePlatformKey } from './f
 import { parseHtml } from './html.js';
 import { parseFeed, withGuid, type FeedEntry } from './parser.js';
 import { scrapeItems, absoluteUrl } from './scraper.js';
-import { feedEmbed, freeGameEmbed } from '../bot/embeds.js';
+import { feedEmbed, freeGameEmbed, streamAlertEmbed } from '../bot/embeds.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
 import { FeedThreadManager } from './threads.js';
+
+interface YouTubeItem {
+  id?: { videoId?: string };
+  snippet?: {
+    title?: string;
+    publishedAt?: string;
+    channelTitle?: string;
+    description?: string;
+    thumbnails?: {
+      high?: { url?: string };
+      default?: { url?: string };
+    };
+  };
+}
 
 export interface ChannelMessageSender {
   sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void>;
@@ -100,6 +115,8 @@ export class FeedWatcher {
     }
 
     const isFreeGamesFeed = feed.feedType === 'free_games' || feed.feedType?.startsWith('free_games');
+    const isYouTubeFeed = feed.feedType === 'youtube';
+    const isTwitchFeed = feed.feedType === 'twitch';
 
     // For Free Games feeds: automated polling runs daily (UTC) so limited-time giveaways are not missed.
     if (isFreeGamesFeed) {
@@ -114,6 +131,13 @@ export class FeedWatcher {
       }
 
       await this.pollFreeGamesLocked(userId, feed);
+      return;
+    }
+
+    // YouTube and Twitch feeds are primarily handled via webhooks
+    // But we also poll periodically as a fallback
+    if (isYouTubeFeed || isTwitchFeed) {
+      await this.pollStreamAlertFeed(userId, feed);
       return;
     }
 
@@ -331,6 +355,220 @@ export class FeedWatcher {
 
     this.repo.setFeedChecked(userId, feed.id, games.length ? games[0].id : feed.lastEntryId);
     this.logger.info('Free games feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
+  }
+
+  private async pollStreamAlertFeed(userId: number, feed: Feed): Promise<void> {
+    this.logger.debug('Polling stream alert feed (fallback)', { feedId: feed.id, feedType: feed.feedType });
+
+    const { channelId, threadChannelId } = this.resolveFeedTargets(feed);
+    if (!channelId && !threadChannelId) {
+      this.logger.warn('Stream alert feed has no configured Discord channel or thread target; skipping poll', {
+        feedId: feed.id,
+        feedName: feed.name,
+      });
+      return;
+    }
+
+    let entries: Array<{
+      id: string;
+      title: string;
+      link: string;
+      publishedAt: string;
+      author?: string;
+      description?: string;
+      imageUrl?: string;
+    }> = [];
+
+    if (feed.feedType === 'youtube') {
+      entries = await this.fetchYouTubeFeed(feed);
+    } else if (feed.feedType === 'twitch') {
+      entries = await this.fetchTwitchFeed(feed);
+    }
+
+    const toSend: Array<{
+      id: string;
+      title: string;
+      link: string;
+      publishedAt: string;
+      author?: string;
+      description?: string;
+      imageUrl?: string;
+    }> = [];
+    for (const entry of entries) {
+      if (this.repo.isEntrySent(feed.id, entry.id)) continue;
+      if (this.redis && (await this.redis.isEntrySent(feed.id, entry.id))) continue;
+      toSend.push(entry);
+    }
+
+    for (const entry of toSend) {
+      const embed = streamAlertEmbed({
+        title: entry.title,
+        url: entry.link,
+        description: entry.description,
+        author: entry.author,
+        publishedAt: entry.publishedAt,
+        feedTitle: feed.name,
+        color: feed.feedType === 'twitch' ? 0x9146ff : feed.feedType === 'youtube' ? 0xff0000 : 0x06b6d4,
+        imageUrl: entry.imageUrl,
+        feedType: feed.feedType,
+        brandIconUrl: null,
+      });
+      let delivered = false;
+      let errorDetail: string | null = null;
+
+      try {
+        delivered = await this.deliverEntry(feed, { embeds: [embed] });
+      } catch (err) {
+        errorDetail = err instanceof Error ? err.message : String(err);
+      }
+
+      if (delivered) {
+        this.repo.markEntrySent(feed.id, entry.id);
+        await this.redis?.markEntrySent(feed.id, entry.id);
+      } else {
+        this.logger.warn('Delivery failed for stream alert entry', {
+          feedId: feed.id,
+          entryId: entry.id,
+          entryTitle: entry.title,
+          error: errorDetail,
+        });
+        break;
+      }
+    }
+
+    this.repo.setFeedChecked(userId, feed.id, entries.length ? entries[0].id : feed.lastEntryId);
+    this.logger.info('Stream alert feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
+  }
+
+  private async fetchYouTubeFeed(feed: Feed): Promise<
+    Array<{
+      id: string;
+      title: string;
+      link: string;
+      publishedAt: string;
+      author?: string;
+      description?: string;
+      imageUrl?: string;
+    }>
+  > {
+    const apiKey = process.env['YOUTUBE_API_KEY'];
+    if (!apiKey) {
+      this.logger.warn('YouTube API key not configured, skipping YouTube feed', { feedId: feed.id });
+      return [];
+    }
+
+    const channelIdMatch = feed.url.match(/(?:channel\/|user\/|c\/|@)([^/?]+)/);
+    const channelId = channelIdMatch?.[1] || feed.url;
+
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&maxResults=10&key=${apiKey}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        this.logger.warn('YouTube API request failed', { feedId: feed.id, status: response.status });
+        return [];
+      }
+      const data = await response.json();
+
+      return (data.items || []).map((item: YouTubeItem) => {
+        const videoId = item.id?.videoId || item.id || '';
+        return {
+          id: videoId,
+          title: item.snippet?.title || 'New Video',
+          link: videoId ? `https://www.youtube.com/watch?v=${videoId}` : '',
+          publishedAt: item.snippet?.publishedAt || new Date().toISOString(),
+          author: item.snippet?.channelTitle,
+          description: item.snippet?.description,
+          imageUrl: item.snippet?.thumbnails?.high?.url || item.snippet?.thumbnails?.default?.url,
+        };
+      });
+    } catch (err) {
+      this.logger.error('Failed to fetch YouTube feed', { feedId: feed.id }, err);
+      return [];
+    }
+  }
+
+  private async fetchTwitchFeed(feed: Feed): Promise<
+    Array<{
+      id: string;
+      title: string;
+      link: string;
+      publishedAt: string;
+      author?: string;
+      description?: string;
+      imageUrl?: string;
+    }>
+  > {
+    const clientId = process.env['TWITCH_CLIENT_ID'];
+    const clientSecret = process.env['TWITCH_CLIENT_SECRET'];
+
+    if (!clientId || !clientSecret) {
+      this.logger.warn('Twitch credentials not configured, skipping Twitch feed', { feedId: feed.id });
+      return [];
+    }
+
+    let accessToken: string | null = null;
+    let accessTokenSet = false;
+    try {
+      const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          grant_type: 'client_credentials',
+        }),
+      });
+      const tokenData = await tokenRes.json();
+      accessToken = tokenData.access_token;
+      accessTokenSet = true;
+    } catch (err) {
+      this.logger.error('Failed to get Twitch access token', { feedId: feed.id }, err);
+      return [];
+    }
+
+    if (!accessToken || !accessTokenSet) return [];
+
+    const channelMatch = feed.url.match(/twitch\.tv\/([^/?]+)/);
+    const channelName = channelMatch?.[1] || feed.url;
+
+    try {
+      const url = `https://api.twitch.tv/helix/streams?user_login=${channelName}`;
+      const response = await fetch(url, {
+        headers: {
+          'Client-ID': clientId,
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        this.logger.warn('Twitch API request failed', { feedId: feed.id, status: response.status });
+        return [];
+      }
+
+      const data = await response.json();
+
+      return (data.data || []).map(
+        (stream: {
+          id: string;
+          user_name: string;
+          title: string;
+          user_login: string;
+          started_at: string;
+          thumbnail_url?: string;
+        }) => ({
+          id: stream.id,
+          title: `${stream.user_name} is live: ${stream.title}`,
+          link: `https://twitch.tv/${stream.user_login}`,
+          publishedAt: stream.started_at,
+          author: stream.user_name,
+          description: stream.title,
+          imageUrl: stream.thumbnail_url?.replace('{width}', '1280').replace('{height}', '720'),
+        }),
+      );
+    } catch (err) {
+      this.logger.error('Failed to fetch Twitch feed', { feedId: feed.id }, err);
+      return [];
+    }
   }
 
   async pollAllFeeds(): Promise<void> {

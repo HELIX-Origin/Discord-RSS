@@ -4,6 +4,7 @@ import type { Repository } from './db/repository.js';
 import type { OAuthService } from './oauth/service.js';
 import type { FeedWatcher } from './feed/watcher.js';
 import type { RedisCoordinator } from './state/redis.js';
+import type { WebhookRouter } from './webhook/router.js';
 
 import type { DiscordBot } from './bot/bot.js';
 import type { Scheduler } from './scheduler/scheduler.js';
@@ -17,6 +18,7 @@ export interface AppDeps {
   redis: RedisCoordinator | null;
   bot?: DiscordBot | null;
   scheduler?: Scheduler | null;
+  webhookRouter?: WebhookRouter;
 }
 
 /**
