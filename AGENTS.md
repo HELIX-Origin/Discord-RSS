@@ -67,6 +67,10 @@ This section documents active and recently resolved critical issues as required 
   - Rewrote `markdownToHtml` in `src/dashboard/views/legal.ts` as a line-based renderer (headings, bold/italic/code, `[text](url)` links, lists, `---` rules) for `/privacy` and `/tos`.
   - App name now derives from the Discord application (`DiscordBot.getAppName()` via `appDisplayName(deps)` in `src/app.ts`) across bot embeds (`/about`, `/stats`, `/help`, `/feed`), dashboard views, auth/error pages, and OAuth views.
 
+### 9. Discord Threads as Feed Delivery Targets (Planned / Roadmap)
+- **Problem**: Feeds can only deliver into text/announcement channels; Discord Threads (types 10/11/12) are filtered out of channel discovery in `src/bot/rest.ts` and unsupported as delivery targets.
+- **Status**: **Planned — not implemented.** Roadmap captured in [#20](https://github.com/HELIX-Origin/HELIX-RSS/issues/20) with mermaid diagrams, phases (data model, discovery/validation, delivery engine, dashboard UI, slash commands, docs/tests), permission-bit requirements, risks, and acceptance criteria. Implement only per that issue.
+
 ---
 
 ## Agent Ecosystem Architecture & Orchestration
