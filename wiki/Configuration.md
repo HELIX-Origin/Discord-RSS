@@ -27,7 +27,6 @@ Feed posting intervals are managed directly per-user via the dashboard **Feeds**
 | ------------------ | ------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | `LOG_LEVEL`        | `info`        | Logging verbosity: `debug`, `info`, `warn`, or `error`. Structured JSON logs are emitted with timestamp, source, and context. |
 | `SQLITE_DATA`      | `./data`      | Directory where the primary SQLite database (`helix-rss.db`) and runtime assets are saved.                                    |
-| `SQLITE_TEST_DATA` | `./data/.tmp` | Directory used by Vitest integration tests for temporary SQLite instances.                                                    |
 
 ### Discord Bot & OAuth Authentication
 

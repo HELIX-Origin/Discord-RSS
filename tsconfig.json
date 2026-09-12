@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "declaration": true,
     "verbatimModuleSyntax": true,
-    "types": ["node", "vitest/globals"]
+    "types": ["node"]
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]

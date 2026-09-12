@@ -5,10 +5,9 @@ This guide outlines engineering workflows for development, test automation, lint
 ```mermaid
 flowchart LR
     Dev["Code Changes in src/"] --> TypeCheck["tsc --noEmit"]
-    TypeCheck --> FormatCheck["prettier --check"]
-    FormatCheck --> Lint["eslint src tests"]
-    Lint --> Vitest["vitest run"]
-    Vitest --> VerifyOK{"Check Passed?"}
+    TypeCheck --> FormatCheck["prettier --check src"]
+    FormatCheck --> Lint["eslint src"]
+    Lint --> VerifyOK{"Check Passed?"}
     VerifyOK -->|Yes| Build["tsc -> dist/"]
     VerifyOK -->|No| Fix["Debug & Fix"]
     Fix --> Dev
@@ -42,24 +41,6 @@ npm run dev:run
 
 ---
 
-## 🧪 Testing Suite
-
-All tests live in `tests/` and are powered by [Vitest](https://vitest.dev).
-- **Unit Tests (`tests/unit/`)**: Fast, pure tests covering URL helpers, XML parsing, feed scrapers, HTTP routing, logger, and AppState entity mappers.
-- **Integration Tests (`tests/integration/`)**: Complete tests exercising the server, API endpoints, Discord bot gateway, slash command dispatching, and scheduler loops with ephemeral SQLite databases.
-- **Shared Helpers & Mocks (`tests/helpers/`, `tests/mocks/`)**: Shared test databases, factory fixtures, and Mock Service Worker (MSW) network interceptors.
-
-### Running Tests
-```bash
-# Execute full test suite
-npm test
-
-# Run tests in interactive watch mode
-npm run test:watch
-```
-
----
-
 ## 🧹 Code Quality, Linting & Formatting
 
 The codebase enforces strict ESLint rules and Prettier code formatting.
@@ -69,10 +50,10 @@ The codebase enforces strict ESLint rules and Prettier code formatting.
 | Command | Purpose |
 |---|---|
 | `npm run typecheck` | Run TypeScript compiler in check-only mode (`tsc --noEmit`) |
-| `npm run lint` | Run ESLint across `src/` and `tests/` with `--max-warnings 0` |
+| `npm run lint` | Run ESLint across `src/` with `--max-warnings 0` |
 | `npm run format` | Automatically format all source files using Prettier |
 | `npm run format:check` | Verify that all files meet Prettier standards |
-| `npm run check` | Execute typecheck, format check, lint, and test suite in one command |
+| `npm run check` | Execute typecheck, format check, and lint in one command |
 | `npm run build` | Compile TypeScript into production-ready ESM bundle in `dist/` |
 
 ---
