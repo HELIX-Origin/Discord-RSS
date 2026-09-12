@@ -1,4 +1,10 @@
-export function renderOAuthCallbackHtml(status: 'success' | 'error', provider: string, errorDetail?: string): string {
+export function renderOAuthCallbackHtml(
+  status: 'success' | 'error',
+  provider: string,
+  errorDetail?: string,
+  appName = 'HELIX RSS',
+  appIconUrl?: string | null,
+): string {
   const isSuccess = status === 'success';
   const icon = isSuccess ? 'fa-circle-check' : 'fa-circle-xmark';
   const iconColor = isSuccess ? '#10b981' : '#ef4444';
@@ -12,7 +18,8 @@ export function renderOAuthCallbackHtml(status: 'success' | 'error', provider: s
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} · HELIX RSS</title>
+  <title>${title} · ${appName}</title>
+  ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -36,5 +43,9 @@ export function renderOAuthCallbackHtml(status: 'success' | 'error', provider: s
 </html>`;
 }
 
-export const renderOAuthErrorHtml = (title: string, message: string): string =>
-  renderOAuthCallbackHtml('error', title, message);
+export const renderOAuthErrorHtml = (
+  title: string,
+  message: string,
+  appName = 'HELIX RSS',
+  appIconUrl?: string | null,
+): string => renderOAuthCallbackHtml('error', title, message, appName, appIconUrl);

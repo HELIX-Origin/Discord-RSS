@@ -24,6 +24,8 @@ export interface AppConfig {
   pingUrl: string | null;
   pingIntervalMs: number;
   discordApiBaseUrl: string;
+  repoUrl: string;
+  userAgent: string;
 }
 
 export function defaultConfig(): AppConfig {
@@ -144,6 +146,18 @@ export function defaultConfig(): AppConfig {
   }
   const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
 
+  const repoUrl =
+    process.env['REPO_URL']?.trim() ||
+    process.env['GITHUB_REPO']?.trim() ||
+    process.env['REPOSITORY_URL']?.trim() ||
+    process.env['PROJECT_URL']?.trim() ||
+    '';
+
+  const userAgent =
+    process.env['USER_AGENT']?.trim() ||
+    process.env['DISCORD_USER_AGENT']?.trim() ||
+    (repoUrl ? `DiscordBot (${repoUrl}, 0.1.0)` : 'DiscordBot (0.1.0)');
+
   return {
     host,
     port,
@@ -166,6 +180,8 @@ export function defaultConfig(): AppConfig {
     pingUrl,
     pingIntervalMs,
     discordApiBaseUrl: process.env['DISCORD_API_BASE_URL']?.trim() || 'https://discord.com/api/v10',
+    repoUrl,
+    userAgent,
   };
 }
 

@@ -4,7 +4,7 @@ import type { AppDeps } from '../app.js';
 import { createLogger, type Logger } from '../util/logger.js';
 import { allBotCommands, dispatchInteraction } from './commands/index.js';
 import { DiscordGatewayClient } from './gateway.js';
-import { DiscordRestClient } from './rest.js';
+import { DiscordRestClient, type DiscordApplicationInfo } from './rest.js';
 import { InteractionResponseType, type DiscordInteraction } from './types.js';
 import { createHelixRssServer } from '../dashboard/server.js';
 
@@ -28,6 +28,7 @@ export class DiscordBot {
   private isStarted = false;
   private ownerDiscordIds = new Set<string>();
   private teamAdminDiscordIds = new Set<string>();
+  private applicationInfo: DiscordApplicationInfo | null = null;
 
   constructor(
     private readonly deps: AppDeps,
@@ -229,6 +230,7 @@ export class DiscordBot {
   async detectApplicationOwners(): Promise<{ ownerIds: string[]; adminIds: string[] }> {
     try {
       const app = await this.rest.getCurrentApplication();
+      this.applicationInfo = app;
       const owners = new Set<string>();
       const admins = new Set<string>();
 
@@ -251,7 +253,9 @@ export class DiscordBot {
 
       this.ownerDiscordIds = owners;
       this.teamAdminDiscordIds = admins;
-      this.logger.info('Detected Discord Application Team from Portal', {
+      this.logger.info('Detected Discord Application details from Portal', {
+        appName: app.name,
+        hasIcon: Boolean(app.icon || app.bot?.avatar),
         teamCount: owners.size,
         teamIds: Array.from(owners),
       });
@@ -266,6 +270,29 @@ export class DiscordBot {
       });
       return { ownerIds: [], adminIds: [] };
     }
+  }
+
+  getApplicationInfo(): DiscordApplicationInfo | null {
+    return this.applicationInfo;
+  }
+
+  getAppName(): string {
+    return (
+      this.applicationInfo?.name ||
+      this.applicationInfo?.bot?.global_name ||
+      this.applicationInfo?.bot?.username ||
+      'HELIX RSS'
+    );
+  }
+
+  getAppIconUrl(): string | null {
+    if (this.applicationInfo?.icon && this.applicationInfo?.id) {
+      return `https://cdn.discordapp.com/app-icons/${this.applicationInfo.id}/${this.applicationInfo.icon}.png?size=128`;
+    }
+    if (this.applicationInfo?.bot?.avatar && this.applicationInfo?.bot?.id) {
+      return `https://cdn.discordapp.com/avatars/${this.applicationInfo.bot.id}/${this.applicationInfo.bot.avatar}.png?size=128`;
+    }
+    return null;
   }
 
   getOwnerDiscordIds(): string[] {

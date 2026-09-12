@@ -2,6 +2,9 @@ import type { AppDeps } from '../../app.js';
 import { isOwnerUser, isAdminOrOwner, canUserAccessDashboard } from '../routes/shared.js';
 
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
+  const appName = deps.bot?.getAppName() || 'HELIX RSS';
+  const appIconUrl = deps.bot?.getAppIconUrl() || null;
+
   // Permission check for logged in Discord users without server manage permissions
   if (userId !== null && !canUserAccessDashboard(userId, deps)) {
     return `<!DOCTYPE html>
@@ -9,7 +12,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Access Denied · HELIX RSS</title>
+  <title>Access Denied · ${appName}</title>
+  ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -52,7 +56,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HELIX RSS · Feed Syndication</title>
+  <title>${appName} · Feed Syndication</title>
+  ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -175,9 +180,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   <!-- Header -->
   <header>
     <a href="/dashboard" class="brand">
-      <div class="brand-icon"><i class="fa-solid fa-rss"></i></div>
+      ${
+        appIconUrl
+          ? `<img src="${appIconUrl}" alt="${appName}" style="width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">`
+          : `<div class="brand-icon"><i class="fa-solid fa-rss"></i></div>`
+      }
       <div>
-        <div class="brand-title">HELIX <span>RSS</span></div>
+        <div class="brand-title">${appName}</div>
         <div class="brand-sub">Discord Feed Syndication</div>
       </div>
     </a>
@@ -232,7 +241,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <span>&middot;</span>
         <a href="/tos">Terms</a>
         <span>&middot;</span>
-        <a href="https://github.com/HELIX-Origin/HELIX-RSS" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="${deps.config.repoUrl || 'https://github.com/HELIX-Origin/HELIX-RSS'}" target="_blank" rel="noreferrer">GitHub</a>
       </div>
     </nav>
 

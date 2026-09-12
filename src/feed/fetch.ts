@@ -29,7 +29,17 @@ export interface HttpFetcherOptions {
   maxBytes?: number;
 }
 
-export const DEFAULT_USER_AGENT = 'HelixRSS/0.1 (+https://github.com/HELIX-Origin/HELIX-RSS)';
+const defaultRepoUrl =
+  process.env['REPO_URL']?.trim() ||
+  process.env['GITHUB_REPO']?.trim() ||
+  process.env['REPOSITORY_URL']?.trim() ||
+  process.env['PROJECT_URL']?.trim() ||
+  '';
+
+export const DEFAULT_USER_AGENT =
+  process.env['FEED_USER_AGENT']?.trim() ||
+  process.env['USER_AGENT']?.trim() ||
+  (defaultRepoUrl ? `HelixRSS/0.1 (+${defaultRepoUrl})` : 'HelixRSS/0.1');
 
 export async function fetchRaw(url: string, options: HttpFetcherOptions = {}): Promise<FetchResult> {
   const { timeoutMs = 15_000, maxRedirects = 5, userAgent = DEFAULT_USER_AGENT, maxBytes = 10 * 1024 * 1024 } = options;

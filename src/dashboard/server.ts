@@ -61,18 +61,26 @@ export function createHelixRssServer(deps: AppDeps): Server {
 
   // Auth pages
   router.add('GET', '/login', (_req, res, _ctx, d) => {
-    sendHtml(res, 200, renderLoginHtml(false, d.config.redirectUrl));
+    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appIconUrl = d.bot?.getAppIconUrl() || null;
+    sendHtml(res, 200, renderLoginHtml(false, d.config.redirectUrl, appName, appIconUrl));
   });
   router.add('GET', '/register', (_req, res, _ctx, d) => {
-    sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl));
+    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appIconUrl = d.bot?.getAppIconUrl() || null;
+    sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl, appName, appIconUrl));
   });
 
   // Policy & Legal pages
-  router.add('GET', '/privacy', (_req, res) => {
-    sendHtml(res, 200, renderLegalHtml('Privacy Policy', 'PRIVACY.md'));
+  router.add('GET', '/privacy', (_req, res, _ctx, d) => {
+    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appIconUrl = d.bot?.getAppIconUrl() || null;
+    sendHtml(res, 200, renderLegalHtml('Privacy Policy', 'PRIVACY.md', appName, appIconUrl));
   });
-  router.add('GET', '/tos', (_req, res) => {
-    sendHtml(res, 200, renderLegalHtml('Terms of Service', 'TOS.md'));
+  router.add('GET', '/tos', (_req, res, _ctx, d) => {
+    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appIconUrl = d.bot?.getAppIconUrl() || null;
+    sendHtml(res, 200, renderLegalHtml('Terms of Service', 'TOS.md', appName, appIconUrl));
   });
 
   // Bot invite redirects

@@ -25,6 +25,20 @@ export interface DiscordProfile {
   email: string;
 }
 
+function getDiscordUserAgent(): string {
+  const repoUrl =
+    process.env['REPO_URL']?.trim() ||
+    process.env['GITHUB_REPO']?.trim() ||
+    process.env['REPOSITORY_URL']?.trim() ||
+    process.env['PROJECT_URL']?.trim() ||
+    '';
+  return (
+    process.env['USER_AGENT']?.trim() ||
+    process.env['DISCORD_USER_AGENT']?.trim() ||
+    (repoUrl ? `DiscordBot (${repoUrl}, 0.1.0)` : 'DiscordBot (0.1.0)')
+  );
+}
+
 export class DiscordProvider implements OAuthProvider {
   readonly provider = 'discord';
 
@@ -68,7 +82,7 @@ export class DiscordProvider implements OAuthProvider {
       headers: {
         'content-type': 'application/x-www-form-urlencoded',
         accept: 'application/json',
-        'user-agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
+        'user-agent': getDiscordUserAgent(),
       },
       body,
     });
@@ -94,7 +108,7 @@ export class DiscordProvider implements OAuthProvider {
     const res = await fetch('https://discord.com/api/v10/users/@me', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'user-agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
+        'user-agent': getDiscordUserAgent(),
       },
     });
 
@@ -118,7 +132,7 @@ export class DiscordProvider implements OAuthProvider {
     const res = await fetch('https://discord.com/api/v10/users/@me/guilds', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'user-agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
+        'user-agent': getDiscordUserAgent(),
       },
     });
 

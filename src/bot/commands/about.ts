@@ -49,11 +49,15 @@ export async function handleAboutCommand(
       value: `[Open Dashboard](${dashboardUrl})`,
       inline: true,
     },
-    {
-      name: '📂 Source Code',
-      value: '[github.com/HELIX-Origin/HELIX-RSS](https://github.com/HELIX-Origin/HELIX-RSS)',
-      inline: true,
-    },
+    ...(deps.config.repoUrl
+      ? [
+          {
+            name: '📂 Source Code',
+            value: `[${deps.config.repoUrl.replace(/^https?:\/\//i, '')}](${deps.config.repoUrl})`,
+            inline: true,
+          },
+        ]
+      : []),
   ];
 
   if (inviteUrl) {

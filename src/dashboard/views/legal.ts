@@ -25,7 +25,12 @@ function markdownToHtml(md: string): string {
     .replace(/\n/gim, '<br>');
 }
 
-export function renderLegalHtml(title: string, markdownFilename: string): string {
+export function renderLegalHtml(
+  title: string,
+  markdownFilename: string,
+  appName = 'HELIX RSS',
+  appIconUrl?: string | null,
+): string {
   let contentHtml = '<p>Document not found.</p>';
   const filePath = resolve(process.cwd(), markdownFilename);
   if (existsSync(filePath)) {
@@ -42,7 +47,8 @@ export function renderLegalHtml(title: string, markdownFilename: string): string
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} · HELIX RSS</title>
+  <title>${title} · ${appName}</title>
+  ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -57,7 +63,11 @@ export function renderLegalHtml(title: string, markdownFilename: string): string
   <div class="card">
     <div class="header">
       <a href="/dashboard" style="display: flex; align-items: center; gap: 0.5rem; color: #fff; text-decoration: none; font-weight: 800; font-size: 1.1rem;">
-        <i class="fa-solid fa-rss" style="color: #06b6d4;"></i> HELIX <span style="color: #06b6d4;">RSS</span>
+        ${
+          appIconUrl
+            ? `<img src="${appIconUrl}" alt="${appName}" style="width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; object-fit: cover;">`
+            : `<i class="fa-solid fa-rss" style="color: #06b6d4;"></i>`
+        } ${appName}
       </a>
       <a href="/dashboard" class="btn"><i class="fa-solid fa-arrow-left"></i> Return to Dashboard</a>
     </div>

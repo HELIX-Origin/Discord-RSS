@@ -10,6 +10,7 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     _req: IncomingMessage,
     res: ServerResponse,
     ctx: { params: Record<string, string>; query: URLSearchParams },
+    d: AppDeps,
   ) => {
     const errorParam = ctx.query.get('error') || ctx.query.get('message');
     const desc = ctx.query.get('error_description') || errorParam;
@@ -18,7 +19,9 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     const message = desc
       ? `Authentication could not be completed: ${desc}. The rest of the dashboard is up and running smoothly, so feel free to return there safely.`
       : 'The requested OAuth provider is unavailable or encountered an error. The rest of the dashboard is up and running smoothly, so feel free to return there safely.';
-    sendHtml(res, 200, renderOAuthErrorHtml(title, message));
+    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appIconUrl = d.bot?.getAppIconUrl() || null;
+    sendHtml(res, 200, renderOAuthErrorHtml(title, message, appName, appIconUrl));
   };
 
   router.add('GET', '/oauth/error', handleOAuthError);
@@ -40,16 +43,24 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     const state = ctx.query.get('state') ?? '';
     const code = ctx.query.get('code') ?? '';
     const provider = ctx.params['provider'];
+    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appIconUrl = d.bot?.getAppIconUrl() || null;
     try {
       const redirectUri = redirectUriForProvider(d, provider, req);
       await d.oauth.handleCallback(state, code, redirectUri);
       d.repo.logActivity(null, 'info', 'oauth', `OAuth provider "${provider}" connected`);
-      sendHtml(res, 200, renderOAuthCallbackHtml('success', provider));
+      sendHtml(res, 200, renderOAuthCallbackHtml('success', provider, undefined, appName, appIconUrl));
     } catch (err) {
       sendHtml(
         res,
         400,
-        renderOAuthCallbackHtml('error', provider, err instanceof Error ? err.message : 'OAuth callback failed'),
+        renderOAuthCallbackHtml(
+          'error',
+          provider,
+          err instanceof Error ? err.message : 'OAuth callback failed',
+          appName,
+          appIconUrl,
+        ),
       );
     }
   });

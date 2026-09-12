@@ -1,17 +1,24 @@
-export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | null): string {
+export function renderLoginHtml(
+  isRegister: boolean,
+  botInviteUrl?: string | null,
+  appName = 'HELIX RSS',
+  appIconUrl?: string | null,
+): string {
   const title = isRegister ? 'Create Account' : 'Log In';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title} · HELIX RSS</title>
+  <title>${title} · ${appName}</title>
+  ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #0b0f19; color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1rem; }
     .card { background: #111827; border: 1px solid #1f2937; border-radius: 1.25rem; padding: 2.25rem; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
     .brand-icon { width: 3.5rem; height: 3.5rem; border-radius: 1rem; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: inline-flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem; margin-bottom: 1rem; box-shadow: 0 8px 16px rgba(6,182,212,0.3); }
+    .brand-img { width: 4.5rem; height: 4.5rem; border-radius: 1.25rem; object-fit: cover; margin-bottom: 1rem; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
     h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem; }
     h1 span { color: #06b6d4; }
     p { font-size: 0.8125rem; color: #9ca3af; margin-bottom: 1.75rem; }
@@ -28,8 +35,12 @@ export function renderLoginHtml(isRegister: boolean, botInviteUrl?: string | nul
 </head>
 <body>
   <div class="card">
-    <div class="brand-icon"><i class="fa-solid fa-rss"></i></div>
-    <h1>HELIX <span>RSS</span></h1>
+    ${
+      appIconUrl
+        ? `<img src="${appIconUrl}" alt="${appName}" class="brand-img">`
+        : `<div class="brand-icon"><i class="fa-solid fa-rss"></i></div>`
+    }
+    <h1>${appName}</h1>
     <p>Sign in with Discord to manage your feeds and server syndications.</p>
 
     <a href="/api/auth/discord" class="btn-discord">

@@ -3,6 +3,15 @@ import type { ApplicationCommand, InteractionResponse, InteractionResponseData }
 export interface DiscordApplicationInfo {
   id: string;
   name: string;
+  icon?: string | null;
+  description?: string;
+  bot?: {
+    id: string;
+    username: string;
+    avatar?: string | null;
+    global_name?: string | null;
+    discriminator?: string;
+  };
   owner?: { id: string; username: string; discriminator?: string; global_name?: string | null };
   team?: {
     id: string;
@@ -32,19 +41,32 @@ const DISCORD_API_TIMEOUT_MS = 8000;
 
 export class DiscordRestClient {
   private readonly baseUrl: string;
+  private readonly userAgent: string;
 
   constructor(
     private readonly token: string,
     baseUrl = 'https://discord.com/api/v10',
+    userAgent?: string,
   ) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
+    const repoUrl =
+      process.env['REPO_URL']?.trim() ||
+      process.env['GITHUB_REPO']?.trim() ||
+      process.env['REPOSITORY_URL']?.trim() ||
+      process.env['PROJECT_URL']?.trim() ||
+      '';
+    this.userAgent =
+      userAgent ||
+      process.env['USER_AGENT']?.trim() ||
+      process.env['DISCORD_USER_AGENT']?.trim() ||
+      (repoUrl ? `DiscordBot (${repoUrl}, 0.1.0)` : 'DiscordBot (0.1.0)');
   }
 
   private headers(extra: Record<string, string> = {}): Record<string, string> {
     return {
       Authorization: `Bot ${this.token}`,
       'Content-Type': 'application/json',
-      'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
+      'User-Agent': this.userAgent,
       ...extra,
     };
   }
@@ -135,10 +157,7 @@ export class DiscordRestClient {
   ): Promise<void> {
     const res = await fetch(`${this.baseUrl}/interactions/${interactionId}/${interactionToken}/callback`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
-      },
+      headers: this.headers(),
       body: JSON.stringify(response),
       signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
@@ -156,10 +175,7 @@ export class DiscordRestClient {
   ): Promise<void> {
     const res = await fetch(`${this.baseUrl}/webhooks/${applicationId}/${interactionToken}/messages/@original`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
-      },
+      headers: this.headers(),
       body: JSON.stringify(data),
       signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
@@ -177,10 +193,7 @@ export class DiscordRestClient {
   ): Promise<void> {
     const res = await fetch(`${this.baseUrl}/webhooks/${applicationId}/${interactionToken}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
-      },
+      headers: this.headers(),
       body: JSON.stringify(data),
       signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
