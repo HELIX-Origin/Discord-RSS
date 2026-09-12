@@ -11,6 +11,7 @@ import { createLogger, type LogLevel } from '../util/logger.js';
 
 export interface ChannelMessageSender {
   sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void>;
+  getAppIconUrl?(): string | null;
 }
 
 export class FeedWatcher {
@@ -203,6 +204,7 @@ export class FeedWatcher {
         feedTitle: feed.name,
         imageUrl: entry.imageUrl,
         feedType: feed.feedType,
+        brandIconUrl: this.bot?.getAppIconUrl?.() ?? null,
       });
 
       let delivered = false;

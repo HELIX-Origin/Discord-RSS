@@ -195,12 +195,14 @@ export function feedEmbed(args: {
   color?: number;
   imageUrl?: string | null;
   feedType?: string;
+  brandIconUrl?: string | null;
 }): DiscordEmbed {
-  const { title, url, description, author, publishedAt, feedTitle, imageUrl, feedType } = args;
+  const { title, url, description, author, publishedAt, feedTitle, imageUrl, feedType, brandIconUrl } = args;
   const isRedditImageFeed = feedType === 'reddit';
   const isRedditDomain = /reddit\.com\/(?:r|user)\//i.test(url);
   const color = args.color ?? (isRedditImageFeed || isRedditDomain ? REDDIT_EMBED_COLOR : STANDARD_EMBED_COLOR);
   const cleanT = cleanTitle(title);
+  const embedIcon = brandIconUrl ?? null;
 
   const embed: DiscordEmbed = {
     title: cleanT,
@@ -218,12 +220,11 @@ export function feedEmbed(args: {
       embed.description = cleanDesc;
     }
 
-    // 1. Primary Source / Link Field (Placed in its own field rather than inside the message prose)
-    if (url) {
-      const linkLabel = isRedditDomain ? 'View on Reddit 💬' : `${formatReadableUrlLabel(url)} ↗`;
+    // 1. Reddit text feeds keep a dedicated discussion link; standard RSS entry titles already link to their source URL directly.
+    if (url && isRedditDomain) {
       fields.push({
-        name: isRedditDomain ? '💬 Discussion' : '🔗 Source Link',
-        value: `[${linkLabel}](${url})`,
+        name: '💬 Discussion',
+        value: `[View on Reddit 💬](${url})`,
         inline: true,
       });
     }
@@ -236,6 +237,11 @@ export function feedEmbed(args: {
         value: extraLinks.map((l) => `• [${l.label}](${l.url})`).join('\n'),
         inline: extraLinks.length === 1,
       });
+    }
+
+    // 3. Bot branding mark as the card's corner thumbnail
+    if (embedIcon) {
+      embed.thumbnail = { url: embedIcon };
     }
   }
 
@@ -250,6 +256,9 @@ export function feedEmbed(args: {
       authorName = `u/${authorName}`;
     }
     embed.author = { name: authorName };
+    if (embedIcon) {
+      embed.author.icon_url = embedIcon;
+    }
   }
 
   embed.footer = { text: feedTitle };
