@@ -502,6 +502,17 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   </div>
 
   <script>
+    function escapeHtmlAttr(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    const escapeHtml = escapeHtmlAttr;
+
     let discordGuildsCache = [];
     let presetsCache = [];
     let botInviteUrlCache = null;
