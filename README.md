@@ -17,6 +17,11 @@
 
 Featuring a built-in web dashboard, Discord OAuth2 authentication, zero frontend npm dependencies, SQLite persistent storage, and optional Redis clustering, HELIX RSS provides everything you need to keep your Discord community informed in real time.
 
+> [!IMPORTANT]
+> This repo is currently undergoing a large update. The current state for now may be unuseable as a result. Please be patient as this update will be fully released in the coming weeks.
+> 
+> If you wish to see a live instance of the bot in action, you can check it out by visitng our [running instance](http://159.223.140.212:3131)
+
 ---
 
 ## ✨ Core Features
