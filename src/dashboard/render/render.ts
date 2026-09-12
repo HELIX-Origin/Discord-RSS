@@ -39,8 +39,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
   const isOwner = isOwnerUser(userId, deps);
   const isAdmin = !isOwner && isAdminOrOwner(userId, deps);
-  const canAccessSettings = isOwner || isAdmin;
-  const isHost = canAccessSettings;
+  const isHost = isOwner || isAdmin;
   const dbStats = deps.db.stats();
   const botInviteUrl = deps.config.clientId
     ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=534723950656`
@@ -54,6 +53,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   <title>HELIX RSS Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script>
     (function() {
       try {
@@ -80,17 +82,23 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       --border-glass: rgba(203, 213, 225, 0.9);
       --text-main: #1e293b;
     }
-    body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.2s ease, color 0.2s ease; }
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+    code, pre, .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
     .glass { background: var(--bg-glass); backdrop-filter: blur(12px); border: 1px solid var(--border-glass); }
     .glow-cyan { text-shadow: 0 0 12px rgba(6, 182, 212, 0.6); }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: var(--bg-main); }
     ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
-    .spinner-border { animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Light Theme dimmed dual-tone utility mappings */
+    /* Light Theme utilities */
     html.light-theme ::-webkit-scrollbar-track { background: #e8ecf2; }
     html.light-theme ::-webkit-scrollbar-thumb { background: #94a3b8; }
     html.light-theme ::-webkit-scrollbar-thumb:hover { background: #64748b; }
@@ -119,8 +127,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   </style>
 </head>
 <body class="min-h-screen flex flex-col font-sans selection:bg-cyan-500 selection:text-white">
-  <!-- Top Navigation -->
-  <header class="glass sticky top-0 z-50 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
+  <!-- Top Navigation Header -->
+  <header class="glass sticky top-0 z-50 border-b border-gray-800 px-6 py-3.5 flex items-center justify-between">
     <div class="flex items-center space-x-3">
       <div class="h-10 w-10 rounded-xl overflow-hidden shadow-lg shadow-cyan-500/30 border border-cyan-500/30 shrink-0 bg-gray-900 flex items-center justify-center">
         <i class="fa-solid fa-rss text-cyan-400 text-lg"></i>
@@ -150,7 +158,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       ${
         userId !== null
           ? `<span id="user-pill" class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-800 text-gray-300 border border-gray-700">
-        <i class="fa-solid fa-user mr-1.5 text-cyan-400"></i> <span id="user-name">Loading...</span>
+        <i class="fa-solid fa-user mr-1.5 text-cyan-400"></i> <span id="user-name">Discord User</span>
       </span>
       <button onclick="logout()" title="Log out" class="inline-flex items-center px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-800 hover:bg-red-900/70 text-gray-300 hover:text-white transition border border-gray-700">
         <i class="fa-solid fa-arrow-right-from-bracket"></i>
@@ -203,7 +211,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
     <!-- Tab Contents -->
     <main class="flex-1 space-y-6 min-w-0">
-      <!-- 1. OVERVIEW -->
+      <!-- 1. OVERVIEW TAB -->
       <section id="tab-overview" class="tab-content space-y-6">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div class="glass p-5 rounded-2xl border border-gray-800">
@@ -239,7 +247,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-      <!-- 2. FEEDS -->
+      <!-- 2. FEEDS TAB -->
       <section id="tab-feeds" class="tab-content hidden space-y-6">
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <div>
@@ -301,6 +309,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           </div>
         </div>
 
+        <!-- Feeds List -->
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <div class="flex justify-between items-center">
             <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -321,16 +330,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-
-
-      <!-- 3. POPULAR FEEDS -->
+      <!-- 3. POPULAR FEEDS TAB -->
       <section id="tab-popular" class="tab-content hidden space-y-6">
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <div>
             <h2 class="text-base font-bold text-white flex items-center gap-2">
-              <i class="fa-solid fa-star text-amber-400"></i> Popular Feeds
+              <i class="fa-solid fa-star text-amber-400"></i> Popular Feeds Catalog
             </h2>
-            <p class="text-xs text-gray-400 mt-1">One-click subscribe to top news, tech, science, and gaming feeds into any Discord channel.</p>
+            <p class="text-xs text-gray-400 mt-1">One-click subscribe to top news, tech, AI, gaming, and developer feeds directly into any Discord channel.</p>
           </div>
           <div id="presets-body" class="space-y-4">
             <div class="text-gray-500 py-4 text-center font-mono text-xs">Loading popular feeds...</div>
@@ -338,12 +345,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
-
-
+      <!-- 4. SETTINGS TAB (ADMIN ONLY) -->
       ${
         isHost
-          ? `<!-- 7. SETTINGS -->
-      <section id="tab-settings" class="tab-content hidden space-y-6">
+          ? `<section id="tab-settings" class="tab-content hidden space-y-6">
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <h2 class="text-base font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-sliders text-indigo-400"></i> Service Settings
@@ -352,14 +357,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-2">
               <span class="font-bold text-cyan-400">Public Base URL</span>
               <p class="text-xs text-gray-400">Where this dashboard is reachable (used for OAuth redirect URIs).</p>
-              <input type="text" id="setting-base-url" placeholder="http://localhost:3131" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
+              <input type="text" id="setting-base-url" placeholder="http://159.223.140.212:3131" class="w-full bg-black/40 border border-gray-800 rounded-lg p-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500">
             </div>
             <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 space-y-3">
               <div class="flex items-center justify-between">
-                <span class="font-bold text-cyan-400">Feed Posting Interval</span>
+                <span class="font-bold text-cyan-400">Global Feed Posting Interval</span>
                 <span id="current-interval-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-cyan-950 text-cyan-300 border border-cyan-800">1 hour</span>
               </div>
-              <p class="text-xs text-gray-400">Select how frequently the service checks feeds and delivers new posts to Discord.</p>
+              <p class="text-xs text-gray-400">Default frequency for background feed checking.</p>
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1" id="poll-interval-buttons">
                 <button type="button" onclick="selectPollInterval(60000)" id="btn-interval-60000" class="interval-btn px-3 py-2 rounded-lg text-xs font-semibold border transition text-center bg-gray-800 text-gray-300 border-gray-700 hover:bg-gray-700">
                   <i class="fa-solid fa-bolt text-[10px] mr-1 text-cyan-400"></i>1 min
@@ -383,7 +388,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           </div>
         </div>
 
-
         <div class="glass p-6 rounded-2xl border border-gray-800 space-y-4">
           <div class="flex items-center justify-between">
             <div>
@@ -391,7 +395,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 <i class="fa-solid fa-users text-cyan-400"></i> Registered Users &amp; Discord App Team
               </h2>
               <p class="text-xs text-gray-400 mt-0.5">
-                Team permissions are managed via the Discord Developer Portal. All members of your Discord Application Team automatically have administrative access.
+                Team permissions are synced from the Discord Developer Portal. All members of your Discord Application Team automatically receive administrative privileges.
               </p>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-cyan-950/80 text-cyan-300 border border-cyan-800"><i class="fa-solid fa-people-group mr-1.5 text-cyan-400"></i>Discord App Team</span>
@@ -409,7 +413,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 <i class="fa-solid fa-stethoscope text-emerald-400"></i> Member Feed Health &amp; Diagnostics
               </h2>
               <p class="text-xs text-gray-400 mt-0.5">
-                Scan all member feeds across the system to detect unlinked channels, disabled endpoints, Cloudflare blocks, and configuration errors.
+                Scan all member feeds across the system to detect unlinked channels, disabled endpoints, and feed delivery issues.
               </p>
             </div>
             <button onclick="fetchFeedDiagnostics()" class="px-3.5 py-1.5 rounded-xl bg-gray-800 hover:bg-gray-700 text-xs font-semibold text-gray-200 transition border border-gray-700 flex items-center gap-1.5 shrink-0 self-start sm:self-auto">
@@ -417,7 +421,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </button>
           </div>
 
-          <!-- Diagnostic Metrics -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div class="p-3 rounded-xl bg-gray-900 border border-gray-800">
               <div class="text-[10px] uppercase font-semibold text-gray-500">Total Feeds</div>
@@ -437,7 +440,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </div>
           </div>
 
-          <!-- Detected Configuration Issues List -->
           <div class="space-y-2 pt-2">
             <div class="text-xs font-semibold text-gray-300 flex items-center gap-2">
               <i class="fa-solid fa-triangle-exclamation text-amber-400"></i> Member Feeds with Configuration Issues
@@ -447,7 +449,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             </div>
           </div>
 
-          <!-- Live Feed Diagnostic Tester for Admins -->
+          <!-- Live Feed Inspector -->
           <div class="pt-4 border-t border-gray-800/80 space-y-3">
             <div class="text-xs font-semibold text-gray-300 flex items-center gap-2">
               <i class="fa-solid fa-magnifying-glass-chart text-cyan-400"></i> Live Feed Inspector
@@ -537,16 +539,19 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     async function logout() {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch {}
       window.location.href = '/login';
     }
 
     async function fetchMe() {
       try {
         const res = await fetch('/api/auth/me');
+        if (!res.ok) return;
         const data = await res.json();
-        if (data.authenticated) {
-          const userEl = document.getElementById('user-name') || document.getElementById('user-email');
+        if (data && data.authenticated && data.user) {
+          const userEl = document.getElementById('user-name');
           if (userEl) userEl.textContent = data.user.displayName || data.user.username || 'Discord User';
         }
       } catch {}
@@ -602,7 +607,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/feeds/interval');
         if (res.status === 401 || res.status === 403) return;
         const data = await res.json();
-        if (data.pollIntervalMs) {
+        if (data && data.pollIntervalMs) {
           updateIntervalButtons(data.pollIntervalMs);
         }
       } catch {}
@@ -652,17 +657,18 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       discordGuildsCache.forEach(g => {
         const channels = g.channels || [];
         if (channels.length) {
-          html += \`<optgroup label="\${escapeHtmlAttr(g.name)}">\`;
+          html += '<optgroup label="' + escapeHtmlAttr(g.name) + '">';
           channels.forEach(ch => {
             const val = 'channel:' + ch.id;
             const selected = (currentValue === val || currentValue === ch.id) ? 'selected' : '';
-            html += \`<option value="\${val}" \${selected}>#\${escapeHtmlAttr(ch.name)}</option>\`;
+            html += '<option value="' + val + '" ' + selected + '>#' + escapeHtmlAttr(ch.name) + '</option>';
           });
           html += '</optgroup>';
         }
       });
       return html;
     }
+
     function populateDestinationSelects() {
       const feedsSel = document.getElementById('feed-channel');
       if (feedsSel) feedsSel.innerHTML = buildChannelOptionsHtml(feedsSel.value);
@@ -947,37 +953,48 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     async function addFeed() {
-      const name = document.getElementById('feed-name').value.trim();
-      const url = document.getElementById('feed-url').value.trim();
-      const destination = document.getElementById('feed-channel').value;
+      const nameEl = document.getElementById('feed-name');
+      const urlEl = document.getElementById('feed-url');
+      const destEl = document.getElementById('feed-channel');
+      const name = nameEl ? nameEl.value.trim() : '';
+      const url = urlEl ? urlEl.value.trim() : '';
+      const destination = destEl ? destEl.value : '';
       if (!name || !url) return alert('Please provide a feed name and URL.');
       const dest = parseDestinationPayload(destination);
-      const res = await fetch('/api/feeds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, url, feedType: 'rss', ...dest })
-      });
-      if (checkAuthError(res)) return;
-      const data = await res.json();
-      if (res.ok) {
-        document.getElementById('feed-name').value = '';
-        document.getElementById('feed-url').value = '';
-        fetchAll();
-      } else {
-        alert(data.error || 'Failed to add feed');
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url, feedType: 'rss', ...dest })
+        });
+        if (checkAuthError(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          if (nameEl) nameEl.value = '';
+          if (urlEl) urlEl.value = '';
+          fetchAll();
+        } else {
+          alert(data.error || 'Failed to add feed');
+        }
+      } catch (err) {
+        alert('Network error while adding feed: ' + (err && err.message ? err.message : String(err)));
       }
     }
 
     async function toggleFeed(id, enabled) {
-      const res = await fetch('/api/feeds/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
-      if (checkAuthError(res)) return;
-      fetchAll();
+      try {
+        const res = await fetch('/api/feeds/' + id, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ enabled }) });
+        if (checkAuthError(res)) return;
+        fetchAll();
+      } catch {}
     }
 
     async function pollFeed(id) {
-      const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
-      if (checkAuthError(res)) return;
-      fetchAll();
+      try {
+        const res = await fetch('/api/feeds/' + id + '/poll', { method: 'POST' });
+        if (checkAuthError(res)) return;
+        fetchAll();
+      } catch {}
     }
 
     async function pollAllUserFeeds() {
@@ -1008,26 +1025,31 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
     async function deleteItem(collection, id, label) {
       if (!confirm('Delete this ' + label + '?')) return;
-      const res = await fetch('/api/' + collection + '/' + id, { method: 'DELETE' });
-      if (checkAuthError(res)) return;
-      fetchAll();
+      try {
+        const res = await fetch('/api/' + collection + '/' + id, { method: 'DELETE' });
+        if (checkAuthError(res)) return;
+        fetchAll();
+      } catch {}
     }
 
-
-
     async function saveSettings() {
-      const publicBaseUrl = document.getElementById('setting-base-url').value.trim();
-      const res = await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicBaseUrl, pollIntervalMs: selectedPollIntervalMs })
-      });
-      if (checkAuthError(res)) return;
-      if (res.ok) {
-        alert('Settings saved.');
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        alert(errData.error || 'Failed to save settings.');
+      const baseUrlInput = document.getElementById('setting-base-url');
+      const publicBaseUrl = baseUrlInput ? baseUrlInput.value.trim() : '';
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ publicBaseUrl, pollIntervalMs: selectedPollIntervalMs })
+        });
+        if (checkAuthError(res)) return;
+        if (res.ok) {
+          alert('Settings saved.');
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || 'Failed to save settings.');
+        }
+      } catch (err) {
+        alert('Network error while saving settings: ' + (err && err.message ? err.message : String(err)));
       }
     }
 
@@ -1042,7 +1064,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No registered users found.</div>';
           return;
         }
-        const isOwnerUser = ${isOwner ? 'true' : 'false'};
         container.innerHTML = users.map(u => {
           const isTeamMember = u.role === 'owner' || u.role === 'admin';
           const roleBadge = isTeamMember
@@ -1086,8 +1107,8 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       const body = document.getElementById('modal-member-body');
       if (!modal || !body) return;
 
-      title.textContent = 'Member Feeds: ' + userName;
-      subtitle.textContent = 'User #' + userId + ' · Feeds and channel delivery diagnostics';
+      if (title) title.textContent = 'Member Feeds: ' + userName;
+      if (subtitle) subtitle.textContent = 'User #' + userId + ' · Feeds and channel delivery diagnostics';
       body.innerHTML = '<div class="text-gray-400 py-6 text-center font-mono text-xs"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading member feeds...</div>';
       modal.classList.remove('hidden');
 
@@ -1178,12 +1199,12 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
         const totalEl = document.getElementById('diag-total-feeds');
         const issuesEl = document.getElementById('diag-issues-count');
-        const missingChannelsEl = document.getElementById('diag-missing-channels') || document.getElementById('diag-missing-webhooks');
+        const missingChannelsEl = document.getElementById('diag-missing-channels');
         const healthyEl = document.getElementById('diag-healthy-count');
 
         if (totalEl) totalEl.textContent = data.totalFeeds;
         if (issuesEl) issuesEl.textContent = data.issuesCount;
-        if (missingChannelsEl) missingChannelsEl.textContent = data.stats?.missingChannelCount ?? data.stats?.missingWebhookCount ?? 0;
+        if (missingChannelsEl) missingChannelsEl.textContent = data.stats?.missingChannelCount ?? 0;
         if (healthyEl) healthyEl.textContent = data.healthyFeedsCount;
 
         const selectEl = document.getElementById('diag-test-feed-select');
