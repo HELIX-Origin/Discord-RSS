@@ -28,7 +28,7 @@ export async function dispatchInteraction(
     case 'about':
       return handleAboutCommand(interaction, deps);
     case 'help':
-      return handleHelpCommand(interaction, allBotCommands);
+      return handleHelpCommand(interaction, allBotCommands, deps);
     default:
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

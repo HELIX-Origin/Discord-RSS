@@ -2,28 +2,97 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { getThemeInfo } from './dashboard.js';
 
-function markdownToHtml(md: string): string {
-  return md
+function inlineFormat(text: string): string {
+  return text
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (_m, label: string, href: string) => {
+      const isExternal = /^https?:\/\//i.test(href);
+      return `<a href="${href}"${isExternal ? ' target="_blank" rel="noopener noreferrer"' : ''} style="color: var(--primary); text-decoration: underline;">${label}</a>`;
+    })
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
     .replace(
-      /^# (.*$)/gim,
-      '<h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);">$1</h1>',
-    )
-    .replace(
-      /^## (.*$)/gim,
-      '<h2 style="font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);">$1</h2>',
-    )
-    .replace(
-      /^### (.*$)/gim,
-      '<h3 style="font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--text);">$1</h3>',
-    )
-    .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-    .replace(
-      /`([^`]+)`/gim,
+      /`([^`]+)`/g,
       '<code style="background: rgba(0,0,0,0.4); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; color: var(--primary);">$1</code>',
-    )
-    .replace(/\n\n/gim, '</p><p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-muted);">')
-    .replace(/\n/gim, '<br>');
+    );
+}
+
+function markdownToHtml(md: string): string {
+  const lines = md.replace(/\r\n/g, '\n').split('\n');
+  const out: string[] = [];
+  let listType: 'ul' | 'ol' | null = null;
+
+  const closeList = (): void => {
+    if (listType) {
+      out.push(`</${listType}>`);
+      listType = null;
+    }
+  };
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (line === '') {
+      closeList();
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line)) {
+      closeList();
+      out.push('<hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">');
+      continue;
+    }
+
+    // Headings (h1-h3)
+    const heading = line.match(/^(#{1,3})\s+(.*)$/);
+    if (heading) {
+      closeList();
+      const level = heading[1].length;
+      const headingStyle =
+        level === 1
+          ? 'font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);'
+          : level === 2
+            ? 'font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);'
+            : 'font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--text);';
+      out.push(`<h${level} style="${headingStyle}">${inlineFormat(heading[2])}</h${level}>`);
+      continue;
+    }
+
+    // Unordered list item
+    const ulItem = line.match(/^[-*]\s+(.*)$/);
+    if (ulItem) {
+      if (listType !== 'ul') {
+        closeList();
+        out.push(
+          '<ul style="margin: 0.5rem 0 1rem 1.5rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">',
+        );
+        listType = 'ul';
+      }
+      out.push(`<li>${inlineFormat(ulItem[1])}</li>`);
+      continue;
+    }
+
+    // Ordered list item
+    const olItem = line.match(/^\d+[.)]\s+(.*)$/);
+    if (olItem) {
+      if (listType !== 'ol') {
+        closeList();
+        out.push(
+          '<ol style="margin: 0.5rem 0 1rem 1.5rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">',
+        );
+        listType = 'ol';
+      }
+      out.push(`<li>${inlineFormat(olItem[1])}</li>`);
+      continue;
+    }
+
+    // Paragraph
+    closeList();
+    out.push(`<p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-muted);">${inlineFormat(line)}</p>`);
+  }
+
+  closeList();
+  return out.join('\n');
 }
 
 export function renderLegalHtml(
@@ -39,7 +108,7 @@ export function renderLegalHtml(
   if (existsSync(filePath)) {
     try {
       const raw = readFileSync(filePath, 'utf8');
-      contentHtml = `<p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-muted);">${markdownToHtml(raw)}</p>`;
+      contentHtml = markdownToHtml(raw);
     } catch {
       contentHtml = '<p>Failed to load document content.</p>';
     }

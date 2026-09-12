@@ -1,4 +1,4 @@
-import type { AppDeps } from '../../app.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import {
   InteractionResponseType,
   type ApplicationCommand,
@@ -30,7 +30,7 @@ export async function handleStatsCommand(interaction: DiscordInteraction, deps: 
 
   const dashboardUrl = deps.config.publicBaseUrl || `http://${deps.config.host}:${deps.config.port}`;
 
-  const appName = deps.bot?.getAppName() || 'HELIX RSS';
+  const appName = appDisplayName(deps);
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,

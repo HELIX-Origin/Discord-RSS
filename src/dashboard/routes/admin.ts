@@ -2,11 +2,11 @@ import type { AppDeps } from '../../app.js';
 import { allBotCommands } from '../../bot/commands/index.js';
 import { sendError, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
-import { requireAdminOrOwner } from './shared.js';
+import { requireOwner } from './shared.js';
 
 export function registerAdminRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/admin/stats', async (req, res, _ctx, deps) => {
-    if ((await requireAdminOrOwner(req, res, deps)) === null) return;
+    if ((await requireOwner(req, res, deps)) === null) return;
     const baseStats = deps.db.stats();
     const users = deps.repo.listUsers();
     const adminCount = users.filter((u) => u.role === 'admin' || u.role === 'owner').length;
@@ -25,7 +25,7 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('GET', '/api/admin/bot', async (req, res, _ctx, deps) => {
-    if ((await requireAdminOrOwner(req, res, deps)) === null) return;
+    if ((await requireOwner(req, res, deps)) === null) return;
     const cfg = deps.config;
     const inviteUrl =
       cfg.redirectUrl ||
@@ -52,7 +52,7 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('POST', '/api/admin/bot/sync-commands', async (req, res, _ctx, deps) => {
-    const userId = await requireAdminOrOwner(req, res, deps);
+    const userId = await requireOwner(req, res, deps);
     if (userId === null) return;
 
     if (!deps.config.clientId) {
@@ -76,7 +76,7 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('POST', '/api/admin/db/optimize', async (req, res, _ctx, deps) => {
-    const userId = await requireAdminOrOwner(req, res, deps);
+    const userId = await requireOwner(req, res, deps);
     if (userId === null) return;
 
     try {
@@ -89,7 +89,7 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('GET', '/api/admin/activity', async (req, res, _ctx, deps) => {
-    if ((await requireAdminOrOwner(req, res, deps)) === null) return;
+    if ((await requireOwner(req, res, deps)) === null) return;
     const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`);
     const limit = Math.min(Number(url.searchParams.get('limit') ?? '100'), 500);
     const level = url.searchParams.get('level')?.toLowerCase();
@@ -102,7 +102,7 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('POST', '/api/admin/trigger-feeds', async (req, res, _ctx, deps) => {
-    const userId = await requireAdminOrOwner(req, res, deps);
+    const userId = await requireOwner(req, res, deps);
     if (userId === null) return;
 
     deps.repo.logActivity(userId, 'info', 'dev-tools', 'Manual feed poll triggered');
@@ -116,7 +116,7 @@ export function registerAdminRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('GET', '/api/admin/config', async (req, res, _ctx, deps) => {
-    if ((await requireAdminOrOwner(req, res, deps)) === null) return;
+    if ((await requireOwner(req, res, deps)) === null) return;
     const cfg = deps.config;
     sendJson(res, 200, {
       host: cfg.host,

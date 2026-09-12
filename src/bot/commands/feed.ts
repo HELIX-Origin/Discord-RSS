@@ -1,4 +1,4 @@
-import type { AppDeps } from '../../app.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import type { DiscordRestClient } from '../rest.js';
 import {
   ApplicationCommandOptionType,
@@ -196,7 +196,7 @@ async function handleAdd(
               { name: 'Feed URL', value: `\`${feed.url}\``, inline: false },
             ],
             footer: {
-              text: 'HELIX RSS • Direct Bot Delivery',
+              text: `${appDisplayName(deps)} • Direct Bot Delivery`,
             },
             timestamp: new Date().toISOString(),
           },
@@ -248,7 +248,7 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
           title: `📡 Feeds for this Server (${feeds.length})`,
           fields,
           color: 0x06b6d4,
-          footer: { text: 'HELIX RSS • Use /feed poll or /feed remove' },
+          footer: { text: `${appDisplayName(deps)} • Use /feed poll or /feed remove` },
           timestamp: new Date().toISOString(),
         },
       ],
@@ -318,7 +318,7 @@ async function handlePoll(options: InteractionOption[], userId: number, deps: Ap
               },
               { name: 'Status', value: updated?.enabled ? '🟢 Enabled' : '⏸️ Disabled', inline: true },
             ],
-            footer: { text: 'HELIX RSS' },
+            footer: { text: appDisplayName(deps) },
             timestamp: new Date().toISOString(),
           },
         ],

@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { AppDeps } from '../../app.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import { renderOAuthCallbackHtml, renderOAuthErrorHtml } from '../views/oauth-callback.js';
 import { sendError, sendHtml, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
@@ -19,7 +19,7 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     const message = desc
       ? `Authentication could not be completed: ${desc}. The rest of the dashboard is up and running smoothly, so feel free to return there safely.`
       : 'The requested OAuth provider is unavailable or encountered an error. The rest of the dashboard is up and running smoothly, so feel free to return there safely.';
-    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appName = appDisplayName(d);
     const appIconUrl = d.bot?.getAppIconUrl() || null;
     sendHtml(res, 200, renderOAuthErrorHtml(title, message, appName, appIconUrl));
   };
@@ -43,7 +43,7 @@ export function registerOAuthRoutes(router: Router<AppDeps>): void {
     const state = ctx.query.get('state') ?? '';
     const code = ctx.query.get('code') ?? '';
     const provider = ctx.params['provider'];
-    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appName = appDisplayName(d);
     const appIconUrl = d.bot?.getAppIconUrl() || null;
     try {
       const redirectUri = redirectUriForProvider(d, provider, req);

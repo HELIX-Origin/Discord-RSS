@@ -1,4 +1,4 @@
-import type { AppDeps } from '../../app.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import { isOwnerUser, isAdminOrOwner, canUserAccessDashboard } from '../routes/shared.js';
 
 export function getThemeInfo(theme?: string): { id: string; name: string; icon: string } {
@@ -40,7 +40,7 @@ export function getColorSchemeInfo(scheme?: string): { id: string; name: string 
 }
 
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
-  const appName = deps.bot?.getAppName() || 'HELIX RSS';
+  const appName = appDisplayName(deps);
   const appIconUrl = deps.bot?.getAppIconUrl() || null;
   const theme = getThemeInfo(deps.config.defaultTheme);
   const colorScheme = getColorSchemeInfo(deps.config.dashboardColorScheme);
@@ -453,6 +453,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     .feed-meta { font-size: 0.6875rem; color: var(--text-dim); }
     .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; border-radius: 0.375rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; }
     .badge-green { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+    .badge-red { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
     .badge-gray { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid var(--border); }
     .badge-amber { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
 
@@ -526,6 +527,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           isHost
             ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn">
           <i class="fa-solid fa-sliders"></i> Settings
+        </button>`
+            : ''
+        }
+        ${
+          isOwner
+            ? `<button onclick="switchTab('devtools')" id="tab-btn-devtools" class="tab-btn">
+          <i class="fa-solid fa-screwdriver-wrench" style="color: var(--primary);"></i> Developer Tools
         </button>`
             : ''
         }
@@ -848,6 +856,76 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       </section>`
           : ''
       }
+
+      <!-- TAB 7: DEVELOPER TOOLS (BOT OWNER / TEAM ONLY) -->
+      ${
+        isOwner
+          ? `<section id="tab-devtools" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-screwdriver-wrench" style="color: var(--primary);"></i> Developer Tools</div>
+              <div class="card-desc">Discord bot owner/team diagnostics, service logs, and manual maintenance triggers.</div>
+            </div>
+            <button onclick="loadDevToolsTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total Feeds</div><div class="stat-value" id="dt-feed-count">-</div><div class="stat-sub">All syndicated feeds</div></div>
+          <div class="stat-card"><div class="stat-label">Entries Delivered</div><div class="stat-value" id="dt-sent-count">-</div><div class="stat-sub">Messages sent to Discord</div></div>
+          <div class="stat-card"><div class="stat-label">Registered Users</div><div class="stat-value" id="dt-user-count">-</div><div class="stat-sub">Dashboard accounts</div></div>
+          <div class="stat-card"><div class="stat-label">Database Size</div><div class="stat-value" id="dt-db-size">-</div><div class="stat-sub">SQLite persistence</div></div>
+          <div class="stat-card"><div class="stat-label">Process Uptime</div><div class="stat-value" id="dt-uptime">-</div><div class="stat-sub">Since service start</div></div>
+          <div class="stat-card"><div class="stat-label">Memory RSS</div><div class="stat-value" id="dt-memory">-</div><div class="stat-sub">Heap: <span id="dt-heap">-</span></div></div>
+          <div class="stat-card"><div class="stat-label">Node.js</div><div class="stat-value" id="dt-node">-</div><div class="stat-sub">Runtime version</div></div>
+          <div class="stat-card"><div class="stat-label">Platform</div><div class="stat-value" id="dt-platform">-</div><div class="stat-sub">Operating environment</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-bolt" style="color: var(--primary);"></i> Developer Actions</div>
+              <div class="card-desc">Manual maintenance triggers. Every action is recorded in the Service Logs below.</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            <button onclick="triggerFeedPoll()" class="btn btn-primary btn-sm"><i class="fa-solid fa-rotate"></i> Poll All Feeds Now</button>
+            <button onclick="syncDiscordCommands()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-right-arrow-left"></i> Sync Discord Slash Commands</button>
+            <button onclick="optimizeDatabase()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-database"></i> Optimize SQLite DB</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-list-ul" style="color: var(--primary);"></i> Service Logs</div>
+              <div class="card-desc">Full activity log with level filtering.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+              <select id="devtools-log-level" onchange="renderActivityLogs()" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                <option value="">All levels</option>
+                <option value="info">info</option>
+                <option value="warn">warn</option>
+                <option value="error">error</option>
+                <option value="debug">debug</option>
+              </select>
+              <select id="devtools-log-limit" onchange="renderActivityLogs()" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                <option value="50">50</option>
+                <option value="100" selected>100</option>
+                <option value="200">200</option>
+                <option value="500">500</option>
+              </select>
+              <button onclick="renderActivityLogs()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh Logs</button>
+            </div>
+          </div>
+          <div id="devtools-logs" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 480px; overflow-y: auto;">
+            <div class="empty-state">Loading service logs...</div>
+          </div>
+        </div>
+      </section>`
+          : ''
+      }
     </main>
   </div>
 
@@ -881,6 +959,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       else if (tabId === 'freegames') loadFreeGamesTab();
       else if (tabId === 'news') loadNewsTab();
       else if (tabId === 'settings') loadSettingsTab();
+      else if (tabId === 'devtools') loadDevToolsTab();
     }
 
     // Auth & Logout
@@ -970,6 +1049,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     async function loadOverviewTab() {
       const activityEl = document.getElementById('activity-list');
       const feedsCountEl = document.getElementById('stat-feeds-count');
+      loadDiscordChannels();
       try {
         const res = await fetch('/api/stats', { signal: AbortSignal.timeout(5000) });
         if (res.status === 401 || res.status === 403) {
@@ -1801,6 +1881,106 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       } catch {
         if (container) container.innerHTML = '<div class="empty-state">Failed to load users list.</div>';
       }
+    }
+
+    async function loadDevToolsTab() {
+      renderActivityLogs();
+      try {
+        const res = await fetch('/api/admin/stats', { signal: AbortSignal.timeout(5000) });
+        if (!checkAuth(res)) return;
+        const stats = await res.json();
+        const set = (id, v) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = v;
+        };
+        set('dt-feed-count', stats.feedCount ?? '-');
+        set('dt-sent-count', stats.sentCount ?? '-');
+        set('dt-user-count', stats.userCount ?? '-');
+        set('dt-db-size', Math.round((stats.dbSizeBytes || 0) / 1024) + ' KB');
+        if (typeof stats.processUptimeSeconds === 'number') {
+          const s = stats.processUptimeSeconds;
+          const d = Math.floor(s / 86400);
+          const h = Math.floor((s % 86400) / 3600);
+          const m = Math.floor((s % 3600) / 60);
+          set('dt-uptime', (d ? d + 'd ' : '') + h + 'h ' + m + 'm');
+        }
+        set('dt-memory', Math.round(stats.memoryRssBytes / 1048576) + ' MB');
+        set('dt-heap', Math.round(stats.memoryHeapUsedBytes / 1048576) + ' MB');
+        set('dt-node', stats.nodeVersion || '-');
+        set('dt-platform', stats.platform || '-');
+      } catch {}
+    }
+
+    async function renderActivityLogs() {
+      const container = document.getElementById('devtools-logs');
+      if (!container) return;
+      const levelEl = document.getElementById('devtools-log-level');
+      const limitEl = document.getElementById('devtools-log-limit');
+      const level = levelEl ? levelEl.value : '';
+      const limit = limitEl ? limitEl.value : '100';
+      try {
+        container.innerHTML = '<div class="empty-state">Loading service logs...</div>';
+        const res = await fetch(
+          '/api/admin/activity?limit=' + encodeURIComponent(limit) + (level ? '&level=' + encodeURIComponent(level) : ''),
+          { signal: AbortSignal.timeout(5000) }
+        );
+        if (!checkAuth(res)) return;
+        const logs = await res.json();
+        if (!Array.isArray(logs) || !logs.length) {
+          container.innerHTML = '<div class="empty-state">No log entries found.</div>';
+          return;
+        }
+        container.innerHTML = logs.map(a => {
+          const lvl = (a.level || 'info').toLowerCase();
+          const badge = lvl === 'error' ? 'badge-red' : lvl === 'warn' ? 'badge-amber' : lvl === 'info' ? 'badge-green' : 'badge-gray';
+          const time = a.ts ? new Date(a.ts).toLocaleString() : '-';
+          const actor = a.userId != null ? 'User #' + a.userId : 'System';
+          return '<div class="feed-item" style="align-items: flex-start;">' +
+            '<div class="feed-details">' +
+              '<div class="feed-name-row">' +
+                '<span class="badge ' + badge + '">' + esc(lvl) + '</span>' +
+                '<span class="badge badge-gray">' + esc(a.source || 'system') + '</span>' +
+                '<span class="feed-name" style="font-weight: 600; font-size: 0.8125rem;">' + esc(a.message || '') + '</span>' +
+              '</div>' +
+              '<div class="feed-meta">' + esc(time) + ' &middot; Actor: ' + esc(actor) + '</div>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      } catch {
+        if (container) container.innerHTML = '<div class="empty-state">Failed to load service logs.</div>';
+      }
+    }
+
+    async function postDevToolAction(url, okMsg, failMsg) {
+      try {
+        const res = await fetch(url, { method: 'POST', signal: AbortSignal.timeout(15000) });
+        if (!checkAuth(res)) return;
+        if (res.ok) {
+          alert(okMsg);
+          renderActivityLogs();
+        } else {
+          let msg = failMsg;
+          try {
+            const j = await res.json();
+            if (j && j.error) msg += ': ' + j.error;
+          } catch {}
+          alert(msg);
+        }
+      } catch {
+        alert(failMsg);
+      }
+    }
+
+    function triggerFeedPoll() {
+      postDevToolAction('/api/admin/trigger-feeds', 'Feed poll triggered. It will run in the background.', 'Failed to trigger feed poll.');
+    }
+
+    function syncDiscordCommands() {
+      postDevToolAction('/api/admin/bot/sync-commands', 'Discord slash commands synced successfully.', 'Failed to sync Discord slash commands.');
+    }
+
+    function optimizeDatabase() {
+      postDevToolAction('/api/admin/db/optimize', 'SQLite database optimized.', 'Failed to optimize the database.');
     }
 
     // Initialize on page load

@@ -18,3 +18,11 @@ export interface AppDeps {
   bot?: DiscordBot | null;
   scheduler?: Scheduler | null;
 }
+
+/**
+ * Resolve the application display name from the configured Discord bot application.
+ * Falls back to the service's default name only when no bot context is available.
+ */
+export function appDisplayName(deps: AppDeps): string {
+  return deps.bot?.getAppName() ?? 'HELIX RSS';
+}

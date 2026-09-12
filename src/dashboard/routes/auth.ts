@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import type { AppDeps } from '../../app.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import { AuthService } from '../../auth/service.js';
 import {
   clearSessionCookie,
@@ -116,7 +116,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
 
     if (errorParam) {
       res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' });
-      res.end(renderAuthErrorPage(`Discord authorization canceled or failed: ${errorParam}`));
+      res.end(renderAuthErrorPage(`Discord authorization canceled or failed: ${errorParam}`, appDisplayName(d)));
       return;
     }
 
@@ -127,7 +127,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Discord Authorization · HELIX RSS</title>
+  <title>Discord Authorization · ${appDisplayName(d)}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -137,7 +137,7 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
       <i class="fa-brands fa-discord"></i>
     </div>
     <h1 class="text-xl font-bold">Discord Authorization Completed</h1>
-    <p class="text-sm text-gray-400">HELIX RSS Discord Bot authorization callback received successfully. You can now return to Discord or close this tab.</p>
+    <p class="text-sm text-gray-400">${appDisplayName(d)} Discord Bot authorization callback received successfully. You can now return to Discord or close this tab.</p>
   </div>
 </body>
 </html>`);
@@ -228,7 +228,8 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
         res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(
           renderAuthErrorPage(
-            'Access Denied: You must be a server owner or have Manage Channels permissions in a Discord server to access HELIX RSS.',
+            `Access Denied: You must be a server owner or have Manage Channels permissions in a Discord server to access ${appDisplayName(d)}.`,
+            appDisplayName(d),
           ),
         );
         return;
@@ -278,12 +279,12 @@ export function registerAuthRoutes(router: Router<AppDeps>, deps: AppDeps): void
   });
 }
 
-export function renderAuthErrorPage(message: string): string {
+export function renderAuthErrorPage(message: string, appName = 'HELIX RSS'): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Authentication Error · HELIX RSS</title>
+  <title>Authentication Error · ${appName}</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>

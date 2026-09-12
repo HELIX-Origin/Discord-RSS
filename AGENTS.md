@@ -51,6 +51,22 @@ This section documents active and recently resolved critical issues as required 
   - Added theme-aware landing page with `/`, `/home`, `/landing` routes; `/` redirects to `/dashboard` when `LANDING_PAGE_ENABLED=false`.
   - Documented new variables in `.env.example`; planned and tracked via `PLAN.md` and [#19](https://github.com/HELIX-Origin/HELIX-RSS/issues/19).
 
+### 7. Developer Tools Tab Restored with Owner/Team-Only Logs Page (Resolved)
+- **Problem**: The host-only Dev Tools page (introduced in `3e9a4d1`) was removed during the large dashboard rewrite; the `activity_log` table and `/api/admin/*` endpoints existed but had no dashboard UI.
+- **Resolution**:
+  - Restored a **Developer Tools** sidebar tab, rendered only for the Discord bot owner/team (`isOwnerUser` → role `owner`, set for application owner + team members during OAuth).
+  - Added a runtime diagnostics grid (`/api/admin/stats`): feeds, entries delivered, users, DB size, uptime, memory RSS/heap, Node version, platform.
+  - Added a **Service Logs** page (`/api/admin/activity`) with level filtering (all/info/warn/error/debug) and adjustable limits.
+  - Added Developer Actions: "Poll All Feeds Now", "Sync Discord Slash Commands", "Optimize SQLite DB" — every action is written to the activity log.
+  - Hardened all `/api/admin/*` routes to `requireOwner` (owner/team only at the API layer as well).
+
+### 8. Dashboard Operational Fixes & Derived App Name (Resolved)
+- **Problem**: The Overview "Discord Delivery" stat stayed at `0`, `/privacy` & `/tos` rendered links/formatting as raw markdown, and the app name was hardcoded as `HELIX RSS` instead of the Discord bot application name.
+- **Resolution**:
+  - `loadOverviewTab()` now calls `loadDiscordChannels()` so the delivered-channels stat reflects the real bot channel state.
+  - Rewrote `markdownToHtml` in `src/dashboard/views/legal.ts` as a line-based renderer (headings, bold/italic/code, `[text](url)` links, lists, `---` rules) for `/privacy` and `/tos`.
+  - App name now derives from the Discord application (`DiscordBot.getAppName()` via `appDisplayName(deps)` in `src/app.ts`) across bot embeds (`/about`, `/stats`, `/help`, `/feed`), dashboard views, auth/error pages, and OAuth views.
+
 ---
 
 ## Agent Ecosystem Architecture & Orchestration

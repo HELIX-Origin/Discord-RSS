@@ -38,13 +38,15 @@ flowchart TD
         D1["DASHBOARD_THEME / COLOR_SCHEME env engine ✅"]
         D2["Landing Page toggle ✅"]
         D3["News Feeds tab bug fix ✅"]
+        D4["Developer Tools tab + Logs page ✅"]
+        D5["Derived app name, delivery stat & legal markdown ✅"]
     end
 
     P0 --> A --> S1 --> S2 --> S3 --> S4 --> S5
     A --> R
     S5 --> S6 --> S7 --> S8
     S8 --> M1 --> M2 --> M3 --> M4 --> M5
-    M5 --> D1 --> D2 --> D3
+    M5 --> D1 --> D2 --> D3 --> D4 --> D5
 ```
 
 ---
@@ -70,6 +72,7 @@ flowchart TD
 | **Site Status Monitors Retirement** | Complete removal of site monitors from backend, DB, UI, and bot commands | Complete | Plan #13 / Roadmap |
 | **Cloud Hosting Retirement** | All cloud PaaS hosting (Heroku, Render, Fly.io, Railway, Vercel) removed; `app.json`, Deploy button, `Procfile`, and `$PORT` binding retired. Self-hosting only via Local, VPS, and Docker. | Complete | Roadmap |
 | **Env Themes, Landing Page & News Feeds Fix** | `DASHBOARD_THEME` / `DASHBOARD_COLOR_SCHEME` / `LANDING_PAGE_ENABLED` env-driven theme engine, landing page routes, and News Feeds tab regression fix | Complete | [#19](https://github.com/HELIX-Origin/HELIX-RSS/issues/19) (Plan #19) |
+| **Developer Tools & Service Logs** | Bot owner/team Developer Tools tab with runtime diagnostics, manual triggers, and a filterable Service Logs page (`/api/admin/*` owner-gated) | Complete | Roadmap |
 
 ---
 
@@ -108,6 +111,8 @@ flowchart TD
 - [x] **Landing Page Toggle** — `LANDING_PAGE_ENABLED`; `/`, `/home`, `/landing` routes in `src/dashboard/server.ts`; when disabled `/` redirects to `/dashboard`.
 - [x] **News Feeds Tab Bug Fix** — removed lingering `loadPopularTab()` call and stale `'popular'` tab alias in `src/dashboard/views/dashboard.ts` (tab was renamed to News Feeds).
 - [x] **Docs & Tracking Sync** — added `PLAN.md`, documented vars in `.env.example`, updated `AGENTS.md` Current Issues.
+- [x] **Developer Tools Tab & Service Logs** — restored an owner/team-only **Developer Tools** sidebar tab (`isOwnerUser`) with runtime diagnostics grid, Developer Actions (poll feeds, sync slash commands, optimize DB), and a filterable **Service Logs** page (`/api/admin/activity`); all `/api/admin/*` routes hardened to `requireOwner`.
+- [x] **Operational Fixes & Derived App Name** — `loadOverviewTab()` calls `loadDiscordChannels()` (Discord Delivery stat was stuck at `0`); line-based `markdownToHtml` renderer for `/privacy` & `/tos`; app name derived from the Discord application via `appDisplayName(deps)` across bot embeds, dashboard views, auth/error, and OAuth pages.
 - [x] Passed unified verification gate (`npm run check`).
 
 ---

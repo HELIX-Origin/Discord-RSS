@@ -7,6 +7,7 @@ import {
   type DiscordInteraction,
   type InteractionResponse,
 } from '../types.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import { aboutCommandDef } from './about.js';
 import { feedCommandDef } from './feed.js';
 import { statsCommandDef } from './stats.js';
@@ -31,7 +32,7 @@ function formatOptionSummary(option: ApplicationCommandOption): string {
   return `• \`${option.name}\` *(${req})* — ${option.description}`;
 }
 
-function buildCommandDetailEmbed(command: ApplicationCommand): DiscordEmbed {
+function buildCommandDetailEmbed(command: ApplicationCommand, appName: string): DiscordEmbed {
   const subcommands = command.options?.filter((opt) => opt.type === ApplicationCommandOptionType.SUB_COMMAND) ?? [];
   const directOptions = command.options?.filter((opt) => opt.type !== ApplicationCommandOptionType.SUB_COMMAND) ?? [];
 
@@ -67,12 +68,12 @@ function buildCommandDetailEmbed(command: ApplicationCommand): DiscordEmbed {
     description: `**${command.description}**\n\n**Syntax:** ${usageHint}`,
     color: 0x06b6d4,
     fields,
-    footer: { text: 'HELIX RSS • Slash Command Reference' },
+    footer: { text: `${appName} • Slash Command Reference` },
     timestamp: new Date().toISOString(),
   };
 }
 
-function buildAllCommandsEmbed(commands: ApplicationCommand[]): DiscordEmbed {
+function buildAllCommandsEmbed(commands: ApplicationCommand[], appName: string): DiscordEmbed {
   const fields: Array<{ name: string; value: string; inline?: boolean }> = commands.map((cmd) => {
     const subcommands = cmd.options?.filter((opt) => opt.type === ApplicationCommandOptionType.SUB_COMMAND) ?? [];
 
@@ -93,12 +94,12 @@ function buildAllCommandsEmbed(commands: ApplicationCommand[]): DiscordEmbed {
   });
 
   return {
-    title: '📖 HELIX RSS Slash Commands',
+    title: `📖 ${appName} Slash Commands`,
     description:
       'Here is a list of all available slash commands. Use `/help <command>` for detailed options and syntax.',
     color: 0x06b6d4,
     fields,
-    footer: { text: 'HELIX RSS • Type / in chat to run any command' },
+    footer: { text: `${appName} • Type / in chat to run any command` },
     timestamp: new Date().toISOString(),
   };
 }
@@ -106,7 +107,9 @@ function buildAllCommandsEmbed(commands: ApplicationCommand[]): DiscordEmbed {
 export async function handleHelpCommand(
   interaction: DiscordInteraction,
   commands: ApplicationCommand[] = defaultCommands,
+  deps: AppDeps,
 ): Promise<InteractionResponse> {
+  const appName = appDisplayName(deps);
   const commandOpt = interaction.data?.options?.find((opt) => opt.name === 'command');
   const query =
     typeof commandOpt?.value === 'string' ? commandOpt.value.trim().replace(/^\/+/, '').toLowerCase() : null;
@@ -117,7 +120,7 @@ export async function handleHelpCommand(
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          embeds: [buildCommandDetailEmbed(target)],
+          embeds: [buildCommandDetailEmbed(target, appName)],
         },
       };
     }
@@ -131,7 +134,7 @@ export async function handleHelpCommand(
             title: '❓ Command Not Found',
             description: `Could not find a command named \`/${query}\`.\n\n**Available commands:** ${availableNames}\n\nUse \`/help\` to view all commands.`,
             color: 0xef4444,
-            footer: { text: 'HELIX RSS • Slash Command Reference' },
+            footer: { text: `${appName} • Slash Command Reference` },
             timestamp: new Date().toISOString(),
           },
         ],
@@ -142,7 +145,7 @@ export async function handleHelpCommand(
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      embeds: [buildAllCommandsEmbed(commands)],
+      embeds: [buildAllCommandsEmbed(commands, appName)],
     },
   };
 }

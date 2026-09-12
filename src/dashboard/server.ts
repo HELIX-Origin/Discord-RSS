@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { createServer as createHttpServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import https from 'node:https';
-import type { AppDeps } from '../app.js';
+import { appDisplayName, type AppDeps } from '../app.js';
 import { getRequestBaseUrl, sendError, sendHtml, sendJson, sendText } from './http/helpers.js';
 import { Router } from './http/router.js';
 import { renderDashboardHtml } from './views/dashboard.js';
@@ -77,24 +77,24 @@ export function createHelixRssServer(deps: AppDeps): Server {
 
   // Auth pages
   router.add('GET', '/login', (_req, res, _ctx, d) => {
-    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appName = appDisplayName(d);
     const appIconUrl = d.bot?.getAppIconUrl() || null;
     sendHtml(res, 200, renderLoginHtml(false, d.config.redirectUrl, appName, appIconUrl, d.config.defaultTheme));
   });
   router.add('GET', '/register', (_req, res, _ctx, d) => {
-    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appName = appDisplayName(d);
     const appIconUrl = d.bot?.getAppIconUrl() || null;
     sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl, appName, appIconUrl, d.config.defaultTheme));
   });
 
   // Policy & Legal pages
   router.add('GET', '/privacy', (_req, res, _ctx, d) => {
-    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appName = appDisplayName(d);
     const appIconUrl = d.bot?.getAppIconUrl() || null;
     sendHtml(res, 200, renderLegalHtml('Privacy Policy', 'PRIVACY.md', appName, appIconUrl, d.config.defaultTheme));
   });
   router.add('GET', '/tos', (_req, res, _ctx, d) => {
-    const appName = d.bot?.getAppName() || 'HELIX RSS';
+    const appName = appDisplayName(d);
     const appIconUrl = d.bot?.getAppIconUrl() || null;
     sendHtml(res, 200, renderLegalHtml('Terms of Service', 'TOS.md', appName, appIconUrl, d.config.defaultTheme));
   });

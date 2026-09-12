@@ -1,4 +1,4 @@
-import type { AppDeps } from '../../app.js';
+import { appDisplayName, type AppDeps } from '../../app.js';
 import {
   InteractionResponseType,
   type ApplicationCommand,
@@ -68,7 +68,7 @@ export async function handleAboutCommand(
     });
   }
 
-  const appName = deps.bot?.getAppName() || 'HELIX RSS';
+  const appName = appDisplayName(deps);
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
