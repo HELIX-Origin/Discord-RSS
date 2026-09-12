@@ -1,3 +1,4 @@
+import { appDisplayName, type AppDeps } from '../app.js';
 import { decodeHtmlEntities, extractImageFromHtml, isTrackingPixel, normalizeImageUrl } from '../feed/parser.js';
 import { PLATFORM_BRANDING, type FreeGameItem } from '../feed/freegames.js';
 import type { DiscordEmbed } from './types.js';
@@ -8,6 +9,26 @@ export const STANDARD_EMBED_COLOR = 0x06b6d4; // Cyan brand accent
 export const SUCCESS_EMBED_COLOR = 0x10b981; // Emerald green
 export const ERROR_EMBED_COLOR = 0xef4444; // Red
 export const WARN_EMBED_COLOR = 0xf59e0b; // Amber
+
+export interface AppBranding {
+  appName: string;
+  iconUrl: string | null;
+}
+
+export function appBranding(deps: AppDeps): AppBranding {
+  return {
+    appName: appDisplayName(deps),
+    iconUrl: deps.bot?.getAppIconUrl() ?? null,
+  };
+}
+
+export function brandAuthor(branding: AppBranding): { name: string; icon_url?: string } {
+  const author: { name: string; icon_url?: string } = { name: branding.appName };
+  if (branding.iconUrl) {
+    author.icon_url = branding.iconUrl;
+  }
+  return author;
+}
 
 export const MAX_TITLE_LENGTH = 200;
 export const STANDARD_DESC_LENGTH = 400; // Standardized uniform card height

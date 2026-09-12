@@ -1,10 +1,12 @@
-import { appDisplayName, type AppDeps } from '../../app.js';
+import type { AppDeps } from '../../app.js';
 import {
   InteractionResponseType,
   type ApplicationCommand,
+  type DiscordEmbed,
   type DiscordInteraction,
   type InteractionResponse,
 } from '../types.js';
+import { STANDARD_EMBED_COLOR, appBranding, brandAuthor } from '../embeds.js';
 
 export const aboutCommandDef: ApplicationCommand = {
   name: 'about',
@@ -68,21 +70,26 @@ export async function handleAboutCommand(
     });
   }
 
-  const appName = appDisplayName(deps);
+  const branding = appBranding(deps);
+  const appName = branding.appName;
+
+  const embed: DiscordEmbed = {
+    author: brandAuthor(branding),
+    title: `⚡ About ${appName}`,
+    description: `**${appName}** is a modern, lightweight RSS/Atom feed syndication service built specifically for Discord.`,
+    color: STANDARD_EMBED_COLOR,
+    fields,
+    footer: { text: `${appName} • Feed Syndication` },
+    timestamp: new Date().toISOString(),
+  };
+  if (branding.iconUrl) {
+    embed.thumbnail = { url: branding.iconUrl };
+  }
 
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      embeds: [
-        {
-          title: `⚡ About ${appName}`,
-          description: `**${appName}** is a modern, lightweight RSS/Atom feed syndication service built specifically for Discord.`,
-          color: 0x06b6d4,
-          fields,
-          footer: { text: `${appName} • Feed Syndication` },
-          timestamp: new Date().toISOString(),
-        },
-      ],
+      embeds: [embed],
     },
   };
 }

@@ -7,7 +7,8 @@ import {
   type DiscordInteraction,
   type InteractionResponse,
 } from '../types.js';
-import { appDisplayName, type AppDeps } from '../../app.js';
+import type { AppDeps } from '../../app.js';
+import { ERROR_EMBED_COLOR, STANDARD_EMBED_COLOR, appBranding, brandAuthor, type AppBranding } from '../embeds.js';
 import { aboutCommandDef } from './about.js';
 import { feedCommandDef } from './feed.js';
 import { statsCommandDef } from './stats.js';
@@ -32,7 +33,7 @@ function formatOptionSummary(option: ApplicationCommandOption): string {
   return `• \`${option.name}\` *(${req})* — ${option.description}`;
 }
 
-function buildCommandDetailEmbed(command: ApplicationCommand, appName: string): DiscordEmbed {
+function buildCommandDetailEmbed(command: ApplicationCommand, branding: AppBranding): DiscordEmbed {
   const subcommands = command.options?.filter((opt) => opt.type === ApplicationCommandOptionType.SUB_COMMAND) ?? [];
   const directOptions = command.options?.filter((opt) => opt.type !== ApplicationCommandOptionType.SUB_COMMAND) ?? [];
 
@@ -63,17 +64,22 @@ function buildCommandDetailEmbed(command: ApplicationCommand, appName: string): 
       ? `\`/${command.name} <subcommand> [options]\``
       : `\`/${command.name}${directOptions.length > 0 ? ' [options]' : ''}\``;
 
-  return {
+  const embed: DiscordEmbed = {
+    author: brandAuthor(branding),
     title: `📖 Command: /${command.name}`,
     description: `**${command.description}**\n\n**Syntax:** ${usageHint}`,
-    color: 0x06b6d4,
+    color: STANDARD_EMBED_COLOR,
     fields,
-    footer: { text: `${appName} • Slash Command Reference` },
+    footer: { text: `${branding.appName} • Slash Command Reference` },
     timestamp: new Date().toISOString(),
   };
+  if (branding.iconUrl) {
+    embed.thumbnail = { url: branding.iconUrl };
+  }
+  return embed;
 }
 
-function buildAllCommandsEmbed(commands: ApplicationCommand[], appName: string): DiscordEmbed {
+function buildAllCommandsEmbed(commands: ApplicationCommand[], branding: AppBranding): DiscordEmbed {
   const fields: Array<{ name: string; value: string; inline?: boolean }> = commands.map((cmd) => {
     const subcommands = cmd.options?.filter((opt) => opt.type === ApplicationCommandOptionType.SUB_COMMAND) ?? [];
 
@@ -93,15 +99,20 @@ function buildAllCommandsEmbed(commands: ApplicationCommand[], appName: string):
     };
   });
 
-  return {
-    title: `📖 ${appName} Slash Commands`,
+  const embed: DiscordEmbed = {
+    author: brandAuthor(branding),
+    title: `📖 ${branding.appName} Slash Commands`,
     description:
       'Here is a list of all available slash commands. Use `/help <command>` for detailed options and syntax.',
-    color: 0x06b6d4,
+    color: STANDARD_EMBED_COLOR,
     fields,
-    footer: { text: `${appName} • Type / in chat to run any command` },
+    footer: { text: `${branding.appName} • Type / in chat to run any command` },
     timestamp: new Date().toISOString(),
   };
+  if (branding.iconUrl) {
+    embed.thumbnail = { url: branding.iconUrl };
+  }
+  return embed;
 }
 
 export async function handleHelpCommand(
@@ -109,7 +120,8 @@ export async function handleHelpCommand(
   commands: ApplicationCommand[] = defaultCommands,
   deps: AppDeps,
 ): Promise<InteractionResponse> {
-  const appName = appDisplayName(deps);
+  const branding = appBranding(deps);
+  const appName = branding.appName;
   const commandOpt = interaction.data?.options?.find((opt) => opt.name === 'command');
   const query =
     typeof commandOpt?.value === 'string' ? commandOpt.value.trim().replace(/^\/+/, '').toLowerCase() : null;
@@ -120,24 +132,27 @@ export async function handleHelpCommand(
       return {
         type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
         data: {
-          embeds: [buildCommandDetailEmbed(target, appName)],
+          embeds: [buildCommandDetailEmbed(target, branding)],
         },
       };
     }
 
     const availableNames = commands.map((c) => `\`/${c.name}\``).join(', ');
+    const notFoundEmbed: DiscordEmbed = {
+      author: brandAuthor(branding),
+      title: '❓ Command Not Found',
+      description: `Could not find a command named \`/${query}\`.\n\n**Available commands:** ${availableNames}\n\nUse \`/help\` to view all commands.`,
+      color: ERROR_EMBED_COLOR,
+      footer: { text: `${appName} • Slash Command Reference` },
+      timestamp: new Date().toISOString(),
+    };
+    if (branding.iconUrl) {
+      notFoundEmbed.thumbnail = { url: branding.iconUrl };
+    }
     return {
       type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
       data: {
-        embeds: [
-          {
-            title: '❓ Command Not Found',
-            description: `Could not find a command named \`/${query}\`.\n\n**Available commands:** ${availableNames}\n\nUse \`/help\` to view all commands.`,
-            color: 0xef4444,
-            footer: { text: `${appName} • Slash Command Reference` },
-            timestamp: new Date().toISOString(),
-          },
-        ],
+        embeds: [notFoundEmbed],
       },
     };
   }
@@ -145,7 +160,7 @@ export async function handleHelpCommand(
   return {
     type: InteractionResponseType.CHANNEL_MESSAGE_WITH_SOURCE,
     data: {
-      embeds: [buildAllCommandsEmbed(commands, appName)],
+      embeds: [buildAllCommandsEmbed(commands, branding)],
     },
   };
 }
