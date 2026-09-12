@@ -38,7 +38,39 @@ function isLikelyImageUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
   const clean = url.trim().toLowerCase();
   if (!clean.startsWith('http://') && !clean.startsWith('https://')) return false;
-  return /\.(jpe?g|png|webp|gif|svg|avif)($|\?)/i.test(clean);
+  return /\.(jpe?g|png|webp|gif|gifv|svg|avif)($|\?)/i.test(clean) || clean.includes('giphy.com/gifs/');
+}
+
+export function normalizeImageUrl(rawUrl: string | null | undefined): string | null {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  let url = decodeHtmlEntities(rawUrl.trim());
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return null;
+
+  // 1. Imgur .gifv / .mp4 -> direct .gif for Discord animated display
+  if (/^https?:\/\/(?:i\.)?imgur\.com\/([a-zA-Z0-9]+)\.(?:gifv|mp4)(?:\?[^"'\s>]*)?$/i.test(url)) {
+    url = url.replace(
+      /^https?:\/\/(?:i\.)?imgur\.com\/([a-zA-Z0-9]+)\.(?:gifv|mp4)(?:\?[^"'\s>]*)?$/i,
+      'https://i.imgur.com/$1.gif',
+    );
+  } else if (/^https?:\/\/imgur\.com\/([a-zA-Z0-9]+)\.gif(?:\?[^"'\s>]*)?$/i.test(url)) {
+    url = url.replace(/^https?:\/\/imgur\.com\/([a-zA-Z0-9]+)\.gif(?:\?[^"'\s>]*)?$/i, 'https://i.imgur.com/$1.gif');
+  }
+  // 2. Giphy page links -> direct media .gif
+  else if (/^https?:\/\/(?:www\.)?giphy\.com\/gifs\/(?:.*-)?([a-zA-Z0-9]+)(?:\/)?(?:\?[^"'\s>]*)?$/i.test(url)) {
+    url = url.replace(
+      /^https?:\/\/(?:www\.)?giphy\.com\/gifs\/(?:.*-)?([a-zA-Z0-9]+)(?:\/)?(?:\?[^"'\s>]*)?$/i,
+      'https://media.giphy.com/media/$1/giphy.gif',
+    );
+  }
+  // 3. Gfycat links -> direct .gif
+  else if (/^https?:\/\/gfycat\.com\/([a-zA-Z0-9]+)(?:\?[^"'\s>]*)?$/i.test(url)) {
+    url = url.replace(
+      /^https?:\/\/gfycat\.com\/([a-zA-Z0-9]+)(?:\?[^"'\s>]*)?$/i,
+      'https://thumbs.gfycat.com/$1-size_restricted.gif',
+    );
+  }
+
+  return url;
 }
 
 export function isTrackingPixel(url: string): boolean {
@@ -56,44 +88,92 @@ export function isTrackingPixel(url: string): boolean {
 export function extractImageFromHtml(html: string | null): string | null {
   if (!html) return null;
 
-  // 1. Check for full-res image links in <a> tags (common in Reddit feeds: <a href="https://i.redd.it/...">[link]</a>)
-  const aMatches = html.matchAll(
-    /<a\s+[^>]*?href=["'](https?:\/\/(?:i\.redd\.it|i\.imgur\.com|[^\s"'>]+\.(?:jpe?g|png|webp|gif|avif))(?:\?[^"'\s>]*)?)["'][^>]*>/gi,
+  // 1. Priority 1: Check for direct animated GIF links in <a> or <img> tags
+  // This ensures Reddit/Imgur/Giphy GIF posts extract the real animated GIF rather than static preview JPEGs
+  const gifMatches = html.matchAll(
+    /<a\s+[^>]*?href=["'](https?:\/\/(?:i\.redd\.it\/[^\s"'>]+\.gif|i\.imgur\.com\/[^\s"'>]+\.(?:gif|gifv|mp4)|imgur\.com\/[^\s"'>]+\.(?:gif|gifv|mp4)|(?:www\.)?giphy\.com\/gifs\/[^\s"'>]+|media\.giphy\.com\/media\/[^\s"'>]+\.gif|[^\s"'>]+\.gif)(?:\?[^"'\s>]*)?)["'][^>]*>/gi,
   );
-  for (const match of aMatches) {
-    const url = decodeHtmlEntities(match[1]);
-    if (!isTrackingPixel(url) && !url.includes('/avatar/') && !url.includes('/emojis/')) {
-      return url;
+  for (const match of gifMatches) {
+    const raw = decodeHtmlEntities(match[1]);
+    const normalized = normalizeImageUrl(raw);
+    if (
+      normalized &&
+      !isTrackingPixel(normalized) &&
+      !normalized.includes('/avatar/') &&
+      !normalized.includes('/emojis/')
+    ) {
+      return normalized;
     }
   }
 
-  // 2. Check <img> tags
+  // Also check <img> tags for direct .gif
+  const imgGifMatches = html.matchAll(/<img\s+[^>]*?src=["'](https?:\/\/[^"'\s>]+\.gif(?:\?[^"'\s>]*)?)["'][^>]*>/gi);
+  for (const match of imgGifMatches) {
+    const raw = decodeHtmlEntities(match[1]);
+    const normalized = normalizeImageUrl(raw);
+    if (
+      normalized &&
+      !isTrackingPixel(normalized) &&
+      !normalized.includes('/avatar/') &&
+      !normalized.includes('/emojis/')
+    ) {
+      return normalized;
+    }
+  }
+
+  // 2. Priority 2: Check for full-res image links in <a> tags (common in Reddit feeds: <a href="https://i.redd.it/...">[link]</a>)
+  const aMatches = html.matchAll(
+    /<a\s+[^>]*?href=["'](https?:\/\/(?:i\.redd\.it|i\.imgur\.com|[^\s"'>]+\.(?:jpe?g|png|webp|gif|gifv|avif))(?:\?[^"'\s>]*)?)["'][^>]*>/gi,
+  );
+  for (const match of aMatches) {
+    const raw = decodeHtmlEntities(match[1]);
+    const normalized = normalizeImageUrl(raw);
+    if (
+      normalized &&
+      !isTrackingPixel(normalized) &&
+      !normalized.includes('/avatar/') &&
+      !normalized.includes('/emojis/')
+    ) {
+      return normalized;
+    }
+  }
+
+  // 3. Priority 3: Check <img> tags
   const imgMatches = html.matchAll(/<img\s+[^>]*?src=["'](https?:\/\/[^"'\s>]+)["'][^>]*>/gi);
   for (const match of imgMatches) {
     const fullTag = match[0].toLowerCase();
-    const url = decodeHtmlEntities(match[1]);
+    const raw = decodeHtmlEntities(match[1]);
     if (
       fullTag.includes('width="1"') ||
       fullTag.includes("width='1'") ||
       fullTag.includes('height="1"') ||
       fullTag.includes("height='1'") ||
-      isTrackingPixel(url)
+      isTrackingPixel(raw)
     ) {
       continue;
     }
-    return url;
+    const normalized = normalizeImageUrl(raw);
+    if (normalized) return normalized;
   }
   return null;
 }
 
 export function findEntryImage(element: XmlElement, descriptionHtml?: string | null): string | null {
+  // 0. If the description HTML has a direct animated GIF link, prioritize that over static thumbnails
+  if (descriptionHtml) {
+    const directGif = extractImageFromHtml(descriptionHtml);
+    if (directGif && directGif.toLowerCase().includes('.gif')) {
+      return directGif;
+    }
+  }
+
   // 1. Check <enclosure>
   for (const child of element.children) {
     if (localName(child) === 'enclosure') {
       const url = child.attributes['url'];
       const type = child.attributes['type']?.toLowerCase() ?? '';
       if (url && (type.startsWith('image/') || isLikelyImageUrl(url))) {
-        if (!isTrackingPixel(url)) return url.trim();
+        if (!isTrackingPixel(url)) return normalizeImageUrl(url.trim());
       }
     }
   }
@@ -106,19 +186,19 @@ export function findEntryImage(element: XmlElement, descriptionHtml?: string | n
       const type = child.attributes['type']?.toLowerCase() ?? '';
       const medium = child.attributes['medium']?.toLowerCase() ?? '';
       if (url && (medium === 'image' || type.startsWith('image/') || isLikelyImageUrl(url))) {
-        if (!isTrackingPixel(url)) return url.trim();
+        if (!isTrackingPixel(url)) return normalizeImageUrl(url.trim());
       }
     }
     if (name === 'thumbnail') {
       const url = child.attributes['url'];
-      if (url && !isTrackingPixel(url)) return url.trim();
+      if (url && !isTrackingPixel(url)) return normalizeImageUrl(url.trim());
     }
     if (name === 'image') {
       const href = child.attributes['href'] || child.attributes['url'];
-      if (href && !isTrackingPixel(href)) return href.trim();
+      if (href && !isTrackingPixel(href)) return normalizeImageUrl(href.trim());
       const urlChild = findChild(child, 'url');
       if (urlChild && urlChild.text.trim() && !isTrackingPixel(urlChild.text.trim())) {
-        return urlChild.text.trim();
+        return normalizeImageUrl(urlChild.text.trim());
       }
     }
   }
@@ -130,7 +210,7 @@ export function findEntryImage(element: XmlElement, descriptionHtml?: string | n
       const type = child.attributes['type']?.toLowerCase() ?? '';
       const href = child.attributes['href'];
       if (href && (rel === 'enclosure' || rel === 'preview') && (type.startsWith('image/') || isLikelyImageUrl(href))) {
-        if (!isTrackingPixel(href)) return href.trim();
+        if (!isTrackingPixel(href)) return normalizeImageUrl(href.trim());
       }
     }
   }

@@ -1,4 +1,4 @@
-import { decodeHtmlEntities, extractImageFromHtml, isTrackingPixel } from '../feed/parser.js';
+import { decodeHtmlEntities, extractImageFromHtml, isTrackingPixel, normalizeImageUrl } from '../feed/parser.js';
 import type { DiscordEmbed } from './types.js';
 
 export type Embed = DiscordEmbed;
@@ -258,7 +258,8 @@ export function feedEmbed(args: {
   }
 
   // Standardize single shared full-width image scaling: Discord `image` spans 100% full width of the embed card
-  const primaryImage = imageUrl ?? extractImageFromHtml(description ?? null);
+  const rawImage = imageUrl ?? extractImageFromHtml(description ?? null);
+  const primaryImage = normalizeImageUrl(rawImage);
   if (primaryImage && isValidEmbedImageUrl(primaryImage)) {
     embed.image = { url: primaryImage.trim() };
   }

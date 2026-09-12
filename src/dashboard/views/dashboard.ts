@@ -802,6 +802,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     let currentRedditSort = 'hot';
 
     const CURATED_REDDIT_SUBS = [
+      { sub: 'gifs', name: 'Reddit · r/gifs', desc: 'Classic, funny, and trending animated GIFs', tag: 'GIFs' },
+      { sub: 'HighQualityGifs', name: 'Reddit · r/HighQualityGifs', desc: 'High-framerate crystal-clear original animated GIFs', tag: 'HQ GIFs' },
+      { sub: 'cinemagraphs', name: 'Reddit · r/cinemagraphs', desc: 'Mesmerizing living photos and seamless looping GIFs', tag: 'Cinemagraphs' },
+      { sub: 'educationalgifs', name: 'Reddit · r/educationalgifs', desc: 'Visual learning and educational animated diagrams', tag: 'Educational' },
       { sub: 'EarthPorn', name: 'Reddit · r/EarthPorn', desc: 'Breathtaking landscape and wild nature photography', tag: 'Photography' },
       { sub: 'wallpapers', name: 'Reddit · r/wallpapers', desc: 'High-definition digital wallpapers for desktop and mobile', tag: 'Wallpapers' },
       { sub: 'Art', name: 'Reddit · r/Art', desc: 'Original artwork, illustrations, sculptures, and concept art', tag: 'Art' },
