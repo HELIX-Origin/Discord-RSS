@@ -76,9 +76,9 @@ This section documents active and recently resolved critical issues as required 
   - Config via dashboard **Feeds tab** (per server, not host-only) or env (`FORUM_CHANNEL_IDS`, `THREAD_KEEPALIVE_ENABLED`, `THREAD_KEEPALIVE_INTERVAL_MS`, `THREAD_KEEPALIVE_GRACE_MS`, `THREAD_MAX_MESSAGES`).
   - Legacy channel delivery is unchanged for guilds without thread delivery enabled.
 
-### 10. Dashboard Guild-Centric Rework, Landing Page Audit, Manual Polling Removal & Daily Free Games Polling (Planned / Roadmap)
+### 10. Dashboard Guild-Centric Rework, Landing Page Audit, Manual Polling Removal & Daily Free Games Polling (In Progress)
 - **Problem**: The dashboard is per-feed with large cards and per-feed channel pickers, which does not scale. Manual polling is unreliable for several sources. The landing page still advertises retired and unsupported features. Free Games only runs weekly, missing short-lived giveaways.
-- **Status**: **Planned — not implemented.** Roadmap captured in [#21](https://github.com/HELIX-Origin/HELIX-RSS/issues/21) with mermaid diagrams, phases (landing/source cleanup, data model, dashboard UI, manual polling removal, daily free games, validation/release), decisions, and acceptance criteria. Implement only per that issue.
+- **Status**: **In progress — tracked in [#21](https://github.com/HELIX-Origin/HELIX-RSS/issues/21).** Phases 1 (unsupported source/landing cleanup), 2 (per-guild category target data model/API), 4 (manual polling removal), and 5 (daily free games polling) are implemented. Phase 3 (guild selection page + category UI redesign) remains.
 - **Key decisions locked**:
   - Supported sources: **RSS/Atom/JSON (including News presets), Reddit, Free Games**. YouTube, TikTok, and Bluesky are **not supported** and must be removed from docs/parser stubs.
   - Channel/thread assignment is **per guild, per category** (`rss`, `reddit`, `freegames`), not per individual feed.
