@@ -57,6 +57,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
       name?: string;
       url?: string;
       channelId?: string | null;
+      guildId?: string | null;
       feedType?: FeedType;
       scrape?: { item?: string; title?: string; link?: string; description?: string } | null;
     };
@@ -67,22 +68,28 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
       return sendError(res, 400, 'Invalid URL');
     }
 
-    const channelId = body.channelId?.trim() || null;
-    let guildId: string | null = null;
+    const channelId = body.channelId === undefined ? null : body.channelId ? String(body.channelId).trim() : null;
+    const providedGuildId = body.guildId === undefined ? null : body.guildId ? String(body.guildId).trim() : null;
+
+    if (!channelId && !providedGuildId) {
+      return sendError(res, 400, 'Either channelId or guildId is required');
+    }
+
+    let guildId: string | null = providedGuildId;
     if (channelId && d.bot) {
       const guilds = await d.bot.getGuildsWithChannels();
       const targetGuild = guilds.find((g) => g.channels.some((c) => c.id === channelId));
       if (targetGuild) {
         guildId = targetGuild.id;
-        if (!canUserManageGuild(userId, targetGuild.id, d)) {
-          sendError(
-            res,
-            403,
-            'Forbidden: You must be a server owner or have Manage Channels permission in this server to add feeds to it.',
-          );
-          return;
-        }
       }
+    }
+
+    if (guildId && !canUserManageGuild(userId, guildId, d)) {
+      return sendError(
+        res,
+        403,
+        'Forbidden: You must be a server owner or have Manage Channels permission in this server to add feeds to it.',
+      );
     }
 
     try {

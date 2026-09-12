@@ -400,25 +400,36 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background-color 0.2s, color 0.2s; }
-    
+
     /* Header */
-    header { position: sticky; top: 0; z-index: 50; background: var(--card-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    header { position: sticky; top: 0; z-index: 50; background: var(--card-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+    .header-left { display: flex; align-items: center; gap: 0.75rem; min-width: 0; }
     .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--text); }
-    .brand-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+    .brand-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(6,182,212,0.3); flex-shrink: 0; }
     .brand-title { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.02em; }
     .brand-title span { color: var(--primary); }
     .brand-sub { font-size: 0.75rem; color: var(--text-muted); }
-    .nav-actions { display: flex; align-items: center; gap: 0.625rem; }
+    .guild-pill { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; border-radius: 9999px; background: var(--card-inner); border: 1px solid var(--border); color: var(--text); font-size: 0.875rem; font-weight: 600; }
+    .guild-pill img { width: 1.5rem; height: 1.5rem; border-radius: 50%; object-fit: cover; }
+    .nav-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
 
     /* Layout */
-    .container { max-width: 1280px; width: 100%; margin: 0 auto; padding: 1.5rem; flex: 1; display: flex; gap: 1.5rem; }
-    @media (max-width: 860px) { .container { flex-direction: column; } }
+    .container { max-width: 1280px; width: 100%; margin: 0 auto; padding: 1rem; flex: 1; display: flex; gap: 1.25rem; }
+    @media (max-width: 860px) { .container { flex-direction: column; padding: 0.875rem; gap: 1rem; } }
 
     /* Sidebar Navigation */
-    nav.sidebar { width: 240px; flex-shrink: 0; background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; height: calc(100vh - 6.5rem); position: sticky; top: 5rem; }
-    @media (max-width: 860px) { nav.sidebar { width: 100%; height: auto; position: static; } }
+    nav.sidebar { width: 240px; flex-shrink: 0; background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 0.875rem; display: flex; flex-direction: column; justify-content: space-between; height: calc(100vh - 6.5rem); position: sticky; top: 5rem; }
+    @media (max-width: 860px) {
+      nav.sidebar { width: 100%; height: auto; position: static; }
+      .tab-list { flex-direction: row !important; overflow-x: auto; gap: 0.5rem; padding-bottom: 0.25rem; scrollbar-width: none; }
+      .tab-list::-webkit-scrollbar { display: none; }
+      .tab-btn { width: auto !important; white-space: nowrap; min-height: 44px; }
+      .tab-btn i { margin-right: 0; }
+      .tab-btn span { display: none; }
+      .sidebar-footer { display: none !important; }
+    }
     .tab-list { display: flex; flex-direction: column; gap: 0.375rem; }
-    .tab-btn { width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); background: transparent; border: 1px solid transparent; cursor: pointer; text-align: left; transition: all 0.15s; }
+    .tab-btn { width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; color: var(--text-muted); background: transparent; border: 1px solid transparent; cursor: pointer; text-align: left; transition: all 0.15s; min-height: 44px; }
     .tab-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
     .tab-btn.active { color: var(--primary); background: var(--primary-bg); border-color: var(--primary-border); }
     .sidebar-footer { padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim); display: flex; justify-content: space-between; }
@@ -426,28 +437,52 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     .sidebar-footer a:hover { color: var(--primary); }
 
     /* Main Content */
-    main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.5rem; }
-    .tab-pane { display: none; flex-direction: column; gap: 1.5rem; }
+    main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1.25rem; }
+    .tab-pane { display: none; flex-direction: column; gap: 1.25rem; }
     .tab-pane.active { display: flex; }
 
     /* Cards & Components */
-    .card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
-    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
     .card-title { font-size: 1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
     .card-desc { font-size: 0.8125rem; color: var(--text-muted); }
 
+    /* Guild Selection */
+    .guild-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
+    @media (max-width: 480px) { .guild-grid { grid-template-columns: 1fr; } }
+    @media (min-width: 481px) and (max-width: 860px) { .guild-grid { grid-template-columns: repeat(2, 1fr); } }
+    .guild-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 1rem; transition: border-color 0.15s, transform 0.15s; }
+    .guild-card:hover { border-color: var(--primary); transform: translateY(-2px); }
+    .guild-icon { width: 4.5rem; height: 4.5rem; border-radius: 1rem; object-fit: cover; background: var(--card-inner); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--text-muted); }
+    .guild-name { font-size: 1.125rem; font-weight: 700; color: var(--text); }
+
+    /* Category Grid */
+    .category-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; align-items: start; }
+    @media (max-width: 1100px) { .category-grid { grid-template-columns: 1fr; } }
+    .category-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+    .category-card.rss { border-top: 4px solid var(--primary); }
+    .category-card.reddit { border-top: 4px solid #ff4500; }
+    .category-card.freegames { border-top: 4px solid #10b981; }
+    .category-header { display: flex; align-items: center; gap: 0.75rem; }
+    .category-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .category-icon.rss { background: rgba(6, 182, 212, 0.15); color: var(--primary); }
+    .category-icon.reddit { background: rgba(255, 69, 0, 0.15); color: #ff4500; }
+    .category-icon.freegames { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .category-title { font-size: 1.125rem; font-weight: 800; }
+    .target-readout { font-size: 0.75rem; color: var(--text-muted); background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.5rem 0.75rem; }
+
     /* Grid layout */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
     .stat-card { background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1.25rem; }
     .stat-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
     .stat-value { font-size: 1.875rem; font-weight: 800; color: var(--primary); margin-top: 0.5rem; }
     .stat-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
 
     /* Form Controls */
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
     .form-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
-    input[type="text"], select, textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text); outline: none; transition: border-color 0.15s; }
+    input[type="text"], select, textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text); outline: none; transition: border-color 0.15s; min-height: 44px; }
     select {
       appearance: none;
       -webkit-appearance: none;
@@ -461,9 +496,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
     select option, select optgroup { background: var(--card-inner); color: var(--text); }
     select option:disabled { color: var(--text-dim); }
-    input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); width: 1rem; height: 1rem; cursor: pointer; }
-    input[type="text"]:focus, select:focus { border-color: var(--primary); }
-    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; text-decoration: none; transition: all 0.15s; }
+    input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); width: 1.125rem; height: 1.125rem; cursor: pointer; }
+    input[type="text"]:focus, select:focus, textarea:focus { border-color: var(--primary); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; text-decoration: none; transition: all 0.15s; min-height: 44px; }
     .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(6,182,212,0.25); }
     .btn-primary:hover { background: var(--primary-hover); }
     .btn-discord { background: var(--discord); color: #fff; }
@@ -472,16 +507,18 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     .btn-ghost:hover { background: rgba(255,255,255,0.08); color: var(--text); }
     .btn-danger { background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3); }
     .btn-danger:hover { background: rgba(239,68,68,0.3); color: #fff; }
-    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem; }
+    .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem; min-height: 36px; }
+    .btn-block { width: 100%; }
 
     /* Feed & List Items */
-    .feed-item { background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-    .feed-details { min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
-    .feed-name-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-    .feed-name { font-weight: 700; font-size: 0.9375rem; color: var(--text); }
-    .feed-url { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 480px; }
+    .feed-list { display: flex; flex-direction: column; gap: 0.5rem; }
+    .feed-pill { background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.875rem; padding: 0.625rem 0.875rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; }
+    .feed-details { min-width: 0; display: flex; flex-direction: column; gap: 0.2rem; }
+    .feed-name-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+    .feed-name { font-weight: 700; font-size: 0.875rem; color: var(--text); }
+    .feed-url { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 360px; }
     .feed-meta { font-size: 0.6875rem; color: var(--text-dim); }
-    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; border-radius: 0.375rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; }
+    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.15rem 0.45rem; border-radius: 0.375rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; }
     .badge-green { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
     .badge-red { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
     .badge-gray { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid var(--border); }
@@ -489,27 +526,38 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
     /* Interval Pills */
     .interval-group { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
-    .interval-btn { padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 600; background: var(--card-inner); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
+    .interval-btn { padding: 0.5rem 1rem; border-radius: 0.75rem; font-size: 0.75rem; font-weight: 600; background: var(--card-inner); border: 1px solid var(--border); color: var(--text-muted); cursor: pointer; transition: all 0.15s; min-height: 40px; }
     .interval-btn:hover { background: rgba(255,255,255,0.05); color: var(--text); }
     .interval-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-    .empty-state { padding: 2.5rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+    .empty-state { padding: 2rem 1rem; text-align: center; color: var(--text-muted); font-size: 0.875rem; }
+
+    /* Utility */
+    .section-title { font-size: 1.25rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .section-desc { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
   <!-- Header -->
   <header>
-    <a href="/dashboard" class="brand">
-      ${
-        appIconUrl
-          ? `<img src="${appIconUrl}" alt="${appName}" style="width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">`
-          : `<div class="brand-icon"><i class="fa-solid fa-rss"></i></div>`
-      }
-      <div>
-        <div class="brand-title">${appName}</div>
-        <div class="brand-sub">Discord Feed Syndication</div>
+    <div class="header-left">
+      <a href="/dashboard" class="brand">
+        ${
+          appIconUrl
+            ? `<img src="${appIconUrl}" alt="${appName}" style="width: 2.25rem; height: 2.25rem; border-radius: 0.625rem; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">`
+            : `<div class="brand-icon"><i class="fa-solid fa-rss"></i></div>`
+        }
+        <div>
+          <div class="brand-title">${appName}</div>
+          <div class="brand-sub">Discord Feed Syndication</div>
+        </div>
+      </a>
+      <div id="current-guild-pill" class="guild-pill hidden">
+        <img id="current-guild-icon" src="" alt="">
+        <span id="current-guild-name">Server</span>
       </div>
-    </a>
+    </div>
 
     <div class="nav-actions">
       <span class="badge badge-gray" title="Active Theme: ${theme.name}${colorScheme.id !== 'default' ? ` · Scheme: ${colorScheme.name}` : ''} (Configured via .env)" style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">
@@ -518,7 +566,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       ${
         botInviteUrl
           ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-discord btn-sm">
-        <i class="fa-brands fa-discord"></i> Invite Bot
+        <i class="fa-brands fa-discord"></i> <span class="btn-text">Invite Bot</span>
       </a>`
           : ''
       }
@@ -535,455 +583,427 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
   <!-- Container -->
   <div class="container">
-    <!-- Sidebar -->
-    <nav class="sidebar">
-      <div class="tab-list">
-        <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-btn active">
-          <i class="fa-solid fa-chart-line"></i> Overview
-        </button>
-        <button onclick="switchTab('feeds')" id="tab-btn-feeds" class="tab-btn">
-          <i class="fa-solid fa-list"></i> Feeds
-        </button>
-        <button onclick="switchTab('reddit')" id="tab-btn-reddit" class="tab-btn">
-          <i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Reddit Feeds
-        </button>
-        <button onclick="switchTab('freegames')" id="tab-btn-freegames" class="tab-btn">
-          <i class="fa-solid fa-gift" style="color: #10b981;"></i> Free Games Feeds
-        </button>
-        <button onclick="switchTab('news')" id="tab-btn-news" class="tab-btn">
-          <i class="fa-solid fa-newspaper" style="color: var(--amber);"></i> News Feeds
-        </button>
+    <!-- Guild Selection View -->
+    <div id="guild-selection-view" class="tab-pane active" style="width: 100%;">
+      <div>
+        <div class="section-title"><i class="fa-solid fa-server" style="color: var(--primary);"></i> Select a Server</div>
+        <div class="section-desc">Choose a Discord server to manage its feeds and delivery channels.</div>
+      </div>
+      <div id="guild-grid" class="guild-grid">
+        <div class="empty-state">Loading servers...</div>
+      </div>
+      <div id="guild-empty-state" class="empty-state hidden">
+        <div style="font-size: 1.25rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-robot"></i></div>
+        <div>No manageable servers found. Make sure the bot has been added to a server where you have <strong>Manage Channels</strong> permission.</div>
+        ${botInviteUrl ? `<div style="margin-top: 1rem;"><a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-discord"><i class="fa-brands fa-discord"></i> Invite Bot</a></div>` : ''}
+      </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="tab-pane" style="width: 100%; flex-direction: row;">
+      <!-- Sidebar -->
+      <nav class="sidebar">
+        <div class="tab-list">
+          <button onclick="switchTab('overview')" id="tab-btn-overview" class="tab-btn active">
+            <i class="fa-solid fa-chart-line"></i> <span>Overview</span>
+          </button>
+          <button onclick="switchTab('categories')" id="tab-btn-categories" class="tab-btn">
+            <i class="fa-solid fa-layer-group"></i> <span>Categories</span>
+          </button>
+          <button onclick="switchTab('news')" id="tab-btn-news" class="tab-btn">
+            <i class="fa-solid fa-newspaper" style="color: var(--amber);"></i> <span>News</span>
+          </button>
+          ${
+            isHost
+              ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn">
+            <i class="fa-solid fa-sliders"></i> <span>Settings</span>
+          </button>`
+              : ''
+          }
+          ${
+            isOwner
+              ? `<button onclick="switchTab('devtools')" id="tab-btn-devtools" class="tab-btn">
+            <i class="fa-solid fa-screwdriver-wrench" style="color: var(--primary);"></i> <span>Dev Tools</span>
+          </button>`
+              : ''
+          }
+        </div>
+
+        <div class="sidebar-footer">
+          <a href="/dashboard" onclick="clearGuild(event)" id="change-server-link">Change Server</a>
+          <span>&middot;</span>
+          <a href="/privacy">Privacy</a>
+          <span>&middot;</span>
+          <a href="/tos">Terms</a>
+        </div>
+      </nav>
+
+      <!-- Main View -->
+      <main>
+        <!-- TAB 1: OVERVIEW -->
+        <section id="tab-overview" class="tab-pane active">
+          <div>
+            <div class="section-title"><i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i> Server Overview</div>
+            <div class="section-desc">Feeds and delivery status for the selected server.</div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Total Feeds</div>
+              <div class="stat-value" id="stat-total-feeds">0</div>
+              <div class="stat-sub">In this server</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Active Feeds</div>
+              <div class="stat-value" style="color: #10b981;" id="stat-active-feeds">0</div>
+              <div class="stat-sub">Enabled and polling</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">RSS Feeds</div>
+              <div class="stat-value" id="stat-rss-feeds">0</div>
+              <div class="stat-sub">News & custom RSS</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Reddit Feeds</div>
+              <div class="stat-value" style="color: #ff4500;" id="stat-reddit-feeds">0</div>
+              <div class="stat-sub">Subreddits</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Free Games Feeds</div>
+              <div class="stat-value" style="color: #10b981;" id="stat-freegames-feeds">0</div>
+              <div class="stat-sub">Daily game drops</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Database Engine</div>
+              <div class="stat-value" style="color: #5865F2;">${Math.round(dbStats.dbSizeBytes / 1024)} KB</div>
+              <div class="stat-sub">SQLite persistence</div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Recent Activity</div>
+                <div class="card-desc">System logs, delivery notifications, and parser status</div>
+              </div>
+              <button onclick="loadOverviewTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            </div>
+            <div id="activity-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 320px; overflow-y: auto;">
+              <div class="empty-state">Loading recent activity...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: CATEGORIES -->
+        <section id="tab-categories" class="tab-pane">
+          <div>
+            <div class="section-title"><i class="fa-solid fa-layer-group" style="color: var(--primary);"></i> Feed Categories</div>
+            <div class="section-desc">Configure delivery targets and manage feeds for each category in this server.</div>
+          </div>
+
+          <div id="category-targets-grid" class="category-grid">
+            <!-- RSS Card -->
+            <div class="category-card rss">
+              <div class="category-header">
+                <div class="category-icon rss"><i class="fa-solid fa-rss"></i></div>
+                <div>
+                  <div class="category-title" style="color: var(--primary);">RSS</div>
+                  <div class="card-desc">News, blogs, and custom RSS/Atom feeds</div>
+                </div>
+              </div>
+              <div class="target-readout" id="rss-target-readout">Loading target...</div>
+              <div class="form-group">
+                <label class="form-label">Target Channel</label>
+                <select id="rss-target-channel"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target Forum Thread Channel (optional)</label>
+                <select id="rss-target-thread"></select>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button onclick="saveCategoryTarget('rss')" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Save Target</button>
+              </div>
+
+              <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.25rem;">
+                <div class="card-title" style="font-size: 0.9375rem;"><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Add RSS Feed</div>
+                <div class="form-grid" style="margin-top: 0.75rem;">
+                  <div class="form-group">
+                    <label class="form-label">Feed Name</label>
+                    <input type="text" id="add-rss-name" placeholder="E.g., TechCrunch News">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Feed URL</label>
+                    <input type="text" id="add-rss-url" placeholder="https://example.com/rss.xml" style="font-family: monospace;">
+                  </div>
+                </div>
+                <div class="form-group" style="margin-top: 0.5rem;">
+                  <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="add-rss-scrape" onchange="toggleScrapeFields('rss')">
+                    <span>Scrape webpage (HTML selector mode)</span>
+                  </label>
+                </div>
+                <div id="rss-scrape-fields" style="display: none;">
+                  <div class="form-grid" style="margin-top: 0.5rem;">
+                    <div class="form-group">
+                      <label class="form-label">Item Selector</label>
+                      <input type="text" id="add-rss-scrape-item" placeholder="article">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Title Selector</label>
+                      <input type="text" id="add-rss-scrape-title" placeholder="h2 a">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Link Selector</label>
+                      <input type="text" id="add-rss-scrape-link" placeholder="a">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Description Selector (optional)</label>
+                      <input type="text" id="add-rss-scrape-desc" placeholder=".summary">
+                    </div>
+                  </div>
+                </div>
+                <button onclick="submitAddRssFeed()" class="btn btn-primary btn-sm btn-block" style="margin-top: 0.75rem;"><i class="fa-solid fa-plus"></i> Add RSS Feed</button>
+              </div>
+
+              <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                <div class="card-title" style="font-size: 0.9375rem;"><i class="fa-solid fa-list" style="color: var(--primary);"></i> RSS Feeds</div>
+                <div id="rss-feeds-list" class="feed-list" style="margin-top: 0.75rem;">
+                  <div class="empty-state">Loading feeds...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reddit Card -->
+            <div class="category-card reddit">
+              <div class="category-header">
+                <div class="category-icon reddit"><i class="fa-brands fa-reddit"></i></div>
+                <div>
+                  <div class="category-title" style="color: #ff4500;">Reddit</div>
+                  <div class="card-desc">Subreddit image and RSS feeds</div>
+                </div>
+              </div>
+              <div class="target-readout" id="reddit-target-readout">Loading target...</div>
+              <div class="form-group">
+                <label class="form-label">Target Channel</label>
+                <select id="reddit-target-channel"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target Forum Thread Channel (optional)</label>
+                <select id="reddit-target-thread"></select>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button onclick="saveCategoryTarget('reddit')" class="btn btn-primary btn-sm" style="background: #ff4500; border-color: #ff4500;"><i class="fa-solid fa-floppy-disk"></i> Save Target</button>
+              </div>
+
+              <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.25rem;">
+                <div class="card-title" style="font-size: 0.9375rem;"><i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Add Reddit Feed</div>
+                <div class="form-grid" style="margin-top: 0.75rem;">
+                  <div class="form-group">
+                    <label class="form-label">Subreddit</label>
+                    <input type="text" id="add-reddit-sub" placeholder="e.g. wallpapers" oninput="handleRedditSubInput(this.value)">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Display Name (optional)</label>
+                    <input type="text" id="add-reddit-name" placeholder="Reddit · r/wallpapers">
+                  </div>
+                </div>
+                <div class="form-group" style="margin-top: 0.5rem;">
+                  <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="add-reddit-image-mode" checked>
+                    <span>Pure image mode (images/GIFs only)</span>
+                  </label>
+                </div>
+                <button onclick="submitAddRedditFeed()" class="btn btn-primary btn-sm btn-block" style="margin-top: 0.75rem; background: #ff4500; border-color: #ff4500;"><i class="fa-brands fa-reddit"></i> Add Reddit Feed</button>
+              </div>
+
+              <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                <div class="card-title" style="font-size: 0.9375rem;"><i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Reddit Feeds</div>
+                <div id="reddit-feeds-list" class="feed-list" style="margin-top: 0.75rem;">
+                  <div class="empty-state">Loading feeds...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Free Games Card -->
+            <div class="category-card freegames">
+              <div class="category-header">
+                <div class="category-icon freegames"><i class="fa-solid fa-gift"></i></div>
+                <div>
+                  <div class="category-title" style="color: #10b981;">Free Games</div>
+                  <div class="card-desc">Epic, Steam, GOG, and more</div>
+                </div>
+              </div>
+              <div class="target-readout" id="freegames-target-readout">Loading target...</div>
+              <div class="form-group">
+                <label class="form-label">Target Channel</label>
+                <select id="freegames-target-channel"></select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Target Forum Thread Channel (optional)</label>
+                <select id="freegames-target-thread"></select>
+              </div>
+              <div style="display: flex; justify-content: flex-end;">
+                <button onclick="saveCategoryTarget('freegames')" class="btn btn-primary btn-sm" style="background: #10b981; border-color: #10b981;"><i class="fa-solid fa-floppy-disk"></i> Save Target</button>
+              </div>
+
+              <div style="border-top: 1px solid var(--border); padding-top: 1rem; margin-top: 0.25rem;">
+                <div class="card-title" style="font-size: 0.9375rem;"><i class="fa-solid fa-gift" style="color: #10b981;"></i> Add Free Games Feed</div>
+                <div class="form-grid" style="margin-top: 0.75rem;">
+                  <div class="form-group">
+                    <label class="form-label">Platform</label>
+                    <select id="add-freegames-platform" onchange="handleFreeGamesPlatformChange(this.value)">
+                      <option value="all">All Platforms</option>
+                      <option value="epic">Epic Games Store</option>
+                      <option value="steam">Steam Giveaways</option>
+                      <option value="gog">GOG Promotions</option>
+                      <option value="indiegala">IndieGala Freebies</option>
+                      <option value="humble">Humble Bundle</option>
+                      <option value="itchio">Itch.io Freebies</option>
+                      <option value="ubisoft">Ubisoft Giveaways</option>
+                      <option value="prime">Prime Gaming</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Display Name (optional)</label>
+                    <input type="text" id="add-freegames-name" placeholder="Free Games · All Stores">
+                  </div>
+                </div>
+                <button onclick="submitAddFreeGamesFeed()" class="btn btn-primary btn-sm btn-block" style="margin-top: 0.75rem; background: #10b981; border-color: #10b981;"><i class="fa-solid fa-gift"></i> Add Free Games Feed</button>
+              </div>
+
+              <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                <div class="card-title" style="font-size: 0.9375rem;"><i class="fa-solid fa-list-check" style="color: #10b981;"></i> Free Games Feeds</div>
+                <div id="freegames-feeds-list" class="feed-list" style="margin-top: 0.75rem;">
+                  <div class="empty-state">Loading feeds...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: NEWS FEEDS CATALOG -->
+        <section id="tab-news" class="tab-pane">
+          <div class="card">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-newspaper" style="color: var(--amber);"></i> News Feeds Catalog</div>
+              <div class="card-desc">One-click subscribe to top news, tech, gaming, science, and developer feeds. Presets are added as RSS feeds in this server using the RSS category target.</div>
+            </div>
+            <div id="presets-list-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
+              <div class="empty-state">Loading news feeds catalog...</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: SETTINGS (ADMIN ONLY) -->
         ${
           isHost
-            ? `<button onclick="switchTab('settings')" id="tab-btn-settings" class="tab-btn">
-          <i class="fa-solid fa-sliders"></i> Settings
-        </button>`
+            ? `<section id="tab-settings" class="tab-pane">
+          <div class="card">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> System Settings</div>
+              <div class="card-desc">Configure public endpoints, OAuth redirection, and service defaults.</div>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label class="form-label">Public Base URL</label>
+                <input type="text" id="cfg-base-url" placeholder="http://159.223.140.212:3131">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Active Dashboard Theme &amp; Color Scheme</label>
+                <input type="text" value="${theme.name} (${theme.id}) &bull; ${colorScheme.name} (${colorScheme.id})" disabled style="opacity: 0.85; cursor: not-allowed;" title="Configured via DASHBOARD_THEME and DASHBOARD_COLOR_SCHEME environment variables">
+                <span style="font-size: 0.6875rem; color: var(--text-dim); margin-top: 0.25rem;">Configured via <code style="color: var(--primary);">DASHBOARD_THEME</code> and <code style="color: var(--primary);">DASHBOARD_COLOR_SCHEME</code> in <code style="color: var(--primary);">.env</code>. Themes: <code style="color: var(--text-muted);">glassmorphism</code>, <code style="color: var(--text-muted);">dark</code>, <code style="color: var(--text-muted);">light</code>, <code style="color: var(--text-muted);">cyberpunk</code>, <code style="color: var(--text-muted);">dracula</code>, <code style="color: var(--text-muted);">nord</code>, <code style="color: var(--text-muted);">emerald</code>. Color Schemes: <code style="color: var(--text-muted);">cyan</code>, <code style="color: var(--text-muted);">purple</code>, <code style="color: var(--text-muted);">blue</code>, <code style="color: var(--text-muted);">emerald</code>, <code style="color: var(--text-muted);">rose</code>, <code style="color: var(--text-muted);">amber</code>, <code style="color: var(--text-muted);">indigo</code>, <code style="color: var(--text-muted);">crimson</code>, <code style="color: var(--text-muted);">teal</code>, <code style="color: var(--text-muted);">sunset</code>.</span>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+              <button onclick="saveSystemSettings()" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Registered Users &amp; Discord App Team</div>
+                <div class="card-desc">All Discord Application team members automatically have administrative privileges.</div>
+              </div>
+              <button onclick="loadUsersList()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            </div>
+            <div id="users-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+              <div class="empty-state">Loading users...</div>
+            </div>
+          </div>
+        </section>`
             : ''
         }
+
+        <!-- TAB 5: DEVELOPER TOOLS (BOT OWNER / TEAM ONLY) -->
         ${
           isOwner
-            ? `<button onclick="switchTab('devtools')" id="tab-btn-devtools" class="tab-btn">
-          <i class="fa-solid fa-screwdriver-wrench" style="color: var(--primary);"></i> Developer Tools
-        </button>`
+            ? `<section id="tab-devtools" class="tab-pane">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-screwdriver-wrench" style="color: var(--primary);"></i> Developer Tools</div>
+                <div class="card-desc">Discord bot owner/team diagnostics, service logs, and manual maintenance triggers.</div>
+              </div>
+              <button onclick="loadDevToolsTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Total Feeds</div><div class="stat-value" id="dt-feed-count">-</div><div class="stat-sub">All syndicated feeds</div></div>
+            <div class="stat-card"><div class="stat-label">Entries Delivered</div><div class="stat-value" id="dt-sent-count">-</div><div class="stat-sub">Messages sent to Discord</div></div>
+            <div class="stat-card"><div class="stat-label">Registered Users</div><div class="stat-value" id="dt-user-count">-</div><div class="stat-sub">Dashboard accounts</div></div>
+            <div class="stat-card"><div class="stat-label">Database Size</div><div class="stat-value" id="dt-db-size">-</div><div class="stat-sub">SQLite persistence</div></div>
+            <div class="stat-card"><div class="stat-label">Process Uptime</div><div class="stat-value" id="dt-uptime">-</div><div class="stat-sub">Since service start</div></div>
+            <div class="stat-card"><div class="stat-label">Memory RSS</div><div class="stat-value" id="dt-memory">-</div><div class="stat-sub">Heap: <span id="dt-heap">-</span></div></div>
+            <div class="stat-card"><div class="stat-label">Node.js</div><div class="stat-value" id="dt-node">-</div><div class="stat-sub">Runtime version</div></div>
+            <div class="stat-card"><div class="stat-label">Platform</div><div class="stat-value" id="dt-platform">-</div><div class="stat-sub">Operating environment</div></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-bolt" style="color: var(--primary);"></i> Developer Actions</div>
+                <div class="card-desc">Manual maintenance triggers. Every action is recorded in the Service Logs below.</div>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+              <button onclick="syncDiscordCommands()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-right-arrow-left"></i> Sync Discord Slash Commands</button>
+              <button onclick="optimizeDatabase()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-database"></i> Optimize SQLite DB</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title"><i class="fa-solid fa-list-ul" style="color: var(--primary);"></i> Service Logs</div>
+                <div class="card-desc">Full activity log with level filtering.</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <select id="devtools-log-level" onchange="renderActivityLogs()" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                  <option value="">All levels</option>
+                  <option value="info">info</option>
+                  <option value="warn">warn</option>
+                  <option value="error">error</option>
+                  <option value="debug">debug</option>
+                </select>
+                <select id="devtools-log-limit" onchange="renderActivityLogs()" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+                  <option value="50">50</option>
+                  <option value="100" selected>100</option>
+                  <option value="200">200</option>
+                  <option value="500">500</option>
+                </select>
+                <button onclick="renderActivityLogs()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh Logs</button>
+              </div>
+            </div>
+            <div id="devtools-logs" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 480px; overflow-y: auto;">
+              <div class="empty-state">Loading service logs...</div>
+            </div>
+          </div>
+        </section>`
             : ''
         }
-      </div>
-
-      <div class="sidebar-footer">
-        <a href="/privacy">Privacy</a>
-        <span>&middot;</span>
-        <a href="/tos">Terms</a>
-        <span>&middot;</span>
-        <a href="${deps.config.repoUrl || 'https://github.com/HELIX-Origin/HELIX-RSS'}" target="_blank" rel="noreferrer">GitHub</a>
-      </div>
-    </nav>
-
-    <!-- Main View -->
-    <main>
-      <!-- TAB 1: OVERVIEW -->
-      <section id="tab-overview" class="tab-pane active">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">My Subscriptions</div>
-            <div class="stat-value" id="stat-feeds-count">0</div>
-            <div class="stat-sub">Active feed syndications</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Discord Delivery</div>
-            <div class="stat-value" style="color: #5865F2;" id="stat-channels-count">0</div>
-            <div class="stat-sub">Connected channels</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Database Engine</div>
-            <div class="stat-value" style="color: #10b981;">${Math.round(dbStats.dbSizeBytes / 1024)} KB</div>
-            <div class="stat-sub">SQLite synchronous engine</div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-clock-rotate-left" style="color: var(--primary);"></i> Recent Activity</div>
-              <div class="card-desc">System logs, delivery notifications, and parser status</div>
-            </div>
-            <button onclick="loadOverviewTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-          </div>
-          <div id="activity-list" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 320px; overflow-y: auto;">
-            <div class="empty-state">Loading recent activity...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 2: FEEDS -->
-      <section id="tab-feeds" class="tab-pane">
-        <!-- Add Feed Card -->
-        <div class="card">
-          <div>
-            <div class="card-title"><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Add New RSS Feed</div>
-            <div class="card-desc">Provide any RSS, Atom, or XML feed URL and select the destination Discord channel.</div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Feed Name</label>
-              <input type="text" id="add-feed-name" placeholder="E.g., TechCrunch News">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Feed URL</label>
-              <input type="text" id="add-feed-url" placeholder="https://example.com/rss.xml" style="font-family: monospace;">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Destination Discord Channel</label>
-              <select id="add-feed-channel">
-                <option value="">-- Select Discord Channel --</option>
-              </select>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: flex-end;">
-            <button onclick="submitAddFeed()" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Add Feed</button>
-          </div>
-        </div>
-
-        <!-- Feed Posting Interval Card -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-regular fa-clock" style="color: var(--primary);"></i> Feed Posting Interval</div>
-              <div class="card-desc">How often the system checks feeds for new articles and delivers them to your Discord channels.</div>
-            </div>
-            <span class="badge badge-green" id="active-interval-badge">1 hour</span>
-          </div>
-          <div class="interval-group" id="interval-buttons-container">
-            <button type="button" onclick="setUserInterval(60000)" id="int-btn-60000" class="interval-btn"><i class="fa-solid fa-bolt"></i> 1 minute</button>
-            <button type="button" onclick="setUserInterval(600000)" id="int-btn-600000" class="interval-btn"><i class="fa-regular fa-clock"></i> 10 minutes</button>
-            <button type="button" onclick="setUserInterval(1800000)" id="int-btn-1800000" class="interval-btn"><i class="fa-regular fa-clock"></i> 30 minutes</button>
-            <button type="button" onclick="setUserInterval(3600000)" id="int-btn-3600000" class="interval-btn active"><i class="fa-regular fa-clock"></i> 1 hour</button>
-          </div>
-        </div>
-
-        <!-- Forum Thread Delivery Card -->
-        <div class="card" style="border-left: 4px solid #5865F2;">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-comments" style="color: #5865F2;"></i> Forum Thread Delivery</div>
-              <div class="card-desc">Optional: deliver every feed into its own dedicated thread inside a forum channel. One thread per feed — threads are kept open and rotate into a fresh thread when they grow large. Configured per server.</div>
-            </div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Server</label>
-              <select id="thread-config-guild" onchange="onThreadGuildChange()">
-                <option value="">-- Select Server --</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
-                <input type="checkbox" id="thread-config-enabled" />
-                <span>Enable forum thread delivery for this server</span>
-              </label>
-              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">Existing feeds in this server automatically adopt a per-feed thread on their next poll.</div>
-            </div>
-          </div>
-          <div class="form-group" id="thread-config-forums-group" style="margin-top: 0.75rem; display: none;">
-            <label class="form-label">Forum Channel(s)</label>
-            <div id="thread-config-forums" style="display: flex; flex-direction: column; gap: 0.4rem;"></div>
-          </div>
-          <div style="display: flex; justify-content: flex-end; margin-top: 0.75rem;">
-            <button onclick="saveThreadConfig()" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Save Thread Settings</button>
-          </div>
-        </div>
-
-        <!-- My Feeds List Card -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-list" style="color: var(--primary);"></i> My Subscribed Feeds</div>
-              <div class="card-desc">Manage, pause, or remove your active feed syndications.</div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button onclick="loadFeedsTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-            </div>
-          </div>
-          <div id="feeds-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div class="empty-state">Loading feeds...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: REDDIT FEEDS -->
-      <section id="tab-reddit" class="tab-pane">
-        <!-- Add Reddit Feed Card -->
-        <div class="card" style="border-left: 4px solid #ff4500;">
-          <div>
-            <div class="card-title" style="color: #ff4500;"><i class="fa-brands fa-reddit" style="font-size: 1.25rem;"></i> Custom Reddit Feeds</div>
-            <div class="card-desc">Syndicate any subreddit, user, or topic feed to Discord. Choose between <strong>Pure Image Mode</strong> (high-res image/GIF banner only) or <strong>Standard RSS Mode</strong> (formatted post prose, author badges, and discussions).</div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Subreddit or Reddit RSS URL</label>
-              <input type="text" id="add-reddit-sub" placeholder="e.g. wallpapers, technology, or https://www.reddit.com/r/EarthPorn/.rss" oninput="handleRedditSubInput(this.value)">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Feed Display Mode</label>
-              <select id="add-reddit-type">
-                <option value="reddit">🖼️ Pure Image Mode (Image & Animated GIF Only)</option>
-                <option value="rss">📰 Standard RSS Mode (Prose, Discussion & Links)</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Custom Display Name</label>
-              <input type="text" id="add-reddit-name" placeholder="Leave empty for auto (e.g. Reddit · r/wallpapers)">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Destination Discord Channel</label>
-              <select id="add-reddit-channel">
-                <option value="">-- Select Discord Channel --</option>
-              </select>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.25rem;">
-            <div style="display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;">
-              <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--text-dim); margin-right: 0.25rem;">Sort:</span>
-              <button type="button" onclick="setRedditSort('hot')" id="reddit-sort-hot" class="btn btn-ghost btn-sm active" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Hot</button>
-              <button type="button" onclick="setRedditSort('top-day')" id="reddit-sort-top-day" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Top (Day)</button>
-              <button type="button" onclick="setRedditSort('top-week')" id="reddit-sort-top-week" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Top (Week)</button>
-              <button type="button" onclick="setRedditSort('new')" id="reddit-sort-new" class="btn btn-ghost btn-sm" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">New</button>
-            </div>
-            <button onclick="submitAddRedditFeed()" class="btn btn-primary" style="background: #ff4500; border-color: #ff4500; box-shadow: 0 4px 12px rgba(255,69,0,0.25);">
-              <i class="fa-brands fa-reddit"></i> Add Reddit Feed
-            </button>
-          </div>
-        </div>
-
-        <!-- Curated Popular Reddit Feeds Grid -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Curated Subreddit Presets</div>
-              <div class="card-desc">Popular image, media, technology, gaming, and discussion communities ready to sync in one click.</div>
-            </div>
-          </div>
-          <div id="reddit-curated-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.875rem;">
-            <div class="empty-state">Loading curated subreddits...</div>
-          </div>
-        </div>
-
-        <!-- Active Reddit Feeds List Card -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-brands fa-reddit" style="color: #ff4500;"></i> My Reddit Feeds</div>
-              <div class="card-desc">Active Reddit subscriptions posting to your Discord server. Toggle between Pure Image and Standard RSS mode anytime.</div>
-            </div>
-            <button onclick="loadRedditTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-          </div>
-          <div id="reddit-feeds-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div class="empty-state">Loading Reddit feeds...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB: FREE GAMES FEEDS -->
-      <section id="tab-freegames" class="tab-pane">
-        <!-- Add Free Games Feed Card -->
-        <div class="card" style="border-left: 4px solid #10b981;">
-          <div class="card-header">
-            <div>
-              <div class="card-title" style="color: #10b981;"><i class="fa-solid fa-gift" style="font-size: 1.25rem;"></i> Free Games Feeds (Epic Games, Steam, GOG)</div>
-              <div class="card-desc">Automatically tracks and delivers 100% OFF free-to-keep game promotions and giveaways directly to your Discord channels.</div>
-            </div>
-            <span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 0.75rem;">
-              <i class="fa-solid fa-calendar-day"></i> Daily Poll
-            </span>
-          </div>
-
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Game Store Platform</label>
-              <select id="add-freegames-platform" onchange="handleFreeGamesPlatformChange(this.value)">
-                <option value="all">🎮 All Platforms (Epic + Steam + GOG + IndieGala + Humble)</option>
-                <option value="epic">🚀 Epic Games Store Only</option>
-                <option value="steam">♨️ Steam Giveaways Only</option>
-                <option value="gog">💜 GOG Promotions Only</option>
-                <option value="indiegala">🎁 IndieGala Freebies Only</option>
-                <option value="humble">📦 Humble Bundle Giveaways Only</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Feed Display Name</label>
-              <input type="text" id="add-freegames-name" placeholder="Free Games · All Platforms">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Destination Discord Channel</label>
-              <select id="add-freegames-channel">
-                <option value="">-- Select Discord Channel --</option>
-              </select>
-            </div>
-          </div>
-
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
-            <div style="font-size: 0.8125rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
-              <i class="fa-solid fa-clock-rotate-left" style="color: #10b981;"></i>
-              <span>Runs on automated weekly Monday schedule + instant manual trigger anytime.</span>
-            </div>
-            <button onclick="submitAddFreeGamesFeed()" class="btn btn-primary" style="background: #10b981; border-color: #10b981; box-shadow: 0 4px 12px rgba(16,185,129,0.25);">
-              <i class="fa-solid fa-gift"></i> Add Free Games Feed
-            </button>
-          </div>
-        </div>
-
-        <!-- Curated Free Game Presets Grid -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-gamepad" style="color: #10b981;"></i> Instant Platform Presets</div>
-              <div class="card-desc">Quickly configure a dedicated free game alerts channel for each store.</div>
-            </div>
-          </div>
-          <div id="freegames-curated-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.875rem;">
-            <div class="empty-state">Loading platforms...</div>
-          </div>
-        </div>
-
-        <!-- Active Free Games Feeds List Card -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-list-check" style="color: #10b981;"></i> My Free Games Feeds</div>
-              <div class="card-desc">Active free games subscriptions delivering new giveaways as they are discovered.</div>
-            </div>
-            <div style="display: flex; gap: 0.5rem;">
-              <button onclick="loadFreeGamesTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-            </div>
-          </div>
-          <div id="freegames-feeds-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div class="empty-state">Loading Free Games feeds...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: NEWS FEEDS CATALOG -->
-      <section id="tab-news" class="tab-pane">
-        <div class="card">
-          <div>
-            <div class="card-title"><i class="fa-solid fa-newspaper" style="color: var(--amber);"></i> News Feeds Catalog</div>
-            <div class="card-desc">One-click subscribe to top news, tech, gaming, science, and developer feeds directly into any Discord channel.</div>
-          </div>
-          <div id="presets-list-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
-            <div class="empty-state">Loading news feeds catalog...</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: SETTINGS (ADMIN ONLY) -->
-      ${
-        isHost
-          ? `<section id="tab-settings" class="tab-pane">
-        <div class="card">
-          <div>
-            <div class="card-title"><i class="fa-solid fa-sliders" style="color: var(--primary);"></i> System Settings</div>
-            <div class="card-desc">Configure public endpoints, OAuth redirection, and service defaults.</div>
-          </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label class="form-label">Public Base URL</label>
-              <input type="text" id="cfg-base-url" placeholder="http://159.223.140.212:3131">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Active Dashboard Theme &amp; Color Scheme</label>
-              <input type="text" value="${theme.name} (${theme.id}) &bull; ${colorScheme.name} (${colorScheme.id})" disabled style="opacity: 0.85; cursor: not-allowed;" title="Configured via DASHBOARD_THEME and DASHBOARD_COLOR_SCHEME environment variables">
-              <span style="font-size: 0.6875rem; color: var(--text-dim); margin-top: 0.25rem;">Configured via <code style="color: var(--primary);">DASHBOARD_THEME</code> and <code style="color: var(--primary);">DASHBOARD_COLOR_SCHEME</code> in <code style="color: var(--primary);">.env</code>. Themes: <code style="color: var(--text-muted);">glassmorphism</code>, <code style="color: var(--text-muted);">dark</code>, <code style="color: var(--text-muted);">light</code>, <code style="color: var(--text-muted);">cyberpunk</code>, <code style="color: var(--text-muted);">dracula</code>, <code style="color: var(--text-muted);">nord</code>, <code style="color: var(--text-muted);">emerald</code>. Color Schemes: <code style="color: var(--text-muted);">cyan</code>, <code style="color: var(--text-muted);">purple</code>, <code style="color: var(--text-muted);">blue</code>, <code style="color: var(--text-muted);">emerald</code>, <code style="color: var(--text-muted);">rose</code>, <code style="color: var(--text-muted);">amber</code>, <code style="color: var(--text-muted);">indigo</code>, <code style="color: var(--text-muted);">crimson</code>, <code style="color: var(--text-muted);">teal</code>, <code style="color: var(--text-muted);">sunset</code>.</span>
-            </div>
-          </div>
-          <div style="display: flex; justify-content: flex-end;">
-            <button onclick="saveSystemSettings()" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> Registered Users &amp; Discord App Team</div>
-              <div class="card-desc">All Discord Application team members automatically have administrative privileges.</div>
-            </div>
-            <button onclick="loadUsersList()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-          </div>
-          <div id="users-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
-            <div class="empty-state">Loading users...</div>
-          </div>
-        </div>
-      </section>`
-          : ''
-      }
-
-      <!-- TAB 7: DEVELOPER TOOLS (BOT OWNER / TEAM ONLY) -->
-      ${
-        isOwner
-          ? `<section id="tab-devtools" class="tab-pane">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-screwdriver-wrench" style="color: var(--primary);"></i> Developer Tools</div>
-              <div class="card-desc">Discord bot owner/team diagnostics, service logs, and manual maintenance triggers.</div>
-            </div>
-            <button onclick="loadDevToolsTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
-          </div>
-        </div>
-
-        <div class="stats-grid">
-          <div class="stat-card"><div class="stat-label">Total Feeds</div><div class="stat-value" id="dt-feed-count">-</div><div class="stat-sub">All syndicated feeds</div></div>
-          <div class="stat-card"><div class="stat-label">Entries Delivered</div><div class="stat-value" id="dt-sent-count">-</div><div class="stat-sub">Messages sent to Discord</div></div>
-          <div class="stat-card"><div class="stat-label">Registered Users</div><div class="stat-value" id="dt-user-count">-</div><div class="stat-sub">Dashboard accounts</div></div>
-          <div class="stat-card"><div class="stat-label">Database Size</div><div class="stat-value" id="dt-db-size">-</div><div class="stat-sub">SQLite persistence</div></div>
-          <div class="stat-card"><div class="stat-label">Process Uptime</div><div class="stat-value" id="dt-uptime">-</div><div class="stat-sub">Since service start</div></div>
-          <div class="stat-card"><div class="stat-label">Memory RSS</div><div class="stat-value" id="dt-memory">-</div><div class="stat-sub">Heap: <span id="dt-heap">-</span></div></div>
-          <div class="stat-card"><div class="stat-label">Node.js</div><div class="stat-value" id="dt-node">-</div><div class="stat-sub">Runtime version</div></div>
-          <div class="stat-card"><div class="stat-label">Platform</div><div class="stat-value" id="dt-platform">-</div><div class="stat-sub">Operating environment</div></div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-bolt" style="color: var(--primary);"></i> Developer Actions</div>
-              <div class="card-desc">Manual maintenance triggers. Every action is recorded in the Service Logs below.</div>
-            </div>
-          </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-            <button onclick="syncDiscordCommands()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-arrow-right-arrow-left"></i> Sync Discord Slash Commands</button>
-            <button onclick="optimizeDatabase()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-database"></i> Optimize SQLite DB</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title"><i class="fa-solid fa-list-ul" style="color: var(--primary);"></i> Service Logs</div>
-              <div class="card-desc">Full activity log with level filtering.</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-              <select id="devtools-log-level" onchange="renderActivityLogs()" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem;">
-                <option value="">All levels</option>
-                <option value="info">info</option>
-                <option value="warn">warn</option>
-                <option value="error">error</option>
-                <option value="debug">debug</option>
-              </select>
-              <select id="devtools-log-limit" onchange="renderActivityLogs()" style="width: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem;">
-                <option value="50">50</option>
-                <option value="100" selected>100</option>
-                <option value="200">200</option>
-                <option value="500">500</option>
-              </select>
-              <button onclick="renderActivityLogs()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh Logs</button>
-            </div>
-          </div>
-          <div id="devtools-logs" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 480px; overflow-y: auto;">
-            <div class="empty-state">Loading service logs...</div>
-          </div>
-        </div>
-      </section>`
-          : ''
-      }
-    </main>
+      </main>
+    </div>
   </div>
 
   <script>
@@ -993,8 +1013,16 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    function guildIconUrl(guildId, icon) {
+      if (!icon) return null;
+      return 'https://cdn.discordapp.com/icons/' + esc(guildId) + '/' + esc(icon) + '.png';
+    }
+
     // State caches
-    let cachedChannels = [];
+    let currentGuildId = null;
+    let currentGuild = null;
+    let cachedGuilds = [];
+    let cachedCategories = null;
     let cachedPresets = [];
     let activeTabName = 'overview';
 
@@ -1009,14 +1037,22 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       if (target) target.classList.add('active');
       if (btn) btn.classList.add('active');
 
-      // Lazy-load data when switching to a tab
       if (tabId === 'overview') loadOverviewTab();
-      else if (tabId === 'feeds') loadFeedsTab();
-      else if (tabId === 'reddit') loadRedditTab();
-      else if (tabId === 'freegames') loadFreeGamesTab();
+      else if (tabId === 'categories') loadCategoriesTab();
       else if (tabId === 'news') loadNewsTab();
       else if (tabId === 'settings') loadSettingsTab();
       else if (tabId === 'devtools') loadDevToolsTab();
+    }
+
+    function clearGuild(event) {
+      if (event) event.preventDefault();
+      window.location.href = '/dashboard';
+    }
+
+    function selectGuild(guildId) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('guild', guildId);
+      window.location.search = params.toString();
     }
 
     // Auth & Logout
@@ -1035,15 +1071,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       return true;
     }
 
-    function feedDeliveryLabel(f) {
-      const thread = f.threadChannelId
-        ? '<span style="color: #5865F2;"><i class="fa-solid fa-comments"></i> #' + esc(f.threadChannelId) + '</span>'
-        : '';
-      const channel = f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked';
-      if (!thread) return 'Delivery: ' + channel;
-      return 'Delivery: ' + thread + ' &middot; Fallback: ' + channel;
-    }
-
     // User Profile
     async function loadUserProfile() {
       try {
@@ -1057,320 +1084,285 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       } catch {}
     }
 
-    // Channels Dropdown Builder
-    function buildChannelOptionsHtml(currentVal) {
-      if (!cachedChannels || !cachedChannels.length) {
-        return '<option value="">-- No Discord Channels Available (Invite Bot) --</option>';
-      }
-      let html = '<option value="">-- Select Discord Channel --</option>';
-      cachedChannels.forEach(g => {
-        const channels = g.channels || [];
-        if (channels.length) {
-          html += '<optgroup label="' + esc(g.name) + '">';
-          channels.forEach(ch => {
-            const val = 'channel:' + ch.id;
-            const sel = (currentVal === val || currentVal === ch.id) ? 'selected' : '';
-            html += '<option value="' + val + '" ' + sel + '>#' + esc(ch.name) + '</option>';
-          });
-          html += '</optgroup>';
+    // Guild selection
+    async function loadGuildSelection() {
+      const grid = document.getElementById('guild-grid');
+      const empty = document.getElementById('guild-empty-state');
+      if (!grid || !empty) return;
+      try {
+        const res = await fetch('/api/guilds', { signal: AbortSignal.timeout(6000) });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        cachedGuilds = data.guilds || [];
+        if (!cachedGuilds.length) {
+          grid.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
         }
-      });
-      return html;
+        empty.classList.add('hidden');
+        grid.innerHTML = cachedGuilds.map(g => {
+          const icon = guildIconUrl(g.id, g.icon);
+          return '<div class="guild-card">' +
+            (icon ? '<img class="guild-icon" src="' + icon + '" alt="' + esc(g.name) + '">' : '<div class="guild-icon"><i class="fa-solid fa-server"></i></div>') +
+            '<div class="guild-name">' + esc(g.name) + '</div>' +
+            '<button onclick="selectGuild(&quot;' + esc(g.id) + '&quot;)" class="btn btn-primary"><i class="fa-solid fa-gear"></i> Manage Server</button>' +
+          '</div>';
+        }).join('');
+      } catch {
+        grid.innerHTML = '<div class="empty-state">Failed to load servers.</div>';
+      }
     }
 
-    async function loadDiscordChannels() {
-      try {
-        const res = await fetch('/api/discord/channels', { signal: AbortSignal.timeout(6000) });
-        if (!res.ok) return;
-        const data = await res.json();
-        cachedChannels = data.guilds || [];
-        
-        // Populate Add Feed dropdown
-        const sel = document.getElementById('add-feed-channel');
-        if (sel) sel.innerHTML = buildChannelOptionsHtml(sel.value);
-
-        // Populate Add Reddit dropdown
-        const redditSel = document.getElementById('add-reddit-channel');
-        if (redditSel) redditSel.innerHTML = buildChannelOptionsHtml(redditSel.value);
-
-        // Populate Add Free Games dropdown
-        const freegamesSel = document.getElementById('add-freegames-channel');
-        if (freegamesSel) freegamesSel.innerHTML = buildChannelOptionsHtml(freegamesSel.value);
-
-        // Update connected channels count on overview
-        const chCountEl = document.getElementById('stat-channels-count');
-        if (chCountEl) {
-          const total = cachedChannels.reduce((acc, g) => acc + (g.channels?.length || 0), 0);
-          chCountEl.textContent = total;
+    function setupGuildHeader() {
+      const pill = document.getElementById('current-guild-pill');
+      const iconEl = document.getElementById('current-guild-icon');
+      const nameEl = document.getElementById('current-guild-name');
+      if (!pill || !nameEl) return;
+      if (currentGuild) {
+        nameEl.textContent = currentGuild.name || 'Server';
+        const icon = guildIconUrl(currentGuild.guildId || currentGuild.id, currentGuild.icon);
+        if (icon && iconEl) {
+          iconEl.src = icon;
+          iconEl.alt = currentGuild.name || 'Server';
+          iconEl.classList.remove('hidden');
+        } else if (iconEl) {
+          iconEl.src = '';
+          iconEl.classList.add('hidden');
         }
+        pill.classList.remove('hidden');
+      } else {
+        pill.classList.add('hidden');
+      }
+    }
 
-        // Refresh any preset channel selects
-        document.querySelectorAll('select[data-preset-channel], select[data-reddit-preset-channel], select[data-freegames-preset-channel]').forEach(s => {
-          s.innerHTML = buildChannelOptionsHtml(s.value);
+    function getGuildName(guildId) {
+      const g = cachedGuilds.find(x => x.id === guildId);
+      return g ? g.name : (currentGuild ? currentGuild.name : guildId);
+    }
+
+    async function loadGuildDashboard() {
+      const selectionView = document.getElementById('guild-selection-view');
+      const dashboardView = document.getElementById('dashboard-view');
+      if (selectionView) selectionView.classList.remove('active');
+      if (dashboardView) dashboardView.classList.add('active');
+
+      try {
+        const res = await fetch('/api/guilds/' + encodeURIComponent(currentGuildId) + '/categories', { signal: AbortSignal.timeout(6000) });
+        if (res.status === 403 || res.status === 401) {
+          alert('You do not have permission to manage this server.');
+          clearGuild();
+          return;
+        }
+        if (!res.ok) {
+          alert('Could not load server configuration.');
+          clearGuild();
+          return;
+        }
+        cachedCategories = await res.json();
+        currentGuild = { guildId: cachedCategories.guildId, name: cachedCategories.name, icon: cachedCategories.icon };
+        setupGuildHeader();
+        populateCategoryTargets();
+        loadOverviewTab();
+      } catch {
+        alert('Failed to load server configuration.');
+        clearGuild();
+      }
+    }
+
+    function populateCategoryTargetSelect(selectId, channels, currentId, placeholder) {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      let html = '<option value="">' + esc(placeholder) + '</option>';
+      if (channels && channels.length) {
+        channels.forEach(ch => {
+          const selected = ch.id === currentId ? 'selected' : '';
+          html += '<option value="' + esc(ch.id) + '" ' + selected + '>#' + esc(ch.name) + '</option>';
         });
-      } catch {}
+      }
+      sel.innerHTML = html;
+    }
+
+    function populateCategoryTargets() {
+      if (!cachedCategories) return;
+      const textChannels = cachedCategories.textChannels || [];
+      const forumChannels = cachedCategories.forumChannels || [];
+      const targets = cachedCategories.categories || [];
+      const getTarget = (cat) => targets.find(t => t.category === cat) || { channelId: null, threadChannelId: null };
+
+      ['rss', 'reddit', 'freegames'].forEach(cat => {
+        const target = getTarget(cat);
+        populateCategoryTargetSelect(cat + '-target-channel', textChannels, target.channelId, '-- Select Channel --');
+        populateCategoryTargetSelect(cat + '-target-thread', forumChannels, target.threadChannelId, '-- No Forum Thread --');
+        updateTargetReadout(cat, target, textChannels, forumChannels);
+      });
+    }
+
+    function channelNameById(channels, id) {
+      if (!id) return null;
+      const ch = (channels || []).find(c => c.id === id);
+      return ch ? '#' + ch.name : '#' + id.slice(-6);
+    }
+
+    function updateTargetReadout(category, target, textChannels, forumChannels) {
+      const el = document.getElementById(category + '-target-readout');
+      if (!el) return;
+      const channel = channelNameById(textChannels, target.channelId) || 'none';
+      const thread = channelNameById(forumChannels, target.threadChannelId) || 'none';
+      el.innerHTML = 'Channel: <strong>' + esc(channel) + '</strong> &middot; Thread: <strong>' + esc(thread) + '</strong>';
+    }
+
+    async function saveCategoryTarget(category) {
+      if (!currentGuildId) return;
+      const channelSel = document.getElementById(category + '-target-channel');
+      const threadSel = document.getElementById(category + '-target-thread');
+      const channelId = channelSel ? channelSel.value || null : null;
+      const threadChannelId = threadSel ? threadSel.value || null : null;
+      try {
+        const res = await fetch('/api/guilds/' + encodeURIComponent(currentGuildId) + '/categories/' + encodeURIComponent(category), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelId, threadChannelId })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          if (cachedCategories && cachedCategories.categories) {
+            const idx = cachedCategories.categories.findIndex(t => t.category === category);
+            if (idx >= 0) cachedCategories.categories[idx] = data;
+            else cachedCategories.categories.push(data);
+          }
+          populateCategoryTargets();
+          alert('Saved ' + category + ' target for this server.');
+        } else {
+          alert((data && data.error) || 'Failed to save target.');
+        }
+      } catch {
+        alert('Network error saving target.');
+      }
+    }
+
+    function categoryForFeed(feed) {
+      const t = feed.feedType;
+      if (t === 'reddit') return 'reddit';
+      if (t === 'rss' || t === 'scrape') return 'rss';
+      if (t && t.startsWith('free_games')) return 'freegames';
+      return null;
+    }
+
+    async function loadGuildFeeds() {
+      try {
+        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(6000) });
+        if (!checkAuth(res)) return [];
+        const feeds = await res.json();
+        return Array.isArray(feeds) ? feeds.filter(f => f.guildId === currentGuildId) : [];
+      } catch {
+        return [];
+      }
+    }
+
+    function renderFeedPill(f) {
+      const isReddit = f.feedType === 'reddit';
+      const isFreeGames = f.feedType === 'free_games' || (f.feedType && f.feedType.startsWith('free_games'));
+      const isScrape = f.feedType === 'scrape';
+      let typeBadge = '<span class="badge badge-gray"><i class="fa-solid fa-rss"></i> RSS</span>';
+      if (isReddit) typeBadge = '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-brands fa-reddit"></i> Reddit</span>';
+      else if (isFreeGames) typeBadge = '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-gift"></i> Free Games</span>';
+      else if (isScrape) typeBadge = '<span class="badge badge-amber"><i class="fa-solid fa-code"></i> Scraper</span>';
+      const statusBadge = f.enabled
+        ? '<span class="badge badge-green">Active</span>'
+        : '<span class="badge badge-gray">Paused</span>';
+      const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
+      return '<div class="feed-pill">' +
+        '<div class="feed-details">' +
+          '<div class="feed-name-row">' +
+            '<span class="feed-name">' + esc(f.name) + '</span>' +
+            typeBadge +
+            statusBadge +
+          '</div>' +
+          '<div class="feed-url">' + esc(f.url) + '</div>' +
+          '<div class="feed-meta">Checked: ' + lastPolled + '</div>' +
+        '</div>' +
+        '<div style="display: flex; gap: 0.375rem; flex-shrink: 0;">' +
+          '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm" title="' + (f.enabled ? 'Pause' : 'Resume') + '">' +
+            '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i>' +
+          '</button>' +
+          '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    async function renderCategoryFeeds(category) {
+      const container = document.getElementById(category + '-feeds-list');
+      if (!container) return;
+      container.innerHTML = '<div class="empty-state">Loading feeds...</div>';
+      const feeds = await loadGuildFeeds();
+      const categoryFeeds = feeds.filter(f => categoryForFeed(f) === category);
+      if (!categoryFeeds.length) {
+        container.innerHTML = '<div class="empty-state">No ' + category + ' feeds for this server yet.</div>';
+        return;
+      }
+      container.innerHTML = categoryFeeds.map(renderFeedPill).join('');
+    }
+
+    async function loadCategoriesTab() {
+      if (!cachedCategories && currentGuildId) {
+        await loadGuildDashboard();
+        return;
+      }
+      populateCategoryTargets();
+      await Promise.all(['rss', 'reddit', 'freegames'].map(renderCategoryFeeds));
     }
 
     // TAB 1: OVERVIEW
     async function loadOverviewTab() {
       const activityEl = document.getElementById('activity-list');
-      const feedsCountEl = document.getElementById('stat-feeds-count');
-      loadDiscordChannels();
-      try {
-        const res = await fetch('/api/stats', { signal: AbortSignal.timeout(5000) });
-        if (res.status === 401 || res.status === 403) {
-          if (activityEl) activityEl.innerHTML = '<div class="empty-state">Sign in with Discord to view recent activity.</div>';
-          if (feedsCountEl) feedsCountEl.textContent = '0';
-          return;
-        }
-        const data = await res.json();
-        if (feedsCountEl) feedsCountEl.textContent = data.myFeeds !== undefined ? data.myFeeds : '0';
+      const totalEl = document.getElementById('stat-total-feeds');
+      const activeEl = document.getElementById('stat-active-feeds');
+      const rssEl = document.getElementById('stat-rss-feeds');
+      const redditEl = document.getElementById('stat-reddit-feeds');
+      const freegamesEl = document.getElementById('stat-freegames-feeds');
 
-        if (activityEl && data.activity && data.activity.length) {
-          activityEl.innerHTML = data.activity.map(a => {
-            const color = a.level === 'error' ? '#ef4444' : a.level === 'warn' ? '#f59e0b' : 'var(--primary)';
-            return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8125rem;">' +
-              '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
-                '<i class="fa-solid fa-circle" style="color: ' + color + '; font-size: 0.5rem;"></i>' +
-                '<span style="color: var(--text);">' + esc(a.message) + '</span>' +
-              '</div>' +
-              '<span style="font-size: 0.6875rem; color: var(--text-dim); font-family: monospace;">' + esc(a.ts) + '</span>' +
-            '</div>';
-          }).join('');
+      try {
+        const [feeds, statsRes] = await Promise.all([
+          loadGuildFeeds(),
+          fetch('/api/stats', { signal: AbortSignal.timeout(5000) })
+        ]);
+        const total = feeds.length;
+        const active = feeds.filter(f => f.enabled).length;
+        const rss = feeds.filter(f => categoryForFeed(f) === 'rss').length;
+        const reddit = feeds.filter(f => categoryForFeed(f) === 'reddit').length;
+        const freegames = feeds.filter(f => categoryForFeed(f) === 'freegames').length;
+        if (totalEl) totalEl.textContent = String(total);
+        if (activeEl) activeEl.textContent = String(active);
+        if (rssEl) rssEl.textContent = String(rss);
+        if (redditEl) redditEl.textContent = String(reddit);
+        if (freegamesEl) freegamesEl.textContent = String(freegames);
+
+        if (activityEl && statsRes.ok) {
+          const data = await statsRes.json();
+          if (data.activity && data.activity.length) {
+            activityEl.innerHTML = data.activity.map(a => {
+              const color = a.level === 'error' ? '#ef4444' : a.level === 'warn' ? '#f59e0b' : 'var(--primary)';
+              return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8125rem;">' +
+                '<div style="display: flex; align-items: center; gap: 0.5rem;">' +
+                  '<i class="fa-solid fa-circle" style="color: ' + color + '; font-size: 0.5rem;"></i>' +
+                  '<span style="color: var(--text);">' + esc(a.message) + '</span>' +
+                '</div>' +
+                '<span style="font-size: 0.6875rem; color: var(--text-dim); font-family: monospace;">' + esc(a.ts) + '</span>' +
+              '</div>';
+            }).join('');
+          } else {
+            activityEl.innerHTML = '<div class="empty-state">No recent activity recorded yet.</div>';
+          }
         } else if (activityEl) {
-          activityEl.innerHTML = '<div class="empty-state">No recent activity recorded yet.</div>';
+          activityEl.innerHTML = '<div class="empty-state">Could not load activity.</div>';
         }
       } catch {
         if (activityEl) activityEl.innerHTML = '<div class="empty-state">Could not load activity.</div>';
       }
     }
 
-    // TAB 2: FEEDS
-    async function loadFeedsTab() {
-      const container = document.getElementById('feeds-list-container');
-      const feedsCountEl = document.getElementById('stat-feeds-count');
-      
-      // Also load user interval and channels
-      loadUserInterval();
-      loadDiscordChannels();
-      loadThreadConfig();
-
-      try {
-        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
-        if (res.status === 401 || res.status === 403) {
-          if (container) container.innerHTML = '<div class="empty-state">Sign in with Discord to view and manage your feeds.</div>';
-          return;
-        }
-        const feeds = await res.json();
-        if (!Array.isArray(feeds) || !feeds.length) {
-          if (container) container.innerHTML = '<div class="empty-state">No feeds added yet. Add a feed above or explore News Feeds presets.</div>';
-          if (feedsCountEl) feedsCountEl.textContent = '0';
-          return;
-        }
-
-        if (feedsCountEl) feedsCountEl.textContent = feeds.length;
-        if (!container) return;
-
-        container.innerHTML = feeds.map(f => {
-          const isImageFeed = f.feedType === 'reddit';
-          const isFreeGames = f.feedType === 'free_games' || (f.feedType && f.feedType.startsWith('free_games'));
-          const typeBadge = isImageFeed
-            ? '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-brands fa-reddit"></i> Image Feed</span>'
-            : isFreeGames
-              ? '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-gift"></i> Free Games</span>'
-              : f.feedType === 'scrape'
-                ? '<span class="badge badge-amber"><i class="fa-solid fa-code"></i> Scraper</span>'
-                : '<span class="badge badge-gray"><i class="fa-solid fa-rss"></i> RSS</span>';
-          const statusBadge = f.enabled
-            ? '<span class="badge badge-green">Active</span>'
-            : '<span class="badge badge-gray">Paused</span>';
-          const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
-
-          return '<div class="feed-item">' +
-            '<div class="feed-details">' +
-              '<div class="feed-name-row">' +
-                '<span class="feed-name">' + esc(f.name) + '</span>' +
-                typeBadge +
-                statusBadge +
-              '</div>' +
-              '<div class="feed-url">' + esc(f.url) + '</div>' +
-              '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
-            '</div>' +
-            '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
-                '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
-                  '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
-                '</button>' +
-                '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-      } catch {
-        if (container) container.innerHTML = '<div class="empty-state">Failed to load feeds.</div>';
-      }
-    }
-
-    async function loadUserInterval() {
-      try {
-        const res = await fetch('/api/feeds/interval', { signal: AbortSignal.timeout(5000) });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (data && data.pollIntervalMs) {
-          updateIntervalUI(data.pollIntervalMs);
-        }
-      } catch {}
-    }
-
-    function updateIntervalUI(ms) {
-      const labels = { 60000: '1 minute', 600000: '10 minutes', 1800000: '30 minutes', 3600000: '1 hour' };
-      const badge = document.getElementById('active-interval-badge');
-      if (badge && labels[ms]) badge.textContent = labels[ms];
-
-      [60000, 600000, 1800000, 3600000].forEach(val => {
-        const btn = document.getElementById('int-btn-' + val);
-        if (btn) {
-          if (val === ms) btn.classList.add('active');
-          else btn.classList.remove('active');
-        }
-      });
-    }
-
-    async function setUserInterval(ms) {
-      updateIntervalUI(ms);
-      try {
-        const res = await fetch('/api/feeds/interval', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pollIntervalMs: ms })
-        });
-        if (!checkAuth(res)) return;
-      } catch {}
-    }
-
-    // ----- Forum Thread Delivery (per guild) -----
-    let cachedThreadConfig = { guilds: [] };
-
-    async function loadThreadConfig() {
-      try {
-        const res = await fetch('/api/discord/thread-config', { signal: AbortSignal.timeout(6000) });
-        if (!res.ok) return;
-        const data = await res.json();
-        cachedThreadConfig = data || { guilds: [] };
-        const sel = document.getElementById('thread-config-guild');
-        if (!sel) return;
-        const current = sel.value;
-        sel.innerHTML = '<option value="">-- Select Server --</option>' + cachedThreadConfig.guilds.map(g =>
-          '<option value="' + esc(g.guildId) + '">' + esc(g.name) + '</option>'
-        ).join('');
-        if (current && cachedThreadConfig.guilds.some(g => g.guildId === current)) sel.value = current;
-        renderThreadConfigForGuild();
-      } catch {}
-    }
-
-    function currentThreadGuild() {
-      const sel = document.getElementById('thread-config-guild');
-      const guildId = sel ? sel.value : '';
-      return cachedThreadConfig.guilds.find(g => g.guildId === guildId) || null;
-    }
-
-    function onThreadGuildChange() {
-      renderThreadConfigForGuild();
-    }
-
-    function renderThreadConfigForGuild() {
-      const guild = currentThreadGuild();
-      const box = document.getElementById('thread-config-forums');
-      const group = document.getElementById('thread-config-forums-group');
-      const enable = document.getElementById('thread-config-enabled');
-      if (!guild) {
-        if (group) group.style.display = 'none';
-        if (box) box.innerHTML = '';
-        if (enable) enable.checked = false;
-        return;
-      }
-      if (enable) enable.checked = Boolean(guild.threadsEnabled);
-      if (!box || !group) return;
-      if (!guild.forumChannels.length) {
-        group.style.display = '';
-        box.innerHTML = '<div style="font-size: 0.8125rem; color: var(--text-muted);">No forum channels found in this server. Create a Forum channel first, then refresh this page.</div>';
-        return;
-      }
-      group.style.display = '';
-      const selected = new Set(guild.forumChannelIds || []);
-      box.innerHTML = guild.forumChannels.map(ch => {
-        const checked = selected.has(ch.id) ? 'checked' : '';
-        return '<label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer;">' +
-          '<input type="checkbox" class="thread-forum-check" value="' + esc(ch.id) + '" ' + checked + ' />' +
-          '<span>#' + esc(ch.name) + '</span>' +
-        '</label>';
-      }).join('');
-    }
-
-    async function saveThreadConfig() {
-      const guild = currentThreadGuild();
-      if (!guild) {
-        alert('Please select a server first.');
-        return;
-      }
-      const enable = document.getElementById('thread-config-enabled');
-      const enabled = Boolean(enable && enable.checked);
-      const forumChannelIds = Array.from(document.querySelectorAll('.thread-forum-check:checked')).map(e => e.value);
-      try {
-        const res = await fetch('/api/discord/thread-config', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ guildId: guild.guildId, threadsEnabled: enabled, forumChannelIds })
-        });
-        if (!checkAuth(res)) return;
-        if (!res.ok) {
-          const err = await res.json().catch(() => null);
-          alert(err && err.error ? err.error : 'Failed to save thread settings.');
-          return;
-        }
-        const data = await res.json();
-        guild.threadsEnabled = data.threadsEnabled;
-        guild.forumChannelIds = data.forumChannelIds;
-        renderThreadConfigForGuild();
-        alert(enabled ? 'Forum thread delivery enabled. Feeds will deliver into per-feed threads on their next poll.' : 'Forum thread delivery disabled. Feeds will deliver into their regular channel going forward.');
-      } catch {
-        alert('Failed to save thread settings.');
-      }
-    }
-
-    async function submitAddFeed() {
-      const nameInput = document.getElementById('add-feed-name');
-      const urlInput = document.getElementById('add-feed-url');
-      const chanInput = document.getElementById('add-feed-channel');
-
-      const name = nameInput ? nameInput.value.trim() : '';
-      const url = urlInput ? urlInput.value.trim() : '';
-      const channelVal = chanInput ? chanInput.value : '';
-
-      if (!name || !url) return alert('Please enter both feed name and URL.');
-
-      let channelId = null;
-      if (channelVal.startsWith('channel:')) channelId = channelVal.replace('channel:', '');
-      else if (/^[0-9]+$/.test(channelVal)) channelId = channelVal;
-
-      try {
-        const res = await fetch('/api/feeds', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, url, channelId, feedType: 'rss' })
-        });
-        if (!checkAuth(res)) return;
-        const data = await res.json();
-        if (res.ok) {
-          if (nameInput) nameInput.value = '';
-          if (urlInput) urlInput.value = '';
-          loadFeedsTab();
-        } else {
-          alert(data.error || 'Failed to add feed');
-        }
-      } catch (err) {
-        alert('Network error adding feed: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
+    // Feed actions
     async function toggleFeed(id, enabled) {
       try {
         const res = await fetch('/api/feeds/' + id, {
@@ -1379,9 +1371,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           body: JSON.stringify({ enabled })
         });
         if (!checkAuth(res)) return;
-        if (activeTabName === 'reddit') loadRedditTab();
-        else if (activeTabName === 'freegames') loadFreeGamesTab();
-        else loadFeedsTab();
+        refreshCurrentTab();
       } catch {}
     }
 
@@ -1390,56 +1380,74 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       try {
         const res = await fetch('/api/feeds/' + id, { method: 'DELETE' });
         if (!checkAuth(res)) return;
-        if (activeTabName === 'reddit') loadRedditTab();
-        else if (activeTabName === 'freegames') loadFreeGamesTab();
-        else loadFeedsTab();
+        refreshCurrentTab();
       } catch {}
     }
 
-    // ==================== REDDIT FEEDS CONTROLLER ====================
-    let currentRedditSort = 'hot';
-
-    const CURATED_REDDIT_SUBS = [
-      // Image & GIF Communities
-      { sub: 'wallpapers', name: 'Reddit · r/wallpapers', desc: 'High-definition digital wallpapers for desktop and mobile', tag: 'Wallpapers', defaultType: 'reddit' },
-      { sub: 'EarthPorn', name: 'Reddit · r/EarthPorn', desc: 'Breathtaking landscape and wild nature photography', tag: 'Photography', defaultType: 'reddit' },
-      { sub: 'Art', name: 'Reddit · r/Art', desc: 'Original artwork, illustrations, sculptures, and concept art', tag: 'Art', defaultType: 'reddit' },
-      { sub: 'spaceporn', name: 'Reddit · r/spaceporn', desc: 'Deep space telescopes, galaxies, nebulas, and astronomy', tag: 'Space', defaultType: 'reddit' },
-      { sub: 'gifs', name: 'Reddit · r/gifs', desc: 'Classic, funny, and trending animated GIFs', tag: 'GIFs', defaultType: 'reddit' },
-      { sub: 'HighQualityGifs', name: 'Reddit · r/HighQualityGifs', desc: 'High-framerate crystal-clear original animated GIFs', tag: 'HQ GIFs', defaultType: 'reddit' },
-      { sub: 'cinemagraphs', name: 'Reddit · r/cinemagraphs', desc: 'Mesmerizing living photos and seamless looping GIFs', tag: 'Cinemagraphs', defaultType: 'reddit' },
-      { sub: 'NatureIsFuckingLit', name: 'Reddit · r/NatureIsFuckingLit', desc: 'Mindblowing wildlife behavior and nature moments', tag: 'Nature', defaultType: 'reddit' },
-      { sub: 'ArchitecturePorn', name: 'Reddit · r/ArchitecturePorn', desc: 'Stunning architectural design, structures, and skylines', tag: 'Design', defaultType: 'reddit' },
-      { sub: 'Aww', name: 'Reddit · r/Aww', desc: 'Adorable animals, cute puppies, kittens, and heartwarming pets', tag: 'Animals', defaultType: 'reddit' },
-      { sub: 'Memes', name: 'Reddit · r/Memes', desc: 'Trending community humor and top viral memes', tag: 'Memes', defaultType: 'reddit' },
-      // News & Discussion Communities
-      { sub: 'technology', name: 'Reddit · r/technology', desc: 'News and discussions about the creation and use of technology', tag: 'Technology', defaultType: 'rss' },
-      { sub: 'gaming', name: 'Reddit · r/gaming', desc: 'Video games, gaming news, community highlights, and discussions', tag: 'Gaming', defaultType: 'rss' },
-      { sub: 'worldnews', name: 'Reddit · r/worldnews', desc: 'Major international headlines and world news coverage', tag: 'World News', defaultType: 'rss' },
-      { sub: 'science', name: 'Reddit · r/science', desc: 'Peer-reviewed research and scientific discoveries across disciplines', tag: 'Science', defaultType: 'rss' },
-      { sub: 'programming', name: 'Reddit · r/programming', desc: 'Software engineering, programming languages, and developer tools', tag: 'Programming', defaultType: 'rss' },
-      { sub: 'gadgets', name: 'Reddit · r/gadgets', desc: 'Consumer electronics, new hardware, mobile devices, and reviews', tag: 'Gadgets', defaultType: 'rss' },
-      { sub: 'Futurology', name: 'Reddit · r/Futurology', desc: 'Future studies, AI breakthroughs, and technological foresight', tag: 'Futurology', defaultType: 'rss' }
-    ];
-
-    function setRedditSort(sort) {
-      currentRedditSort = sort;
-      ['hot', 'top-day', 'top-week', 'new'].forEach(s => {
-        const btn = document.getElementById('reddit-sort-' + s);
-        if (btn) {
-          if (s === sort) {
-            btn.style.background = '#ff4500';
-            btn.style.color = '#ffffff';
-            btn.style.borderColor = '#ff4500';
-          } else {
-            btn.style.background = 'var(--card-inner)';
-            btn.style.color = 'var(--text-muted)';
-            btn.style.borderColor = 'var(--border)';
-          }
-        }
-      });
+    function refreshCurrentTab() {
+      if (activeTabName === 'overview') loadOverviewTab();
+      else if (activeTabName === 'categories') loadCategoriesTab();
+      else if (activeTabName === 'news') loadNewsTab();
     }
 
+    // RSS
+    function toggleScrapeFields(category) {
+      const box = document.getElementById(category + '-scrape-fields');
+      const chk = document.getElementById('add-' + category + '-scrape');
+      if (box) box.style.display = chk && chk.checked ? 'block' : 'none';
+    }
+
+    async function submitAddRssFeed() {
+      if (!currentGuildId) return;
+      const nameInput = document.getElementById('add-rss-name');
+      const urlInput = document.getElementById('add-rss-url');
+      const scrapeChk = document.getElementById('add-rss-scrape');
+      const name = nameInput ? nameInput.value.trim() : '';
+      const url = urlInput ? urlInput.value.trim() : '';
+      if (!name || !url) return alert('Please enter both feed name and URL.');
+
+      let feedType = 'rss';
+      let scrape = null;
+      if (scrapeChk && scrapeChk.checked) {
+        const item = document.getElementById('add-rss-scrape-item');
+        const title = document.getElementById('add-rss-scrape-title');
+        const link = document.getElementById('add-rss-scrape-link');
+        const desc = document.getElementById('add-rss-scrape-desc');
+        if (!item.value.trim() || !title.value.trim() || !link.value.trim()) {
+          return alert('Please fill in item, title, and link selectors for scrape mode.');
+        }
+        feedType = 'scrape';
+        scrape = {
+          item: item.value.trim(),
+          title: title.value.trim(),
+          link: link.value.trim(),
+          description: desc.value.trim() || undefined
+        };
+      }
+
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url, feedType, scrape, guildId: currentGuildId })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          if (nameInput) nameInput.value = '';
+          if (urlInput) urlInput.value = '';
+          if (scrapeChk) scrapeChk.checked = false;
+          toggleScrapeFields('rss');
+          renderCategoryFeeds('rss');
+        } else {
+          alert(data.error || 'Failed to add feed');
+        }
+      } catch (err) {
+        alert('Network error adding feed: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    // Reddit
     function cleanSubredditName(raw) {
       let s = (raw || '').trim();
       if (s.includes('reddit.com/r/')) s = s.split('reddit.com/r/')[1];
@@ -1459,157 +1467,30 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    function buildRedditUrl(rawInput, sort) {
-      const trimmed = (rawInput || '').trim();
-      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-        if (trimmed.includes('reddit.com')) {
-          if (trimmed.includes('.rss')) return trimmed;
-          const noTrailing = trimmed.endsWith('/') ? trimmed.slice(0, -1) : trimmed;
-          return noTrailing + '/.rss';
-        }
-        return trimmed;
-      }
-
-      const clean = cleanSubredditName(trimmed);
-      if (trimmed.startsWith('u/') || trimmed.startsWith('user/')) {
-        return 'https://www.reddit.com/user/' + clean + '/.rss';
-      }
-
-      if (sort === 'top-day') return 'https://www.reddit.com/r/' + clean + '/top/.rss?t=day';
-      if (sort === 'top-week') return 'https://www.reddit.com/r/' + clean + '/top/.rss?t=week';
-      if (sort === 'new') return 'https://www.reddit.com/r/' + clean + '/new/.rss';
-      return 'https://www.reddit.com/r/' + clean + '/.rss';
-    }
-
-    async function loadRedditTab() {
-      loadDiscordChannels();
-      setRedditSort(currentRedditSort);
-
-      // 1. Render Curated Subreddits Grid
-      const curatedContainer = document.getElementById('reddit-curated-container');
-      if (curatedContainer) {
-        curatedContainer.innerHTML = CURATED_REDDIT_SUBS.map(item => {
-          const defaultImageSel = item.defaultType === 'reddit' ? 'selected' : '';
-          const defaultRssSel = item.defaultType === 'rss' ? 'selected' : '';
-          return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">' +
-            '<div style="display: flex; flex-direction: column; gap: 0.25rem;">' +
-              '<div style="display: flex; justify-content: space-between; align-items: center;">' +
-                '<span style="font-weight: 700; font-size: 0.9375rem; color: #ff4500; display: flex; align-items: center; gap: 0.375rem;"><i class="fa-brands fa-reddit"></i> r/' + esc(item.sub) + '</span>' +
-                '<span class="badge badge-gray">' + esc(item.tag) + '</span>' +
-              '</div>' +
-              '<div style="font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4;">' + esc(item.desc) + '</div>' +
-            '</div>' +
-            '<div style="display: flex; flex-direction: column; gap: 0.375rem;">' +
-              '<div style="display: flex; gap: 0.375rem; align-items: center;">' +
-                '<select data-reddit-preset-type style="font-size: 0.75rem; padding: 0.35rem 0.5rem; flex: 1;">' +
-                  '<option value="reddit" ' + defaultImageSel + '>🖼️ Image Mode</option>' +
-                  '<option value="rss" ' + defaultRssSel + '>📰 RSS Mode</option>' +
-                '</select>' +
-                '<select data-reddit-preset-channel style="font-size: 0.75rem; padding: 0.35rem 0.5rem; flex: 1.3;">' +
-                  buildChannelOptionsHtml('') +
-                '</select>' +
-              '</div>' +
-              '<button data-preset-sub="' + esc(item.sub) + '" data-preset-name="' + esc(item.name) + '" onclick="enableRedditPreset(this.dataset.presetSub, this.dataset.presetName, this)" class="btn btn-sm" style="background: #ff4500; color: #fff; width: 100%; justify-content: center;">' +
-                '<i class="fa-solid fa-plus"></i> Add to Channel' +
-              '</button>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-      }
-
-      // 2. Load User's Reddit Feeds (Both Pure Image Mode and Standard RSS Mode)
-      const feedsContainer = document.getElementById('reddit-feeds-list-container');
-      try {
-        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
-        if (res.status === 401 || res.status === 403) {
-          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Sign in with Discord to view and manage your Reddit feeds.</div>';
-          return;
-        }
-        const feeds = await res.json();
-        const isReddit = (f) => f.feedType === 'reddit' || (f.url && f.url.includes('reddit.com')) || (f.name && f.name.toLowerCase().includes('reddit'));
-        const redditFeeds = Array.isArray(feeds) ? feeds.filter(isReddit) : [];
-
-        if (!redditFeeds.length) {
-          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">No Reddit feeds added yet. Add a custom subreddit above or choose from the curated presets!</div>';
-          return;
-        }
-
-        if (feedsContainer) {
-          feedsContainer.innerHTML = redditFeeds.map(f => {
-            const isImageMode = f.feedType === 'reddit';
-            const modeBadge = isImageMode
-              ? '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-solid fa-image"></i> Pure Image</span>'
-              : '<span class="badge" style="background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.3);"><i class="fa-solid fa-square-rss"></i> Standard RSS</span>';
-            const toggleAction = isImageMode ? 'rss' : 'reddit';
-            const toggleLabel = isImageMode ? 'Switch to RSS' : 'Switch to Image';
-            const toggleIcon = isImageMode ? 'fa-square-rss' : 'fa-image';
-            const statusBadge = f.enabled
-              ? '<span class="badge badge-green">Active</span>'
-              : '<span class="badge badge-gray">Paused</span>';
-            const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
-
-            return '<div class="feed-item" style="border-left: 3px solid #ff4500;">' +
-              '<div class="feed-details">' +
-                '<div class="feed-name-row">' +
-                  '<span class="feed-name" style="color: #ff4500;"><i class="fa-brands fa-reddit"></i> ' + esc(f.name) + '</span>' +
-                  modeBadge +
-                  statusBadge +
-                '</div>' +
-                '<div class="feed-url">' + esc(f.url) + '</div>' +
-                '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
-              '</div>' +
-              '<div style="display: flex; gap: 0.375rem; shrink-0; align-items: center;">' +
-                '<button data-feed-id="' + f.id + '" data-target-type="' + toggleAction + '" onclick="toggleRedditFeedType(this.dataset.feedId, this.dataset.targetType)" class="btn btn-ghost btn-sm" title="Toggle display mode">' +
-                  '<i class="fa-solid ' + toggleIcon + '"></i> ' + toggleLabel +
-                '</button>' +
-                '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
-                  '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
-                '</button>' +
-                '<button onclick="pollSingleFeed(' + f.id + ')" class="btn btn-ghost btn-sm" title="Poll now"><i class="fa-solid fa-rotate"></i></button>' +
-                '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
-              '</div>' +
-            '</div>';
-          }).join('');
-        }
-      } catch {
-        if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Failed to load Reddit feeds.</div>';
-      }
-    }
-
     async function submitAddRedditFeed() {
+      if (!currentGuildId) return;
       const subInput = document.getElementById('add-reddit-sub');
-      const typeInput = document.getElementById('add-reddit-type');
       const nameInput = document.getElementById('add-reddit-name');
-      const chanInput = document.getElementById('add-reddit-channel');
-
+      const imageModeChk = document.getElementById('add-reddit-image-mode');
       const rawSub = subInput ? subInput.value.trim() : '';
-      if (!rawSub) return alert('Please enter a subreddit name or Reddit RSS URL (e.g. wallpapers or r/technology).');
-
-      const url = buildRedditUrl(rawSub, currentRedditSort);
-      const feedType = typeInput ? typeInput.value : 'reddit';
-      let name = nameInput ? nameInput.value.trim() : '';
-      if (!name) {
-        const cleanSub = cleanSubredditName(rawSub);
-        name = 'Reddit · r/' + cleanSub;
-      }
-
-      const channelVal = chanInput ? chanInput.value : '';
-      let channelId = null;
-      if (channelVal.startsWith('channel:')) channelId = channelVal.replace('channel:', '');
-      else if (/^[0-9]+$/.test(channelVal)) channelId = channelVal;
+      if (!rawSub) return alert('Please enter a subreddit name.');
+      const cleanSub = cleanSubredditName(rawSub);
+      const url = 'https://www.reddit.com/r/' + cleanSub + '/.rss';
+      const feedType = imageModeChk && imageModeChk.checked ? 'reddit' : 'rss';
+      const name = nameInput && nameInput.value.trim() ? nameInput.value.trim() : 'Reddit · r/' + cleanSub;
 
       try {
         const res = await fetch('/api/feeds', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, url, channelId, feedType })
+          body: JSON.stringify({ name, url, feedType, guildId: currentGuildId })
         });
         if (!checkAuth(res)) return;
         const data = await res.json();
         if (res.ok) {
           if (subInput) subInput.value = '';
           if (nameInput) nameInput.value = '';
-          loadRedditTab();
+          renderCategoryFeeds('reddit');
         } else {
           alert(data.error || 'Failed to add Reddit feed');
         }
@@ -1618,73 +1499,17 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    async function enableRedditPreset(sub, defaultName, btn) {
-      const row = btn.closest('div');
-      const sel = row ? row.querySelector('select[data-reddit-preset-channel]') : null;
-      const typeSel = row ? row.querySelector('select[data-reddit-preset-type]') : null;
-      const rawVal = sel ? sel.value : '';
-      const feedType = typeSel ? typeSel.value : 'reddit';
-
-      if (!rawVal) {
-        return alert('Please select a destination Discord channel for "r/' + sub + '".');
-      }
-
-      let channelId = null;
-      if (rawVal.startsWith('channel:')) channelId = rawVal.replace('channel:', '');
-      else if (/^[0-9]+$/.test(rawVal)) channelId = rawVal;
-
-      const url = 'https://www.reddit.com/r/' + sub + '/.rss';
-
-      try {
-        const res = await fetch('/api/feeds', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: defaultName, url, channelId, feedType })
-        });
-        if (!checkAuth(res)) return;
-        const data = await res.json();
-        if (res.ok) {
-          alert('Added Reddit feed for "r/' + sub + '" (' + (feedType === 'reddit' ? 'Pure Image' : 'Standard RSS') + ' mode).');
-          loadRedditTab();
-        } else {
-          alert(data.error || 'Failed to enable Reddit feed');
-        }
-      } catch (err) {
-        alert('Network error enabling Reddit feed: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
-    async function toggleRedditFeedType(feedId, newType) {
-      try {
-        const res = await fetch('/api/feeds/' + feedId, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ feedType: newType })
-        });
-        if (!checkAuth(res)) return;
-        if (res.ok) {
-          loadRedditTab();
-          if (activeTabName === 'feeds') loadFeedsTab();
-        } else {
-          const data = await res.json();
-          alert(data.error || 'Failed to update Reddit feed mode');
-        }
-      } catch (err) {
-        alert('Network error updating Reddit feed: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
-    // ==================== FREE GAMES FEEDS CONTROLLER ====================
+    // Free Games
     const FREEGAMES_PLATFORMS = [
-      { key: 'all', name: 'Free Games · All Stores', desc: 'All active free-to-keep game drops from Epic, Steam, GOG, IndieGala, Humble, Itch.io & more.', icon: 'fa-solid fa-gamepad', color: '#10b981', tag: 'All Sources' },
-      { key: 'epic', name: 'Free Games · Epic Games Store', desc: 'Weekly Thursday-to-Monday 100% OFF free full games on the Epic Games Store.', icon: 'fa-solid fa-rocket', color: '#0078f2', tag: 'Epic Store' },
-      { key: 'steam', name: 'Free Games · Steam Giveaways', desc: 'Active 100% OFF promotional giveaways & free-to-claim full games on Steam.', icon: 'fa-brands fa-steam', color: '#66c0f4', tag: 'Steam' },
-      { key: 'gog', name: 'Free Games · GOG Promotions', desc: 'DRM-free classic and modern full game giveaways directly on GOG.com.', icon: 'fa-solid fa-cube', color: '#a855f7', tag: 'GOG' },
-      { key: 'indiegala', name: 'Free Games · IndieGala Freebies', desc: 'Indie and studio PC game giveaways and free-to-keep titles from IndieGala.', icon: 'fa-solid fa-gift', color: '#e52534', tag: 'IndieGala' },
-      { key: 'humble', name: 'Free Games · Humble Bundle', desc: 'Limited-time free full game promotions and keys from Humble Store.', icon: 'fa-solid fa-box-open', color: '#cc292b', tag: 'Humble' },
-      { key: 'itchio', name: 'Free Games · Itch.io Freebies', desc: 'Popular 100% OFF indie games and developer promotions on Itch.io.', icon: 'fa-brands fa-itch-io', color: '#fa5c5c', tag: 'Itch.io' },
-      { key: 'ubisoft', name: 'Free Games · Ubisoft Giveaways', desc: 'Official free game giveaways and promotions on Ubisoft Connect.', icon: 'fa-solid fa-gamepad', color: '#0070ff', tag: 'Ubisoft' },
-      { key: 'prime', name: 'Free Games · Prime Gaming', desc: 'Full PC game drops and giveaways through Prime Gaming.', icon: 'fa-brands fa-twitch', color: '#9146ff', tag: 'Prime' }
+      { key: 'all', name: 'Free Games · All Stores' },
+      { key: 'epic', name: 'Free Games · Epic Games Store' },
+      { key: 'steam', name: 'Free Games · Steam Giveaways' },
+      { key: 'gog', name: 'Free Games · GOG Promotions' },
+      { key: 'indiegala', name: 'Free Games · IndieGala Freebies' },
+      { key: 'humble', name: 'Free Games · Humble Bundle' },
+      { key: 'itchio', name: 'Free Games · Itch.io Freebies' },
+      { key: 'ubisoft', name: 'Free Games · Ubisoft Giveaways' },
+      { key: 'prime', name: 'Free Games · Prime Gaming' }
     ];
 
     function handleFreeGamesPlatformChange(val) {
@@ -1696,98 +1521,16 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    async function loadFreeGamesTab() {
-      loadDiscordChannels();
-
-      // 1. Render Curated Platform Presets Grid
-      const curatedContainer = document.getElementById('freegames-curated-container');
-      if (curatedContainer) {
-        curatedContainer.innerHTML = FREEGAMES_PLATFORMS.map(item => {
-          return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">' +
-            '<div style="display: flex; flex-direction: column; gap: 0.25rem;">' +
-              '<div style="display: flex; justify-content: space-between; align-items: center;">' +
-                '<span style="font-weight: 700; font-size: 0.9375rem; color: ' + item.color + '; display: flex; align-items: center; gap: 0.375rem;"><i class="' + item.icon + '"></i> ' + esc(item.name) + '</span>' +
-                '<span class="badge badge-gray">' + esc(item.tag) + '</span>' +
-              '</div>' +
-              '<div style="font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4;">' + esc(item.desc) + '</div>' +
-            '</div>' +
-            '<div style="display: flex; gap: 0.5rem; align-items: center;">' +
-              '<select data-freegames-preset-channel style="font-size: 0.75rem; padding: 0.4rem 0.6rem; flex: 1;">' +
-                buildChannelOptionsHtml('') +
-              '</select>' +
-              '<button data-preset-key="' + esc(item.key) + '" data-preset-name="' + esc(item.name) + '" onclick="enableFreeGamesPreset(this.dataset.presetKey, this.dataset.presetName, this)" class="btn btn-sm" style="background: ' + item.color + '; color: #fff; white-space: nowrap;">' +
-                '<i class="fa-solid fa-plus"></i> Add' +
-              '</button>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-      }
-
-      // 2. Load User's Free Games Feeds
-      const feedsContainer = document.getElementById('freegames-feeds-list-container');
-      try {
-        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
-        if (res.status === 401 || res.status === 403) {
-          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Sign in with Discord to view and manage your free games feeds.</div>';
-          return;
-        }
-        const feeds = await res.json();
-        const freeGamesFeeds = Array.isArray(feeds) ? feeds.filter(f => f.feedType === 'free_games' || (f.feedType && f.feedType.startsWith('free_games'))) : [];
-
-        if (!freeGamesFeeds.length) {
-          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">No Free Games feeds added yet. Add a platform above or choose an instant preset to receive weekly Monday game drops!</div>';
-          return;
-        }
-
-        if (feedsContainer) {
-          feedsContainer.innerHTML = freeGamesFeeds.map(f => {
-            const statusBadge = f.enabled
-              ? '<span class="badge badge-green">Active</span>'
-              : '<span class="badge badge-gray">Paused</span>';
-            const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
-
-            return '<div class="feed-item" style="border-left: 3px solid #10b981;">' +
-              '<div class="feed-details">' +
-                '<div class="feed-name-row">' +
-                  '<span class="feed-name" style="color: #10b981;"><i class="fa-solid fa-gift"></i> ' + esc(f.name) + '</span>' +
-                  '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-calendar-day"></i> Daily</span>' +
-                  statusBadge +
-                '</div>' +
-                '<div class="feed-url">' + esc(f.url) + '</div>' +
-                '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
-              '</div>' +
-              '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
-                '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
-                  '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
-                '</button>' +
-                '<button onclick="pollSingleFeed(' + f.id + ')" class="btn btn-ghost btn-sm" title="Poll now"><i class="fa-solid fa-rotate"></i></button>' +
-                '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
-              '</div>' +
-            '</div>';
-          }).join('');
-        }
-      } catch {
-        if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Failed to load Free Games feeds.</div>';
-      }
-    }
-
     async function submitAddFreeGamesFeed() {
+      if (!currentGuildId) return;
       const platSelect = document.getElementById('add-freegames-platform');
       const nameInput = document.getElementById('add-freegames-name');
-      const chanInput = document.getElementById('add-freegames-channel');
-
       const platformKey = platSelect ? platSelect.value : 'all';
       let name = nameInput ? nameInput.value.trim() : '';
       if (!name) {
         const found = FREEGAMES_PLATFORMS.find(p => p.key === platformKey);
         name = found ? found.name : 'Free Games · All Stores';
       }
-
-      const channelVal = chanInput ? chanInput.value : '';
-      let channelId = null;
-      if (channelVal.startsWith('channel:')) channelId = channelVal.replace('channel:', '');
-      else if (/^[0-9]+$/.test(channelVal)) channelId = channelVal;
-
       const feedType = platformKey === 'all' ? 'free_games' : ('free_games_' + platformKey);
       const url = 'freegames://' + platformKey;
 
@@ -1795,13 +1538,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/feeds', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, url, channelId, feedType })
+          body: JSON.stringify({ name, url, feedType, guildId: currentGuildId })
         });
         if (!checkAuth(res)) return;
         const data = await res.json();
         if (res.ok) {
           if (nameInput) nameInput.value = '';
-          loadFreeGamesTab();
+          renderCategoryFeeds('freegames');
         } else {
           alert(data.error || 'Failed to add Free Games feed');
         }
@@ -1810,49 +1553,11 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    async function enableFreeGamesPreset(platformKey, defaultName, btn) {
-      const row = btn.closest('div');
-      const sel = row ? row.querySelector('select[data-freegames-preset-channel]') : null;
-      const rawVal = sel ? sel.value : '';
-
-      if (!rawVal) {
-        return alert('Please select a destination Discord channel for "' + defaultName + '".');
-      }
-
-      let channelId = null;
-      if (rawVal.startsWith('channel:')) channelId = rawVal.replace('channel:', '');
-      else if (/^[0-9]+$/.test(rawVal)) channelId = rawVal;
-
-      const feedType = platformKey === 'all' ? 'free_games' : ('free_games_' + platformKey);
-      const url = 'freegames://' + platformKey;
-
-      try {
-        const res = await fetch('/api/feeds', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: defaultName, url, channelId, feedType })
-        });
-        if (!checkAuth(res)) return;
-        const data = await res.json();
-        if (res.ok) {
-          alert('Enabled Free Games Feed: "' + defaultName + '".');
-          loadFreeGamesTab();
-        } else {
-          alert(data.error || 'Failed to enable Free Games feed');
-        }
-      } catch (err) {
-        alert('Network error enabling Free Games feed: ' + (err && err.message ? err.message : String(err)));
-      }
-    }
-
     // TAB 4: NEWS FEEDS
     async function loadNewsTab() {
       const container = document.getElementById('presets-list-container');
       if (!container) return;
-
-      // Ensure channels are available for the dropdowns
-      loadDiscordChannels();
-
+      container.innerHTML = '<div class="empty-state">Loading news feeds catalog...</div>';
       try {
         const res = await fetch('/api/presets', { signal: AbortSignal.timeout(6000) });
         if (!res.ok) {
@@ -1882,9 +1587,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               : '<span class="badge badge-amber">Preset</span>';
             const btnHtml = p.alreadyAdded
               ? '<button disabled class="btn btn-ghost btn-sm" style="opacity: 0.6; cursor: default;"><i class="fa-solid fa-check"></i> Added</button>'
-              : '<button data-preset-id="' + esc(p.id) + '" onclick="enablePreset(this.dataset.presetId, this)" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Enable</button>';
+              : '<button data-preset-id="' + esc(p.id) + '" onclick="enablePreset(this.dataset.presetId)" class="btn btn-primary btn-sm"><i class="fa-solid fa-bolt"></i> Enable</button>';
 
-            itemsHtml += '<div class="feed-item">' +
+            itemsHtml += '<div class="feed-pill">' +
               '<div class="feed-details">' +
                 '<div class="feed-name-row">' +
                   '<span class="feed-name">' + esc(p.name) + '</span>' +
@@ -1893,10 +1598,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 '<div style="font-size: 0.8125rem; color: var(--text-muted);">' + esc(p.description) + '</div>' +
                 '<div class="feed-url">' + esc(p.url) + '</div>' +
               '</div>' +
-              '<div style="display: flex; align-items: center; gap: 0.5rem; shrink-0;">' +
-                '<select data-preset-channel style="width: 200px; font-size: 0.75rem; padding: 0.4rem 0.6rem;">' +
-                  buildChannelOptionsHtml('') +
-                '</select>' +
+              '<div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0;">' +
                 btnHtml +
               '</div>' +
             '</div>';
@@ -1904,7 +1606,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
           fullHtml += '<div style="display: flex; flex-direction: column; gap: 0.5rem;">' +
             '<div style="font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; color: var(--amber); display: flex; align-items: center; gap: 0.375rem;"><i class="fa-solid fa-folder-open"></i> ' + esc(cat) + '</div>' +
-            '<div style="display: flex; flex-direction: column; gap: 0.5rem;">' + itemsHtml + '</div>' +
+            '<div class="feed-list">' + itemsHtml + '</div>' +
           '</div>';
         }
 
@@ -1914,26 +1616,24 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    async function enablePreset(presetId, btn) {
+    async function enablePreset(presetId) {
+      if (!currentGuildId) return;
       const preset = cachedPresets.find(p => p.id === presetId);
       if (!preset) return;
-      const row = btn.closest('.feed-item');
-      const sel = row ? row.querySelector('select[data-preset-channel]') : null;
-      const rawVal = sel ? sel.value : '';
-
-      if (!rawVal) {
-        return alert('Please select a destination Discord channel for "' + preset.name + '".');
+      if (!cachedCategories) {
+        alert('Server configuration is still loading. Please wait a moment and try again.');
+        return;
       }
-
-      let channelId = null;
-      if (rawVal.startsWith('channel:')) channelId = rawVal.replace('channel:', '');
-      else if (/^[0-9]+$/.test(rawVal)) channelId = rawVal;
-
+      const rssTarget = (cachedCategories.categories || []).find(t => t.category === 'rss');
+      if (!rssTarget || !rssTarget.channelId) {
+        alert('Please configure an RSS target channel for this server in the Categories tab before subscribing to news presets.');
+        return;
+      }
       try {
         const res = await fetch('/api/feeds', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: preset.name, url: preset.url, channelId, feedType: 'rss' })
+          body: JSON.stringify({ name: preset.name, url: preset.url, feedType: 'rss', guildId: currentGuildId })
         });
         if (!checkAuth(res)) return;
         const data = await res.json();
@@ -1948,7 +1648,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    // TAB 4: SETTINGS (ADMIN)
+    // TAB 5: SETTINGS (ADMIN)
     async function loadSettingsTab() {
       const baseUrlInput = document.getElementById('cfg-base-url');
       loadUsersList();
@@ -1991,7 +1691,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
             ? '<span class="badge badge-amber"><i class="fa-solid fa-crown"></i> App Team</span>'
             : '<span class="badge badge-gray"><i class="fa-solid fa-user"></i> Member</span>';
 
-          return '<div class="feed-item">' +
+          return '<div class="feed-pill">' +
             '<div class="feed-details">' +
               '<div class="feed-name-row">' +
                 '<span class="feed-name">' + esc(u.displayName || 'Discord User') + '</span>' +
@@ -2006,6 +1706,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
+    // TAB 6: DEVELOPER TOOLS
     async function loadDevToolsTab() {
       renderActivityLogs();
       try {
@@ -2058,7 +1759,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           const badge = lvl === 'error' ? 'badge-red' : lvl === 'warn' ? 'badge-amber' : lvl === 'info' ? 'badge-green' : 'badge-gray';
           const time = a.ts ? new Date(a.ts).toLocaleString() : '-';
           const actor = a.userId != null ? 'User #' + a.userId : 'System';
-          return '<div class="feed-item" style="align-items: flex-start;">' +
+          return '<div class="feed-pill" style="align-items: flex-start;">' +
             '<div class="feed-details">' +
               '<div class="feed-name-row">' +
                 '<span class="badge ' + badge + '">' + esc(lvl) + '</span>' +
@@ -2104,12 +1805,19 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
     // Initialize on page load
     loadUserProfile();
-    loadOverviewTab();
 
     const urlParams = new URLSearchParams(window.location.search);
+    const guildParam = urlParams.get('guild');
     const initialTab = urlParams.get('tab');
-    if (initialTab && initialTab !== 'overview') {
-      switchTab(initialTab);
+
+    if (guildParam) {
+      currentGuildId = guildParam;
+      loadGuildDashboard();
+      if (initialTab && ['overview', 'categories', 'news', 'settings', 'devtools'].includes(initialTab)) {
+        switchTab(initialTab);
+      }
+    } else {
+      loadGuildSelection();
     }
   </script>
 </body>
