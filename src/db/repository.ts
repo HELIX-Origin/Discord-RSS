@@ -4,11 +4,14 @@ import { UserRepository } from './repositories/users.js';
 import { OAuthRepository } from './repositories/oauth.js';
 import { FeedRepository } from './repositories/feeds.js';
 import { SettingsRepository } from './repositories/settings.js';
+import { GuildCategoryRepository } from './repositories/guild-categories.js';
 import type {
   ActivityEntry,
   DiscordGuild,
   Feed,
+  FeedCategory,
   FeedType,
+  GuildCategory,
   OAuthConnection,
   Session,
   User,
@@ -18,7 +21,9 @@ import type {
 export type {
   ActivityEntry,
   Feed,
+  FeedCategory,
   FeedType,
+  GuildCategory,
   OAuthConnection,
   OAuthState,
   Session,
@@ -44,6 +49,7 @@ export class Repository {
   private readonly oauth: OAuthRepository;
   private readonly feeds: FeedRepository;
   private readonly settings: SettingsRepository;
+  private readonly guildCategories: GuildCategoryRepository;
 
   constructor(private readonly db: Database) {
     this.state = new AppState(db);
@@ -51,6 +57,7 @@ export class Repository {
     this.oauth = new OAuthRepository(db, this.state);
     this.feeds = new FeedRepository(db, this.state);
     this.settings = new SettingsRepository(db, this.state);
+    this.guildCategories = new GuildCategoryRepository(db, this.state);
   }
 
   // ---- Users & auth ----
@@ -192,6 +199,23 @@ export class Repository {
     const updated = this.users.setGuildThreadConfig(guildId, config);
     if (!updated) throw new Error(`Guild ${guildId} thread config could not be saved`);
     return updated;
+  }
+
+  getGuildCategoryTarget(guildId: string, category: FeedCategory): GuildCategory | null {
+    return this.guildCategories.getCategoryTarget(guildId, category);
+  }
+
+  getGuildCategoryTargets(guildId: string): GuildCategory[] {
+    return this.guildCategories.getCategoryTargets(guildId);
+  }
+
+  setGuildCategoryTarget(
+    guildId: string,
+    category: FeedCategory,
+    channelId: string | null,
+    threadChannelId: string | null,
+  ): GuildCategory {
+    return this.guildCategories.setCategoryTarget(guildId, category, channelId, threadChannelId);
   }
 
   deleteGuildData(guildId: string): { feedsDeleted: number; guildsDeleted: number } {

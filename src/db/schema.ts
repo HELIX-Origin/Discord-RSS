@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta (
@@ -99,6 +99,16 @@ CREATE TABLE IF NOT EXISTS discord_guilds (
   forum_channel_ids TEXT NOT NULL DEFAULT '[]'
 );
 
+CREATE TABLE IF NOT EXISTS guild_categories (
+  guild_id TEXT NOT NULL,
+  category TEXT NOT NULL,
+  channel_id TEXT,
+  thread_channel_id TEXT,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (guild_id, category),
+  FOREIGN KEY (guild_id) REFERENCES discord_guilds(guild_id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
 CREATE INDEX IF NOT EXISTS idx_oauth_user_provider ON oauth_connections(user_id, provider);
 CREATE INDEX IF NOT EXISTS idx_oauth_states_state ON oauth_states(state);
@@ -106,4 +116,5 @@ CREATE INDEX IF NOT EXISTS idx_feeds_user ON feeds(user_id);
 CREATE INDEX IF NOT EXISTS idx_sent_entries_feed ON sent_entries(feed_id);
 CREATE INDEX IF NOT EXISTS idx_activity_log_ts ON activity_log(ts DESC);
 CREATE INDEX IF NOT EXISTS idx_discord_guilds_user ON discord_guilds(user_id);
+CREATE INDEX IF NOT EXISTS idx_guild_categories_guild ON guild_categories(guild_id);
 `;

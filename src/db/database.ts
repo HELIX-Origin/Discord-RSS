@@ -80,6 +80,28 @@ export class Database {
     } catch {
       // Column may already exist
     }
+
+    // Schema v6: per-guild category targets (rss / reddit / freegames)
+    try {
+      this.db.exec(`
+        CREATE TABLE IF NOT EXISTS guild_categories (
+          guild_id TEXT NOT NULL,
+          category TEXT NOT NULL,
+          channel_id TEXT,
+          thread_channel_id TEXT,
+          updated_at TEXT NOT NULL,
+          PRIMARY KEY (guild_id, category),
+          FOREIGN KEY (guild_id) REFERENCES discord_guilds(guild_id) ON DELETE CASCADE
+        );
+      `);
+    } catch {
+      // Table may already exist
+    }
+    try {
+      this.db.exec('CREATE INDEX IF NOT EXISTS idx_guild_categories_guild ON guild_categories(guild_id);');
+    } catch {
+      // Index may already exist
+    }
     // Fix oauth_states user_id nullability if created under legacy schema
     try {
       const info = this.db.prepare('PRAGMA table_info(oauth_states)').all() as Array<{

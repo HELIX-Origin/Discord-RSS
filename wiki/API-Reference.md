@@ -177,7 +177,41 @@ GET /api/guilds/:guildId/roles
 ]
 ```
 
-### 4. Get Forum Thread Delivery Config for Managed Guilds
+### 4. Get Guild Category Targets
+```http
+GET /api/guilds/:guildId/categories
+```
+**Auth**: User must be able to manage the target guild.
+**Response**:
+```json
+{
+  "guildId": "987654321098765432",
+  "name": "My Server",
+  "categories": [
+    { "category": "rss", "channelId": "123456789012345678", "threadChannelId": null },
+    { "category": "reddit", "channelId": null, "threadChannelId": null },
+    { "category": "freegames", "channelId": "987654321098765432", "threadChannelId": null }
+  ],
+  "textChannels": [{ "id": "123456789012345678", "name": "rss-feeds", "type": 0 }],
+  "forumChannels": [{ "id": "111111111111111111", "name": "feed-threads", "type": 15 }]
+}
+```
+
+### 5. Update Guild Category Target
+```http
+PUT /api/guilds/:guildId/categories/:category
+Content-Type: application/json
+
+{
+  "channelId": "123456789012345678",
+  "threadChannelId": null
+}
+```
+**Auth**: User must have `Manage Channels` (or Administrator) on the target guild.
+**Validation**: `category` must be `rss`, `reddit`, or `freegames`. `channelId` must be a text/announcement channel in the guild; `threadChannelId` must be a forum channel in the guild.
+**Response**: the updated category target object.
+
+### 6. Get Forum Thread Delivery Config for Managed Guilds
 ```http
 GET /api/discord/thread-config
 ```
@@ -195,7 +229,7 @@ GET /api/discord/thread-config
 ]
 ```
 
-### 5. Update Forum Thread Delivery Config for a Guild
+### 7. Update Forum Thread Delivery Config for a Guild
 ```http
 PUT /api/discord/thread-config
 Content-Type: application/json

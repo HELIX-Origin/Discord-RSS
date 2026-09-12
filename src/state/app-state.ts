@@ -2,12 +2,15 @@ import type { Database } from '../db/database.js';
 import {
   rowToDiscordGuild,
   rowToFeed,
+  rowToGuildCategory,
   rowToOAuthConnection,
   rowToSession,
   rowToUser,
   type ActivityEntry,
   type DiscordGuild,
   type Feed,
+  type FeedCategory,
+  type GuildCategory,
   type OAuthConnection,
   type OAuthState,
   type Session,
@@ -34,6 +37,7 @@ export class AppState {
   private oauthStates = new Map<string, OAuthState>();
   private feedsById = new Map<number, Feed>();
   private discordGuilds = new Map<string, DiscordGuild>();
+  private guildCategories = new Map<string, GuildCategory>();
   private settings = new Map<string, string>();
   private activity: ActivityEntry[] = [];
   private sentByFeed = new Map<number, Set<string>>();
@@ -79,6 +83,11 @@ export class AppState {
     for (const r of raws.prepare('SELECT * FROM discord_guilds').all() as Row[]) {
       const g = rowToDiscordGuild(r);
       if (g) this.putDiscordGuild(g);
+    }
+
+    for (const r of raws.prepare('SELECT * FROM guild_categories').all() as Row[]) {
+      const c = rowToGuildCategory(r);
+      if (c) this.putGuildCategory(c);
     }
 
     for (const r of raws.prepare('SELECT * FROM settings').all() as Row[]) {
@@ -237,6 +246,28 @@ export class AppState {
 
   deleteDiscordGuild(guildId: string): void {
     this.discordGuilds.delete(guildId);
+  }
+
+  // ---- Guild Categories ----
+
+  private guildCategoryKey(guildId: string, category: FeedCategory): string {
+    return `${guildId}:${category}`;
+  }
+
+  getGuildCategory(guildId: string, category: FeedCategory): GuildCategory | null {
+    return this.guildCategories.get(this.guildCategoryKey(guildId, category)) ?? null;
+  }
+
+  listGuildCategories(guildId: string): GuildCategory[] {
+    return [...this.guildCategories.values()].filter((c) => c.guildId === guildId);
+  }
+
+  putGuildCategory(category: GuildCategory): void {
+    this.guildCategories.set(this.guildCategoryKey(category.guildId, category.category), category);
+  }
+
+  deleteGuildCategory(guildId: string, category: FeedCategory): void {
+    this.guildCategories.delete(this.guildCategoryKey(guildId, category));
   }
 
   // ---- Settings ----

@@ -1,6 +1,6 @@
 import type { Repository } from '../db/repository.js';
 import type { RedisCoordinator } from '../state/redis.js';
-import type { Feed } from '../state/types.js';
+import { feedCategory, type Feed, type FeedCategory } from '../state/types.js';
 import { fetchRaw, isCloudflareChallenge } from './fetch.js';
 import { fetchFreeGames, type FreeGameItem, type FreeGamePlatformKey } from './freegames.js';
 import { parseHtml } from './html.js';
@@ -34,6 +34,15 @@ export class FeedWatcher {
 
   setThreads(threads: FeedThreadManager | null): void {
     this.threads = threads;
+  }
+
+  private resolveFeedTargets(feed: Feed): { channelId: string | null; threadChannelId: string | null } {
+    const category = feed.guildId ? (feedCategory(feed.feedType) as FeedCategory | null) : null;
+    const target = category && feed.guildId ? this.repo.getGuildCategoryTarget(feed.guildId, category) : null;
+    return {
+      channelId: target?.channelId ?? feed.channelId ?? null,
+      threadChannelId: target?.threadChannelId ?? feed.threadChannelId ?? null,
+    };
   }
 
   async pollFeed(userId: number, feedId: number): Promise<void> {
@@ -81,16 +90,13 @@ export class FeedWatcher {
       }
     }
 
-    const targetChannelId = feed.channelId;
-    if (!targetChannelId) {
-      const canThread = this.threads ? Boolean(await this.threads.forumChannelForFeed(feed)) : false;
-      if (!canThread) {
-        this.logger.warn('Feed has no configured Discord channel and no thread target; skipping poll', {
-          feedId: feed.id,
-          feedName: feed.name,
-        });
-        return;
-      }
+    const { channelId: targetChannelId, threadChannelId: targetThreadChannelId } = this.resolveFeedTargets(feed);
+    if (!targetChannelId && !targetThreadChannelId) {
+      this.logger.warn('Feed has no configured Discord channel and no category target; skipping poll', {
+        feedId: feed.id,
+        feedName: feed.name,
+      });
+      return;
     }
 
     const isFreeGamesFeed = feed.feedType === 'free_games' || feed.feedType?.startsWith('free_games');
@@ -238,8 +244,9 @@ export class FeedWatcher {
       const outcome = await this.threads.deliver(feed, payload);
       if (outcome.mode === 'thread') return outcome.delivered;
     }
-    if (!this.bot || !feed.channelId) return false;
-    await this.bot.sendChannelMessage(feed.channelId, payload);
+    const { channelId } = this.resolveFeedTargets(feed);
+    if (!this.bot || !channelId) return false;
+    await this.bot.sendChannelMessage(channelId, payload);
     return true;
   }
 

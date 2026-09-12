@@ -1,7 +1,7 @@
 import type { AppConfig } from '../config.js';
 import type { Repository } from '../db/repository.js';
 import type { DiscordChannelSnapshot } from '../bot/rest.js';
-import type { Feed } from '../state/types.js';
+import { feedCategory, type Feed, type FeedCategory } from '../state/types.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
 
 export interface ThreadSender {
@@ -119,7 +119,16 @@ export class FeedThreadManager {
 
   /** Picks a forum channel for a feed, stable across deliveries. */
   async forumChannelForFeed(feed: Feed): Promise<string | null> {
-    const channels = await this.forumChannelsForGuild(await this.resolveFeedGuild(feed));
+    const guildId = await this.resolveFeedGuild(feed);
+    if (!guildId) return null;
+
+    const category = feedCategory(feed.feedType) as FeedCategory | null;
+    if (category) {
+      const target = this.repo.getGuildCategoryTarget(guildId, category);
+      if (target?.threadChannelId) return target.threadChannelId;
+    }
+
+    const channels = await this.forumChannelsForGuild(guildId);
     if (channels.length === 0) return null;
     return channels[Math.abs(feed.id) % channels.length];
   }

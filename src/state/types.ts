@@ -35,6 +35,16 @@ export interface OAuthState {
   createdAt: string;
 }
 
+export type FeedCategory = 'rss' | 'reddit' | 'freegames';
+
+export interface GuildCategory {
+  guildId: string;
+  category: FeedCategory;
+  channelId: string | null;
+  threadChannelId: string | null;
+  updatedAt: string;
+}
+
 export type FeedType =
   | 'rss'
   | 'scrape'
@@ -196,3 +206,24 @@ export const rowToDiscordGuild = (r: Row | undefined): DiscordGuild | null => {
     forumChannelIds,
   };
 };
+
+export const rowToGuildCategory = (r: Row | undefined): GuildCategory | null => {
+  if (!r) return null;
+  const category = String(r.category);
+  if (category !== 'rss' && category !== 'reddit' && category !== 'freegames') return null;
+  return {
+    guildId: String(r.guild_id),
+    category,
+    channelId: r.channel_id === null || r.channel_id === undefined ? null : String(r.channel_id),
+    threadChannelId:
+      r.thread_channel_id === null || r.thread_channel_id === undefined ? null : String(r.thread_channel_id),
+    updatedAt: String(r.updated_at),
+  };
+};
+
+export function feedCategory(feedType: FeedType): FeedCategory | null {
+  if (feedType === 'reddit') return 'reddit';
+  if (feedType === 'rss' || feedType === 'scrape') return 'rss';
+  if (feedType.startsWith('free_games')) return 'freegames';
+  return null;
+}
