@@ -4,9 +4,8 @@
   # 📡 HELIX RSS
   **A modern, self-hosted RSS, Web Scraper, Reddit, & Free Games syndication hub for Discord.**
 
-  [![GitHub release](https://img.shields.io/github/v/release/HELIX-Origin/HELIX-RSS?color=blue&style=flat-square)](https://github.com/HELIX-Origin/HELIX-RSS/releases)
   [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE.md)
-  [![Discord](https://img.shields.io/discord/1078749842602102875?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.com/invite/Ww3XBZC2HV)
+  [![Discord](https://img.shields.io/discord/1078749842602102875?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.gg/Ww3XBZC2HV)
   [![Node.js](https://img.shields.io/badge/Node.js-v22.9.0%2B-339933?logo=node.js&logoColor=white&style=flat-square)](https://nodejs.org/)
   [![Deploy on Heroku](https://img.shields.io/badge/Deploy%20to-Heroku-79589F?logo=heroku&logoColor=white&style=flat-square)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS)
 </div>

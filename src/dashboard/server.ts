@@ -5,6 +5,7 @@ import type { AppDeps } from '../app.js';
 import { getRequestBaseUrl, sendError, sendHtml, sendJson, sendText } from './http/helpers.js';
 import { Router } from './http/router.js';
 import { renderDashboardHtml } from './views/dashboard.js';
+import { renderLandingHtml } from './views/landing.js';
 import { renderLoginHtml } from './views/login.js';
 import { renderLegalHtml } from './views/legal.js';
 import { registerAdminRoutes } from './routes/admin.js';
@@ -38,19 +39,34 @@ export function createHelixRssServer(deps: AppDeps): Server {
   const router = new Router<AppDeps>();
   const logger = createLogger('http', deps.config.logLevel);
 
-  // Root redirect / status
-  router.add('GET', '/', async (req, res) => {
+  // Root landing page or dashboard redirect / status
+  router.add('GET', '/', async (req, res, _ctx, d) => {
     const acceptHeader = req.headers['accept'] ?? '';
     if (acceptHeader.includes('application/json')) {
-      const proto = deps.config.sslKey || deps.config.botSslKey ? 'https' : 'http';
+      const proto = d.config.sslKey || d.config.botSslKey ? 'https' : 'http';
       sendJson(res, 200, { status: 'ok', service: 'helix-rss-bot', proto, uptime: process.uptime() });
       return;
     }
-    const baseUrl = getRequestBaseUrl(req, deps.config.publicBaseUrl, `${deps.config.host}:${deps.config.port}`);
+    if (d.config.landingPageEnabled) {
+      const userId = await authedUserId(req, d);
+      sendHtml(res, 200, renderLandingHtml(d, userId));
+      return;
+    }
+    const baseUrl = getRequestBaseUrl(req, d.config.publicBaseUrl, `${d.config.host}:${d.config.port}`);
     const url = new URL(req.url ?? '/', baseUrl);
     const dest = url.search ? `/dashboard${url.search}` : '/dashboard';
     res.writeHead(302, { Location: dest });
     res.end();
+  });
+
+  // Explicit Landing Page routes
+  router.add('GET', '/home', async (req, res, _ctx, d) => {
+    const userId = await authedUserId(req, d);
+    sendHtml(res, 200, renderLandingHtml(d, userId));
+  });
+  router.add('GET', '/landing', async (req, res, _ctx, d) => {
+    const userId = await authedUserId(req, d);
+    sendHtml(res, 200, renderLandingHtml(d, userId));
   });
 
   // Dashboard UI
@@ -63,24 +79,24 @@ export function createHelixRssServer(deps: AppDeps): Server {
   router.add('GET', '/login', (_req, res, _ctx, d) => {
     const appName = d.bot?.getAppName() || 'HELIX RSS';
     const appIconUrl = d.bot?.getAppIconUrl() || null;
-    sendHtml(res, 200, renderLoginHtml(false, d.config.redirectUrl, appName, appIconUrl));
+    sendHtml(res, 200, renderLoginHtml(false, d.config.redirectUrl, appName, appIconUrl, d.config.defaultTheme));
   });
   router.add('GET', '/register', (_req, res, _ctx, d) => {
     const appName = d.bot?.getAppName() || 'HELIX RSS';
     const appIconUrl = d.bot?.getAppIconUrl() || null;
-    sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl, appName, appIconUrl));
+    sendHtml(res, 200, renderLoginHtml(true, d.config.redirectUrl, appName, appIconUrl, d.config.defaultTheme));
   });
 
   // Policy & Legal pages
   router.add('GET', '/privacy', (_req, res, _ctx, d) => {
     const appName = d.bot?.getAppName() || 'HELIX RSS';
     const appIconUrl = d.bot?.getAppIconUrl() || null;
-    sendHtml(res, 200, renderLegalHtml('Privacy Policy', 'PRIVACY.md', appName, appIconUrl));
+    sendHtml(res, 200, renderLegalHtml('Privacy Policy', 'PRIVACY.md', appName, appIconUrl, d.config.defaultTheme));
   });
   router.add('GET', '/tos', (_req, res, _ctx, d) => {
     const appName = d.bot?.getAppName() || 'HELIX RSS';
     const appIconUrl = d.bot?.getAppIconUrl() || null;
-    sendHtml(res, 200, renderLegalHtml('Terms of Service', 'TOS.md', appName, appIconUrl));
+    sendHtml(res, 200, renderLegalHtml('Terms of Service', 'TOS.md', appName, appIconUrl, d.config.defaultTheme));
   });
 
   // Bot invite redirects

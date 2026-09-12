@@ -26,6 +26,9 @@ export interface AppConfig {
   discordApiBaseUrl: string;
   repoUrl: string;
   userAgent: string;
+  defaultTheme: string;
+  dashboardColorScheme: string;
+  landingPageEnabled: boolean;
 }
 
 export function defaultConfig(): AppConfig {
@@ -158,6 +161,23 @@ export function defaultConfig(): AppConfig {
     process.env['DISCORD_USER_AGENT']?.trim() ||
     (repoUrl ? `DiscordBot (${repoUrl}, 0.1.0)` : 'DiscordBot (0.1.0)');
 
+  const rawTheme =
+    process.env['DASHBOARD_THEME']?.trim().toLowerCase() ||
+    process.env['DEFAULT_THEME']?.trim().toLowerCase() ||
+    process.env['THEME']?.trim().toLowerCase() ||
+    'dark';
+  const defaultTheme = rawTheme === 'glass' ? 'glassmorphism' : rawTheme;
+
+  const landingPageEnabled =
+    process.env['LANDING_PAGE_ENABLED']?.trim().toLowerCase() !== 'false' &&
+    process.env['ENABLE_LANDING_PAGE']?.trim().toLowerCase() !== 'false';
+
+  const dashboardColorScheme =
+    process.env['DASHBOARD_COLOR_SCHEME']?.trim().toLowerCase() ||
+    process.env['COLOR_SCHEME']?.trim().toLowerCase() ||
+    process.env['ACCENT_COLOR']?.trim().toLowerCase() ||
+    'default';
+
   return {
     host,
     port,
@@ -182,6 +202,9 @@ export function defaultConfig(): AppConfig {
     discordApiBaseUrl: process.env['DISCORD_API_BASE_URL']?.trim() || 'https://discord.com/api/v10',
     repoUrl,
     userAgent,
+    defaultTheme,
+    dashboardColorScheme,
+    landingPageEnabled,
   };
 }
 

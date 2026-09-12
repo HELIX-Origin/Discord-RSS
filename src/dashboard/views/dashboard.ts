@@ -1,14 +1,54 @@
 import type { AppDeps } from '../../app.js';
 import { isOwnerUser, isAdminOrOwner, canUserAccessDashboard } from '../routes/shared.js';
 
+export function getThemeInfo(theme?: string): { id: string; name: string; icon: string } {
+  const t = (theme || '').trim().toLowerCase();
+  if (t === 'glass' || t === 'glassmorphism') {
+    return { id: 'glassmorphism', name: 'Glassmorphism', icon: 'fa-solid fa-wand-magic-sparkles' };
+  }
+  if (t === 'light') {
+    return { id: 'light', name: 'Light', icon: 'fa-solid fa-sun' };
+  }
+  if (t === 'cyberpunk') {
+    return { id: 'cyberpunk', name: 'Cyberpunk', icon: 'fa-solid fa-bolt' };
+  }
+  if (t === 'dracula') {
+    return { id: 'dracula', name: 'Dracula', icon: 'fa-solid fa-skull' };
+  }
+  if (t === 'nord') {
+    return { id: 'nord', name: 'Nord', icon: 'fa-solid fa-snowflake' };
+  }
+  if (t === 'emerald') {
+    return { id: 'emerald', name: 'Emerald', icon: 'fa-solid fa-tree' };
+  }
+  return { id: 'dark', name: 'Dark', icon: 'fa-solid fa-moon' };
+}
+
+export function getColorSchemeInfo(scheme?: string): { id: string; name: string } {
+  const s = (scheme || '').trim().toLowerCase();
+  if (s === 'purple' || s === 'amethyst') return { id: 'purple', name: 'Amethyst Purple' };
+  if (s === 'blue' || s === 'ocean') return { id: 'blue', name: 'Ocean Blue' };
+  if (s === 'emerald' || s === 'jade' || s === 'green') return { id: 'emerald', name: 'Emerald Green' };
+  if (s === 'rose' || s === 'pink' || s === 'fuchsia') return { id: 'rose', name: 'Rose Pink' };
+  if (s === 'amber' || s === 'gold' || s === 'yellow') return { id: 'amber', name: 'Amber Gold' };
+  if (s === 'indigo' || s === 'violet') return { id: 'indigo', name: 'Indigo Violet' };
+  if (s === 'crimson' || s === 'ruby' || s === 'red') return { id: 'crimson', name: 'Crimson Ruby' };
+  if (s === 'teal' || s === 'aqua') return { id: 'teal', name: 'Teal Aqua' };
+  if (s === 'sunset' || s === 'coral' || s === 'orange') return { id: 'sunset', name: 'Sunset Coral' };
+  if (s === 'cyan' || s === 'electric') return { id: 'cyan', name: 'Electric Cyan' };
+  return { id: 'default', name: 'Theme Default' };
+}
+
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
   const appName = deps.bot?.getAppName() || 'HELIX RSS';
   const appIconUrl = deps.bot?.getAppIconUrl() || null;
+  const theme = getThemeInfo(deps.config.defaultTheme);
+  const colorScheme = getColorSchemeInfo(deps.config.dashboardColorScheme);
 
   // Permission check for logged in Discord users without server manage permissions
   if (userId !== null && !canUserAccessDashboard(userId, deps)) {
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="${theme.id} scheme-${colorScheme.id}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,14 +56,84 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    :root, html.dark {
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-inner: #111827;
+      --border: #1f2937;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #06b6d4;
+    }
+    html.light {
+      --bg: #e8ecf2;
+      --card-bg: rgba(248, 250, 252, 0.95);
+      --card-inner: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --text-muted: #475569;
+      --primary: #0284c7;
+    }
+    html.glassmorphism {
+      --bg: #0a0d18;
+      --card-bg: rgba(18, 24, 43, 0.55);
+      --card-inner: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #ffffff;
+      --text-muted: #cbd5e1;
+      --primary: #a855f7;
+    }
+    html.glassmorphism body {
+      background: radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.16), transparent 35%),
+                  radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.16), transparent 35%),
+                  radial-gradient(circle at 50% 85%, rgba(236, 72, 153, 0.14), transparent 45%),
+                  #0a0d18;
+      background-attachment: fixed;
+    }
+    html.cyberpunk {
+      --bg: #05050a;
+      --card-bg: rgba(14, 14, 24, 0.92);
+      --card-inner: #0a0a12;
+      --border: rgba(0, 240, 255, 0.25);
+      --text: #fcee0a;
+      --text-muted: #e2e8f0;
+      --primary: #00f0ff;
+    }
+    html.dracula {
+      --bg: #282a36;
+      --card-bg: rgba(40, 42, 54, 0.92);
+      --card-inner: #21222c;
+      --border: #44475a;
+      --text: #f8f8f2;
+      --text-muted: #bd93f9;
+      --primary: #ff79c6;
+    }
+    html.nord {
+      --bg: #2e3440;
+      --card-bg: rgba(46, 52, 64, 0.95);
+      --card-inner: #3b4252;
+      --border: #434c5e;
+      --text: #eceff4;
+      --text-muted: #d8dee9;
+      --primary: #88c0d0;
+    }
+    html.emerald {
+      --bg: #041712;
+      --card-bg: rgba(6, 38, 28, 0.9);
+      --card-inner: #07261d;
+      --border: #134e3a;
+      --text: #ecfdf5;
+      --text-muted: #a7f3d0;
+      --primary: #10b981;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0b0f19; color: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-    .card { background: #111827; border: 1px solid #1f2937; border-radius: 1.25rem; padding: 2rem; max-width: 440px; text-align: center; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 1.25rem; padding: 2rem; max-width: 440px; text-align: center; backdrop-filter: blur(16px); }
     .icon { display: inline-flex; width: 3.5rem; height: 3.5rem; align-items: center; justify-content: center; border-radius: 1rem; background: rgba(245,158,11,0.1); color: #f59e0b; font-size: 1.5rem; margin-bottom: 1rem; }
     h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
-    p { font-size: 0.875rem; color: #9ca3af; line-height: 1.5; margin-bottom: 1.5rem; }
-    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; background: #1f2937; color: #d1d5db; font-size: 0.875rem; font-weight: 600; text-decoration: none; border: 1px solid #374151; cursor: pointer; }
-    .btn:hover { background: #374151; color: #fff; }
+    p { font-size: 0.875rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.5rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; background: var(--card-inner); color: var(--text); font-size: 0.875rem; font-weight: 600; text-decoration: none; border: 1px solid var(--border); cursor: pointer; }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
   </style>
 </head>
 <body>
@@ -52,7 +162,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     : null;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="${theme.id} scheme-${colorScheme.id}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -60,7 +170,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    :root {
+    :root, html.dark {
       --bg: #0b0f19;
       --card-bg: rgba(17, 24, 39, 0.85);
       --card-inner: #111827;
@@ -78,6 +188,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       --amber: #f59e0b;
       --emerald: #10b981;
       --red: #ef4444;
+      --shadow: 0 4px 20px rgba(0,0,0,0.25);
     }
     html.light {
       --bg: #e8ecf2;
@@ -92,6 +203,184 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       --primary-hover: #0369a1;
       --primary-bg: rgba(14, 165, 233, 0.12);
       --primary-border: rgba(14, 165, 233, 0.35);
+      --shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+    html.glassmorphism {
+      --bg: #0a0d18;
+      --card-bg: rgba(18, 24, 43, 0.55);
+      --card-inner: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.12);
+      --border-hover: rgba(168, 85, 247, 0.5);
+      --text: #ffffff;
+      --text-muted: #cbd5e1;
+      --text-dim: #94a3b8;
+      --primary: #a855f7;
+      --primary-hover: #9333ea;
+      --primary-bg: rgba(168, 85, 247, 0.2);
+      --primary-border: rgba(168, 85, 247, 0.45);
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    html.glassmorphism body {
+      background: radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.16), transparent 35%),
+                  radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.16), transparent 35%),
+                  radial-gradient(circle at 50% 85%, rgba(236, 72, 153, 0.14), transparent 45%),
+                  #0a0d18;
+      background-attachment: fixed;
+    }
+    html.glassmorphism .card,
+    html.glassmorphism nav.sidebar,
+    html.glassmorphism header {
+      backdrop-filter: blur(20px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    }
+    html.glassmorphism .stat-card,
+    html.glassmorphism .feed-item,
+    html.glassmorphism input[type="text"],
+    html.glassmorphism select,
+    html.glassmorphism textarea {
+      background: rgba(255, 255, 255, 0.04) !important;
+      backdrop-filter: blur(12px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    }
+    html.cyberpunk {
+      --bg: #05050a;
+      --card-bg: rgba(14, 14, 24, 0.92);
+      --card-inner: #0a0a12;
+      --border: rgba(0, 240, 255, 0.25);
+      --border-hover: #00f0ff;
+      --text: #fcee0a;
+      --text-muted: #e2e8f0;
+      --text-dim: #8b9bb4;
+      --primary: #00f0ff;
+      --primary-hover: #00c8d6;
+      --primary-bg: rgba(0, 240, 255, 0.16);
+      --primary-border: rgba(0, 240, 255, 0.5);
+      --amber: #fcee0a;
+      --red: #ff0055;
+      --emerald: #00ff9f;
+      --shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+    }
+    html.cyberpunk body {
+      background: linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+                  #05050a;
+      background-size: 32px 32px;
+      background-attachment: fixed;
+    }
+    html.dracula {
+      --bg: #282a36;
+      --card-bg: rgba(40, 42, 54, 0.92);
+      --card-inner: #21222c;
+      --border: #44475a;
+      --border-hover: #bd93f9;
+      --text: #f8f8f2;
+      --text-muted: #bd93f9;
+      --text-dim: #6272a4;
+      --primary: #ff79c6;
+      --primary-hover: #ff92d0;
+      --primary-bg: rgba(255, 121, 198, 0.15);
+      --primary-border: rgba(255, 121, 198, 0.45);
+      --emerald: #50fa7b;
+      --amber: #f1fa8c;
+      --red: #ff5555;
+      --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    html.nord {
+      --bg: #2e3440;
+      --card-bg: rgba(46, 52, 64, 0.95);
+      --card-inner: #3b4252;
+      --border: #434c5e;
+      --border-hover: #88c0d0;
+      --text: #eceff4;
+      --text-muted: #d8dee9;
+      --text-dim: #7b88a1;
+      --primary: #88c0d0;
+      --primary-hover: #81a1c1;
+      --primary-bg: rgba(136, 192, 208, 0.15);
+      --primary-border: rgba(136, 192, 208, 0.4);
+      --emerald: #a3be8c;
+      --amber: #ebcb8b;
+      --red: #bf616a;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }
+    html.emerald {
+      --bg: #041712;
+      --card-bg: rgba(6, 38, 28, 0.9);
+      --card-inner: #07261d;
+      --border: #134e3a;
+      --border-hover: #10b981;
+      --text: #ecfdf5;
+      --text-muted: #a7f3d0;
+      --text-dim: #34d399;
+      --primary: #10b981;
+      --primary-hover: #059669;
+      --primary-bg: rgba(16, 185, 129, 0.16);
+      --primary-border: rgba(16, 185, 129, 0.45);
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Color Scheme Overrides */
+    html.scheme-purple, html[class*="scheme-purple"] {
+      --primary: #a855f7 !important;
+      --primary-hover: #9333ea !important;
+      --primary-bg: rgba(168, 85, 247, 0.15) !important;
+      --primary-border: rgba(168, 85, 247, 0.4) !important;
+    }
+    html.scheme-blue, html[class*="scheme-blue"] {
+      --primary: #3b82f6 !important;
+      --primary-hover: #2563eb !important;
+      --primary-bg: rgba(59, 130, 246, 0.15) !important;
+      --primary-border: rgba(59, 130, 246, 0.4) !important;
+    }
+    html.scheme-emerald, html[class*="scheme-emerald"] {
+      --primary: #10b981 !important;
+      --primary-hover: #059669 !important;
+      --primary-bg: rgba(16, 185, 129, 0.15) !important;
+      --primary-border: rgba(16, 185, 129, 0.4) !important;
+    }
+    html.scheme-rose, html[class*="scheme-rose"] {
+      --primary: #f43f5e !important;
+      --primary-hover: #e11d48 !important;
+      --primary-bg: rgba(244, 63, 94, 0.15) !important;
+      --primary-border: rgba(244, 63, 94, 0.4) !important;
+    }
+    html.scheme-amber, html[class*="scheme-amber"] {
+      --primary: #f59e0b !important;
+      --primary-hover: #d97706 !important;
+      --primary-bg: rgba(245, 158, 11, 0.15) !important;
+      --primary-border: rgba(245, 158, 11, 0.4) !important;
+    }
+    html.scheme-indigo, html[class*="scheme-indigo"] {
+      --primary: #6366f1 !important;
+      --primary-hover: #4f46e5 !important;
+      --primary-bg: rgba(99, 102, 241, 0.15) !important;
+      --primary-border: rgba(99, 102, 241, 0.4) !important;
+    }
+    html.scheme-crimson, html[class*="scheme-crimson"] {
+      --primary: #ef4444 !important;
+      --primary-hover: #dc2626 !important;
+      --primary-bg: rgba(239, 68, 68, 0.15) !important;
+      --primary-border: rgba(239, 68, 68, 0.4) !important;
+    }
+    html.scheme-teal, html[class*="scheme-teal"] {
+      --primary: #14b8a6 !important;
+      --primary-hover: #0d9488 !important;
+      --primary-bg: rgba(20, 184, 166, 0.15) !important;
+      --primary-border: rgba(20, 184, 166, 0.4) !important;
+    }
+    html.scheme-sunset, html[class*="scheme-sunset"] {
+      --primary: #ff6b6b !important;
+      --primary-hover: #fa5252 !important;
+      --primary-bg: rgba(255, 107, 107, 0.15) !important;
+      --primary-border: rgba(255, 107, 107, 0.4) !important;
+    }
+    html.scheme-cyan, html[class*="scheme-cyan"] {
+      --primary: #06b6d4 !important;
+      --primary-hover: #0891b2 !important;
+      --primary-bg: rgba(6, 182, 212, 0.15) !important;
+      --primary-border: rgba(6, 182, 212, 0.4) !important;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background-color 0.2s, color 0.2s; }
@@ -192,9 +481,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     </a>
 
     <div class="nav-actions">
-      <button onclick="toggleTheme()" class="btn btn-ghost btn-sm" title="Toggle Theme">
-        <i id="theme-icon" class="fa-solid fa-moon"></i>
-      </button>
+      <span class="badge badge-gray" title="Active Theme: ${theme.name}${colorScheme.id !== 'default' ? ` · Scheme: ${colorScheme.name}` : ''} (Configured via .env)" style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">
+        <i class="${theme.icon}" style="color: var(--primary); margin-right: 0.25rem;"></i> ${theme.name}${colorScheme.id !== 'default' ? ` <span style="opacity: 0.7; font-size: 0.6875rem;">(${colorScheme.name})</span>` : ''}
+      </span>
       ${
         botInviteUrl
           ? `<a href="${botInviteUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-discord btn-sm">
@@ -533,6 +822,11 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
               <label class="form-label">Public Base URL</label>
               <input type="text" id="cfg-base-url" placeholder="http://159.223.140.212:3131">
             </div>
+            <div class="form-group">
+              <label class="form-label">Active Dashboard Theme &amp; Color Scheme</label>
+              <input type="text" value="${theme.name} (${theme.id}) &bull; ${colorScheme.name} (${colorScheme.id})" disabled style="opacity: 0.85; cursor: not-allowed;" title="Configured via DASHBOARD_THEME and DASHBOARD_COLOR_SCHEME environment variables">
+              <span style="font-size: 0.6875rem; color: var(--text-dim); margin-top: 0.25rem;">Configured via <code style="color: var(--primary);">DASHBOARD_THEME</code> and <code style="color: var(--primary);">DASHBOARD_COLOR_SCHEME</code> in <code style="color: var(--primary);">.env</code>. Themes: <code style="color: var(--text-muted);">glassmorphism</code>, <code style="color: var(--text-muted);">dark</code>, <code style="color: var(--text-muted);">light</code>, <code style="color: var(--text-muted);">cyberpunk</code>, <code style="color: var(--text-muted);">dracula</code>, <code style="color: var(--text-muted);">nord</code>, <code style="color: var(--text-muted);">emerald</code>. Color Schemes: <code style="color: var(--text-muted);">cyan</code>, <code style="color: var(--text-muted);">purple</code>, <code style="color: var(--text-muted);">blue</code>, <code style="color: var(--text-muted);">emerald</code>, <code style="color: var(--text-muted);">rose</code>, <code style="color: var(--text-muted);">amber</code>, <code style="color: var(--text-muted);">indigo</code>, <code style="color: var(--text-muted);">crimson</code>, <code style="color: var(--text-muted);">teal</code>, <code style="color: var(--text-muted);">sunset</code>.</span>
+            </div>
           </div>
           <div style="display: flex; justify-content: flex-end;">
             <button onclick="saveSystemSettings()" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Save Settings</button>
@@ -587,20 +881,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       else if (tabId === 'freegames') loadFreeGamesTab();
       else if (tabId === 'news' || tabId === 'popular') loadNewsTab();
       else if (tabId === 'settings') loadSettingsTab();
-    }
-
-    // Theme Toggle
-    function initTheme() {
-      const saved = localStorage.getItem('helix-theme');
-      if (saved === 'light') {
-        document.documentElement.classList.add('light');
-        document.getElementById('theme-icon').className = 'fa-solid fa-sun';
-      }
-    }
-    function toggleTheme() {
-      const isLight = document.documentElement.classList.toggle('light');
-      localStorage.setItem('helix-theme', isLight ? 'light' : 'dark');
-      document.getElementById('theme-icon').className = isLight ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
     }
 
     // Auth & Logout
@@ -1524,7 +1804,6 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     // Initialize on page load
-    initTheme();
     loadUserProfile();
     loadOverviewTab();
 

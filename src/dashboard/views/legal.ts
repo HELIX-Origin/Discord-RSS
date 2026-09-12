@@ -1,27 +1,28 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { getThemeInfo } from './dashboard.js';
 
 function markdownToHtml(md: string): string {
   return md
     .replace(
       /^# (.*$)/gim,
-      '<h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: #fff;">$1</h1>',
+      '<h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text);">$1</h1>',
     )
     .replace(
       /^## (.*$)/gim,
-      '<h2 style="font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #38bdf8;">$1</h2>',
+      '<h2 style="font-size: 1.25rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.5rem; color: var(--primary);">$1</h2>',
     )
     .replace(
       /^### (.*$)/gim,
-      '<h3 style="font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; color: #e2e8f0;">$1</h3>',
+      '<h3 style="font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; color: var(--text);">$1</h3>',
     )
     .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/gim, '<em>$1</em>')
     .replace(
       /`([^`]+)`/gim,
-      '<code style="background: rgba(0,0,0,0.4); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace;">$1</code>',
+      '<code style="background: rgba(0,0,0,0.4); padding: 0.2rem 0.4rem; border-radius: 0.25rem; font-family: monospace; color: var(--primary);">$1</code>',
     )
-    .replace(/\n\n/gim, '</p><p style="margin-bottom: 1rem; line-height: 1.6; color: #94a3b8;">')
+    .replace(/\n\n/gim, '</p><p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-muted);">')
     .replace(/\n/gim, '<br>');
 }
 
@@ -30,20 +31,22 @@ export function renderLegalHtml(
   markdownFilename: string,
   appName = 'HELIX RSS',
   appIconUrl?: string | null,
+  themeConfig?: string,
 ): string {
+  const theme = getThemeInfo(themeConfig);
   let contentHtml = '<p>Document not found.</p>';
   const filePath = resolve(process.cwd(), markdownFilename);
   if (existsSync(filePath)) {
     try {
       const raw = readFileSync(filePath, 'utf8');
-      contentHtml = `<p style="margin-bottom: 1rem; line-height: 1.6; color: #94a3b8;">${markdownToHtml(raw)}</p>`;
+      contentHtml = `<p style="margin-bottom: 1rem; line-height: 1.6; color: var(--text-muted);">${markdownToHtml(raw)}</p>`;
     } catch {
       contentHtml = '<p>Failed to load document content.</p>';
     }
   }
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="${theme.id}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -51,25 +54,105 @@ export function renderLegalHtml(
   ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    :root, html.dark {
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.85);
+      --card-inner: #111827;
+      --border: #1f2937;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --primary: #06b6d4;
+    }
+    html.light {
+      --bg: #e8ecf2;
+      --card-bg: rgba(248, 250, 252, 0.95);
+      --card-inner: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --text-muted: #475569;
+      --primary: #0284c7;
+    }
+    html.glassmorphism {
+      --bg: #0a0d18;
+      --card-bg: rgba(18, 24, 43, 0.55);
+      --card-inner: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #ffffff;
+      --text-muted: #cbd5e1;
+      --primary: #a855f7;
+    }
+    html.glassmorphism body {
+      background: radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.18), transparent 35%),
+                  radial-gradient(circle at 85% 20%, rgba(6, 182, 212, 0.18), transparent 35%),
+                  radial-gradient(circle at 50% 85%, rgba(236, 72, 153, 0.15), transparent 45%),
+                  #0a0d18;
+      background-attachment: fixed;
+    }
+    html.glassmorphism .card {
+      backdrop-filter: blur(20px) saturate(180%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    }
+    html.cyberpunk {
+      --bg: #05050a;
+      --card-bg: rgba(14, 14, 24, 0.92);
+      --card-inner: #0a0a12;
+      --border: rgba(0, 240, 255, 0.25);
+      --text: #fcee0a;
+      --text-muted: #e2e8f0;
+      --primary: #00f0ff;
+    }
+    html.dracula {
+      --bg: #282a36;
+      --card-bg: rgba(40, 42, 54, 0.92);
+      --card-inner: #21222c;
+      --border: #44475a;
+      --text: #f8f8f2;
+      --text-muted: #bd93f9;
+      --primary: #ff79c6;
+    }
+    html.nord {
+      --bg: #2e3440;
+      --card-bg: rgba(46, 52, 64, 0.95);
+      --card-inner: #3b4252;
+      --border: #434c5e;
+      --text: #eceff4;
+      --text-muted: #d8dee9;
+      --primary: #88c0d0;
+    }
+    html.emerald {
+      --bg: #041712;
+      --card-bg: rgba(6, 38, 28, 0.9);
+      --card-inner: #07261d;
+      --border: #134e3a;
+      --text: #ecfdf5;
+      --text-muted: #a7f3d0;
+      --primary: #10b981;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0b0f19; color: #f3f4f6; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
-    .card { background: #111827; border: 1px solid #1f2937; border-radius: 1.25rem; padding: 2.5rem; max-width: 800px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid #1f2937; padding-bottom: 1rem; }
-    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; background: #1f2937; color: #d1d5db; font-size: 0.8125rem; font-weight: 600; text-decoration: none; border: 1px solid #374151; }
-    .btn:hover { background: #374151; color: #fff; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 2rem 1rem; }
+    .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 1.25rem; padding: 2.5rem; max-width: 800px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); backdrop-filter: blur(16px); }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; background: var(--card-inner); color: var(--text); font-size: 0.8125rem; font-weight: 600; text-decoration: none; border: 1px solid var(--border); }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="header">
-      <a href="/dashboard" style="display: flex; align-items: center; gap: 0.5rem; color: #fff; text-decoration: none; font-weight: 800; font-size: 1.1rem;">
+      <a href="/" style="display: flex; align-items: center; gap: 0.5rem; color: var(--text); text-decoration: none; font-weight: 800; font-size: 1.1rem;">
         ${
           appIconUrl
             ? `<img src="${appIconUrl}" alt="${appName}" style="width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; object-fit: cover;">`
-            : `<i class="fa-solid fa-rss" style="color: #06b6d4;"></i>`
+            : `<i class="fa-solid fa-rss" style="color: var(--primary);"></i>`
         } ${appName}
       </a>
-      <a href="/dashboard" class="btn"><i class="fa-solid fa-arrow-left"></i> Return to Dashboard</a>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="/" class="btn"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="/dashboard" class="btn"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+      </div>
     </div>
     <div>${contentHtml}</div>
   </div>
