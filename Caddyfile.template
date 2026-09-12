@@ -1,0 +1,80 @@
+# Caddyfile for HELIX RSS
+# Replace DOMAIN and EMAIL with your values, or set via environment variables
+{
+    # Global options
+    admin off
+    # Optional: enable metrics
+    # metrics /metrics
+}
+
+# Main domain - reverse proxy to HELIX RSS
+helix-rss.helix-origin.club {
+    # Automatic HTTPS via Let's Encrypt (or ZeroSSL)
+    # Email for ACME registration
+    tls admin@helix-origin.club
+
+    # Security headers
+    header {
+        # HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent clickjacking
+        X-Frame-Options "DENY"
+        # Prevent MIME sniffing
+        X-Content-Type-Options "nosniff"
+        # Referrer policy
+        Referrer-Policy "strict-origin-when-cross-origin"
+        # CSP - adjust as needed for your dashboard
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+        # Permissions policy
+        Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+    }
+
+    # Rate limiting for API endpoints
+    @api path /api/*
+    rate_limit @api {
+        zone api_limit
+        key {remote_host}
+        events 100
+        window 1m
+    }
+
+    # WebSocket support for Discord gateway (if needed)
+    @websocket {
+        header Connection *Upgrade*
+        header Upgrade websocket
+    }
+    reverse_proxy @websocket helix-rss:3131 {
+        transport http {
+            versions h2c 1.1
+        }
+    }
+
+    # Main reverse proxy to HELIX RSS
+    reverse_proxy helix-rss:3131 {
+        # Health check
+        health_uri /health
+        health_interval 10s
+        health_timeout 3s
+        health_status 200 201 202 204
+
+        # Timeouts
+        transport http {
+            response_header_timeout 30s
+            read_timeout 30s
+            write_timeout 30s
+        }
+
+        # Pass through headers
+        header_upstream Host {host}
+        header_upstream X-Real-IP {remote_host}
+        header_upstream X-Forwarded-For {remote_host}
+        header_upstream X-Forwarded-Proto {scheme}
+        header_upstream X-Forwarded-Host {host}
+        header_upstream X-Forwarded-Port {server_port}
+    }
+}
+
+# Optional: Redirect www to non-www
+www.helix-rss.helix-origin.club {
+    redir https://helix-rss.helix-origin.club{uri} permanent
+}
