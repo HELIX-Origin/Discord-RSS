@@ -1,6 +1,6 @@
 # 🤖 Reddit Feeds & Pure Image Mode
 
-Discord-RSS offers a dedicated Reddit engine optimized for subreddit syndication, visual media extraction, and formatting. It supports both **Pure Image Mode** and **Standard RSS Mode**.
+HELIX RSS offers a dedicated Reddit engine optimized for subreddit syndication, visual media extraction, and formatting. It supports both **Pure Image Mode** and **Standard RSS Mode**.
 
 ---
 
@@ -86,9 +86,9 @@ Content-Type: application/json
 Reddit enforces rate limits on RSS and XML queries based on the HTTP `User-Agent`.
 
 ### Best Practices:
-1. Set a unique, descriptive User-Agent in `.env`:
+1. Set a unique, descriptive User-Agent in `.env` (`USER_AGENT`):
    ```env
-   REDDIT_USER_AGENT="Discord-RSS/2.0 (by /u/YourRedditUsername; contact: admin@yourdomain.com)"
+   USER_AGENT="HelixRSS/0.1.0 (by /u/YourRedditUsername; contact: admin@yourdomain.com)"
    ```
-2. Avoid setting polling intervals shorter than 5 minutes (`POLL_INTERVAL=300`) for high-volume Reddit subscriptions.
+2. Avoid short delivery intervals for high-volume Reddit subscriptions — use the dashboard's 10–60 minute posting options.
 3. If you run multiple subreddits, combine them using the multi-reddit format (e.g., `r/tech+gadgets+hardware`) rather than 3 separate feeds.

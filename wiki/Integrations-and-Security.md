@@ -1,6 +1,6 @@
 # 🔒 Integrations & Security
 
-This guide details the security model, authentication flows, authorization rules, and data protection practices in Discord-RSS.
+This guide details the security model, authentication flows, authorization rules, and data protection practices in HELIX RSS.
 
 ---
 
@@ -11,18 +11,18 @@ sequenceDiagram
     autonumber
     actor User as Server Administrator
     participant UI as Dashboard Frontend
-    participant App as Express Backend
+    participant App as Native HTTP Backend
     participant Discord as Discord OAuth2 Endpoint
 
     User->>UI: Click "Login with Discord"
-    UI->>App: GET /auth/discord
+    UI->>App: GET /api/auth/discord
     App->>Discord: Redirect with client_id, scope=identify+guilds, state
     Discord->>User: Display Discord Authorization Consent Dialog
     User->>Discord: Approve Permissions
-    Discord->>App: Callback to /auth/discord/callback with authorization_code
+    Discord->>App: Callback to /api/auth/callback/discord with authorization_code
     App->>Discord: Exchange code for access_token
     Discord-->>App: Return user profile & guilds list
-    App->>App: Store encrypted session cookie (iron-session / express-session)
+    App->>App: Store HttpOnly session token (DB-backed, no third-party cookies)
     App-->>UI: Redirect to Dashboard (/dashboard) with authenticated session
 ```
 
@@ -34,8 +34,8 @@ sequenceDiagram
    - Only users with the `Administrator` or `Manage Server` (`MANAGE_GUILD`) permissions on a given Discord server can view, create, edit, or delete feeds for that server.
    - Server lists are verified server-side on every API call against Discord's `/users/@me/guilds` endpoint.
 
-2. **Global Application Owners**:
-   - Users whose Discord IDs are listed in `OWNER_IDS` (or resolved automatically from the Discord Developer Portal Application info) have global access to server-wide diagnostics, global log streams, and system settings.
+2. **Global Application Owners / Team**:
+   - The Discord application's **owner and team members** are detected automatically (Discord Developer Portal Application info) and granted the `owner` role, which unlocks the Developer Tools, Service Logs, and global system settings. No manual `OWNER_IDS` list is required.
 
 ---
 
@@ -47,8 +47,8 @@ sequenceDiagram
 ### 2. Cross-Site Scripting (XSS) & HTML Sanitization
 - All RSS descriptions and article snippets extracted from untrusted third-party web feeds are passed through an HTML entity decoder and strict HTML tag stripper before being formatted into Discord embeds or web UI cards.
 
-### 3. Rate Limiting & Protection
-- Express routes utilize rate limiting (`express-rate-limit`) on authentication endpoints and manual poll triggers (`POST /api/feeds/freegames/poll`, `POST /api/feeds/:id/test`) to prevent abuse and denial of service.
+### 3. Request Validation & API Hardening
+- The native HTTP router validates request bodies and content types on every mutating endpoint, and Discord interaction responses include state checks and expiry handling. Verified HTTP redirect/state parameters prevent OAuth code injection. Discord API 429/rate-limit responses are surfaced to the operator in the service logs.
 
 ### 4. Database Parameterization
-- All queries to SQLite and PostgreSQL use prepared parameterized statements, preventing SQL injection vulnerabilities.
+- All queries to SQLite use prepared parameterized statements, preventing SQL injection vulnerabilities.

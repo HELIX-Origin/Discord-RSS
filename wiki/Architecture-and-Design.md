@@ -1,6 +1,6 @@
 # 🏗️ Architecture & System Design
 
-Discord-RSS is engineered as a modular, asynchronous TypeScript application combining a background polling daemon, an Express REST API & Web Dashboard, and a Discord.js bot client.
+HELIX RSS is engineered as a modular, asynchronous TypeScript (ESM) application combining a background polling daemon, a native Node.js HTTP dashboard & REST API, and a Discord bot client connected over the official Gateway WebSocket and REST API.
 
 ---
 
@@ -14,28 +14,28 @@ flowchart TB
     end
 
     subgraph AppLayer["Application Core (Node.js / TypeScript)"]
-        Express["Express Server & REST API (`src/dashboard/routes/*`)"]
+        HttpServer["Native HTTP Server & REST API (`src/dashboard/routes/*`)"]
         SessionMgr["Discord OAuth2 & Session Manager (`src/oauth/*`)"]
-        BotClient["Discord.js Bot Client (`src/bot/*`)"]
+        BotClient["Native Discord Bot Client (`src/bot/*`)"]
         FeedWatcher["Background Feed Watcher (`src/feed/watcher.ts`)"]
         ParserEngine["Multi-Format Parser & Scrapers (`src/feed/*`)"]
         DedupEngine["Deduplication & Canonical Normalizer (`src/feed/deduplication.ts`)"]
     end
 
     subgraph DataLayer["Persistence & State Layer"]
-        DB[(SQLite / PostgreSQL Database)]
-        Cache[(In-Memory ETag & Header Cache)]
+        DB[(SQLite Database (node:sqlite, WAL))]
+        Cache[(In-Memory AppState Cache)]
     end
 
     subgraph ExternalServices["External Endpoints"]
         DiscordAPI["Discord REST API (v10) & Gateway"]
-        RemoteFeeds["RSS / Atom / Subreddits / YouTube / Game APIs"]
+        RemoteFeeds["RSS / Atom / Subreddits / Game APIs"]
     end
 
-    Dashboard <--> Express
-    Express <--> SessionMgr
+    Dashboard <--> HttpServer
+    HttpServer <--> SessionMgr
     SessionMgr <--> DiscordAPI
-    Express <--> DB
+    HttpServer <--> DB
 
     DiscordApp <--> DiscordAPI
     DiscordAPI <--> BotClient
@@ -55,13 +55,13 @@ flowchart TB
 ## 🧩 Core Components Breakdown
 
 ### 1. Web Dashboard & API (`src/dashboard/`)
-- Built with **Express 4.x**, serving a responsive, zero-dependency Vanilla CSS & JavaScript frontend.
-- **Glassmorphism Design**: High-contrast dark theme, backdrop blurs, animated status badges, and smooth tab transitions.
-- **REST Endpoints**: CRUD operations for feeds, guild channel inspection, role listing, live log streaming, and manual test triggers.
+- Built with **native Node.js `http`** and a zero-dependency router, serving a responsive, zero-frontend-dependency Vanilla CSS & JavaScript UI.
+- **Theme System**: Env-driven themes (`glassmorphism`, `dark`, `light`, `cyberpunk`, `dracula`, `nord`, `emerald`) with 11 accent color schemes and a toggleable landing page.
+- **REST Endpoints**: CRUD operations for feeds, guild channel inspection, role listing, activity logs (Developer Tools), and manual poll triggers.
 
 ### 2. Background Feed Watcher (`src/feed/watcher.ts`)
-- Operates on a continuous polling loop with configurable intervals (`POLL_INTERVAL=300`).
-- Runs balanced asynchronous worker pools with concurrency controls (`FEED_CONCURRENCY=5`).
+- Operates on a continuous polling loop with per-user configurable intervals (1, 10, 30 or 60 minutes) persisted in SQLite.
+- Runs balanced asynchronous worker pools.
 - Features a weekly Monday cron scheduler for Free Games promotions.
 
 ### 3. Parser & Scrapers Engine (`src/feed/`)
@@ -69,8 +69,8 @@ flowchart TB
 - Sanitizes malformed XML, extracts CDATA payloads, resolves relative links, and cleans HTML tags for Discord embed descriptions.
 
 ### 4. Persistence Layer (`src/db/`)
-- Abstracted database driver supporting both **SQLite** (default for single-node deployments) and **PostgreSQL** (for scalable enterprise hosting).
-- Schema includes `feeds`, `guilds`, `settings`, `articles_seen`, and `stats_events`.
+- **SQLite** via Node's native `node:sqlite` driver (WAL mode) — the only supported database engine.
+- Schema includes `users`, `sessions`, `oauth_connections`, `feeds`, `sent_entries`, `settings`, `activity_log`, and `discord_guilds`.
 
 ---
 

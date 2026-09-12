@@ -1,34 +1,40 @@
 # 🚀 Deployment & Hosting Guide
 
-Discord-RSS is optimized for containerized deployments, self-hosted Linux VPS setups, and cloud container platforms.
+HELIX RSS is optimized for self-hosted deployments on **Docker**, **Linux VPS**, and bare metal with native SSL. Cloud PaaS platforms are intentionally not supported.
 
 ---
 
 ## 🐳 Option 1: Docker & Docker Compose (Recommended)
 
-Docker provides an isolated, production-ready environment with persistent data volumes.
+The repository ships with a production `Dockerfile` and `docker-compose.yml` (multi-stage Node 22 Alpine build, non-root user, `/health` probe, persistent SQLite volume).
 
 ### 1. Project Files Setup
-Ensure your project contains the provided `docker-compose.yml`:
-
 ```yaml
-version: '3.8'
-
 services:
-  discord-rss:
-    build: .
-    container_name: discord-rss
+  helix-rss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helix-rss
     restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - DATABASE_URL=/app/data/discord-rss.sqlite
-    env_file:
-      - .env
+      - "3131:3131"
     volumes:
       - ./data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - NODE_ENV=production
+      - INTERNAL_URL=0.0.0.0
+      - DISCORD_PORT=3131
+      - SQLITE_DATA=/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3131/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 ```
 
 ### 2. Launch Container
@@ -48,8 +54,8 @@ For hosting directly on an Ubuntu/Debian/Rocky Linux server:
 
 ### 1. Install Node.js & Global Process Manager
 ```bash
-# Install Node.js 20.x LTS
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# Install Node.js 22.x LTS (required: >= 22.9.0 for native node:sqlite)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs git
 
 # Install PM2 globally
@@ -58,8 +64,8 @@ sudo npm install -g pm2
 
 ### 2. Clone and Build Project
 ```bash
-git clone https://github.com/your-username/Discord-RSS.git /opt/discord-rss
-cd /opt/discord-rss
+git clone https://github.com/HELIX-Origin/HELIX-RSS.git /opt/helix-rss
+cd /opt/helix-rss
 
 npm install
 npm run build
@@ -69,8 +75,8 @@ nano .env  # Configure credentials
 
 ### 3. Start with PM2
 ```bash
-# Start production cluster process
-pm2 start dist/dashboard/server.js --name "discord-rss"
+# Start the compiled server
+pm2 start dist/index.js --name "helix-rss"
 
 # Save PM2 process list and configure auto-restart on system reboot
 pm2 save
@@ -99,7 +105,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/rss.yourdomain.com/privkey.pem;
 
     location / {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3131;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -111,21 +117,17 @@ server {
     }
 }
 ```
-*Make sure `TRUST_PROXY=true` and `BASE_URL=https://rss.yourdomain.com` are configured in `.env`.*
+*Make sure `PUBLIC_URL=https://rss.yourdomain.com` is configured in `.env` so OAuth callbacks are generated against the public hostname.*
 
 ### Caddy Configuration
 ```caddy
 rss.yourdomain.com {
-    reverse_proxy localhost:3000
+    reverse_proxy localhost:3131
 }
 ```
 
 ---
 
-## ☁️ Cloud PaaS Deployments
+## 🚫 Cloud PaaS Platforms (Retired)
 
-### Railway / Render / Fly.io
-1. Connect your GitHub repository.
-2. Select **Docker** or **Node.js** build environment.
-3. Configure your Environment Variables in the service settings.
-4. Attach a persistent disk / volume mapped to `/app/data` to preserve your SQLite database across redeployments, or configure a managed PostgreSQL instance via `DATABASE_URL`.
+Heroku, Render, Fly.io, and Railway deployment support has been **retired**. HELIX RSS is self-hosted exclusively on Local, VPS, and Docker. This removes platform-lock-in, payment barriers, and out-of-sync credential state.

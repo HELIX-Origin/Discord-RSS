@@ -4,9 +4,14 @@
   # 📡 HELIX RSS
   **A modern, self-hosted RSS, Web Scraper, Reddit, & Free Games syndication hub for Discord.**
 
-  [![License](https://img.shields.io/badge/License-MIT-green?style=plastic)](LICENSE.md)
+  [![Version](https://img.shields.io/github/package-json/v/HELIX-Origin/HELIX-RSS?style=plastic&logo=github)](https://github.com/HELIX-Origin/HELIX-RSS/releases)
+  [![License](https://img.shields.io/github/license/HELIX-Origin/HELIX-RSS?style=plastic)](LICENSE.md)
+  [![Node.js](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FHELIX-Origin%2FHELIX-RSS%2Fmain%2Fpackage.json&query=engines.node&label=Node.js&logo=node.js&logoColor=white&color=339933&style=plastic)](https://nodejs.org/)
+  [![TypeScript](https://img.shields.io/github/languages/top/HELIX-Origin/HELIX-RSS?style=plastic&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+  [![Issues](https://img.shields.io/github/issues/HELIX-Origin/HELIX-RSS?style=plastic)](https://github.com/HELIX-Origin/HELIX-RSS/issues)
+  [![Stars](https://img.shields.io/github/stars/HELIX-Origin/HELIX-RSS?style=plastic&logo=github)](https://github.com/HELIX-Origin/HELIX-RSS)
+  [![Last Commit](https://img.shields.io/github/last-commit/HELIX-Origin/HELIX-RSS?style=plastic)](https://github.com/HELIX-Origin/HELIX-RSS/commits/main)
   [![Discord](https://dcbadge.limes.pink/api/server/https://discord.gg/Ww3XBZC2HV?style=plastic)](https://discord.gg/Ww3XBZC2HV)
-  [![Node.js](https://img.shields.io/badge/Node.js-v22.9.0%2B-339933?logo=node.js&logoColor=white&style=plastic)](https://nodejs.org/)
 </div>
 
 ---
@@ -16,11 +21,6 @@
 **HELIX RSS** is a lightweight, multi-user feed syndication engine and Discord bot built natively in TypeScript ESM. It automatically monitors RSS/Atom feeds, custom CSS webpage scrapers, curated subreddit streams, and weekly 100% OFF free game promotions—delivering clean, rich Discord embeds straight to your server channels without any webhook management overhead.
 
 Featuring a built-in web dashboard, Discord OAuth2 authentication, zero frontend npm dependencies, SQLite persistent storage, and optional Redis clustering, HELIX RSS provides everything you need to keep your Discord community informed in real time.
-
-> [!IMPORTANT]
-> This repo is currently undergoing a large update. The current state for now may be unuseable as a result. Please be patient as this update will be fully released in the coming weeks.
-> 
-> If you wish to see a working live instance of the bot, you can check it out by visitng our [official instance](http://159.223.140.212:3131).
 
 ---
 
@@ -83,10 +83,10 @@ Edit `.env` and enter your Discord Application credentials:
 DISCORD_TOKEN=your_discord_bot_token_here
 DISCORD_CLIENT_ID=your_discord_application_client_id
 DISCORD_CLIENT_SECRET=your_discord_client_secret
-PORT=3131
-PUBLIC_BASE_URL=http://localhost:3131
-APP_REPO_URL=https://github.com/HELIX-Origin/HELIX-RSS
-APP_REPO_USER_AGENT=HELIX-Origin/HELIX-RSS
+INTERNAL_URL=127.0.0.1:3131
+PUBLIC_URL=http://localhost:3131
+REPO_URL=https://github.com/HELIX-Origin/HELIX-RSS
+USER_AGENT=HELIX-Origin/HELIX-RSS
 ```
 
 ### 3. Build & Run
@@ -144,7 +144,7 @@ Comprehensive guides, architecture breakdowns, configuration settings, and API s
 | [🤖 Discord Bot & Commands](wiki/Discord-Bot.md) | Developer Portal configuration, slash commands, direct channel delivery, and embed styling. |
 | [🏗️ Architecture & Design](wiki/Architecture-and-Design.md) | SQLite schema, AppState in-memory caching, RedisCoordinator, and FeedWatcher engine. |
 | [⚙️ Configuration Guide](wiki/Configuration.md) | Exhaustive reference for all `.env` environment variables and settings. |
-| [🚀 Deployment & Hosting](wiki/Deployment-and-Hosting.md) | Docker, systemd, Heroku, Fly.io, Railway, VPS hosting, and native SSL. |
+| [🚀 Deployment & Hosting](wiki/Deployment-and-Hosting.md) | Docker, Docker Compose, VPS/PM2, systemd self-hosting, and native SSL. |
 | [💻 Development & Testing](wiki/Development-and-Testing.md) | Developer environment setup, ESLint, Prettier, TypeScript, and build verification. |
 | [🔒 Integrations & Security](wiki/Integrations-and-Security.md) | Discord OAuth2, session cookies, RBAC permissions, and anti-bot challenge detection. |
 | [📡 REST API Reference](wiki/API-Reference.md) | Complete documentation of all dashboard, feed, and management REST endpoints. |

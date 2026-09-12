@@ -1,6 +1,6 @@
 # 🎮 Free Games & Giveaways Feeds
 
-Discord-RSS includes a multi-platform giveaway and promotion engine that automatically tracks and announces 100% free PC and console games across all major digital game distribution platforms.
+HELIX RSS includes a multi-platform giveaway and promotion engine that automatically tracks and announces 100% free PC and console games across all major digital game distribution platforms.
 
 ---
 
@@ -20,7 +20,7 @@ The Free Games engine integrates with the official **Epic Games Store Promotions
 | `ea` | EA App / Origin | GamerPower API | Electronic Arts / EA App Logo |
 | `prime` | Prime Gaming | GamerPower API | Amazon Prime Gaming Logo |
 | `battlenet` | Battle.net | GamerPower API | Blizzard Battle.net Logo |
-| `all` | All Platforms Combined | Unified Aggregator | Discord-RSS Controller Icon |
+| `all` | All Platforms Combined | Unified Aggregator | HELIX RSS Controller Icon |
 
 ---
 

@@ -1,2 +1,2 @@
 ---
-*Discord-RSS Documentation Wiki &bull; Built with TypeScript, Discord.js, Express & SQLite/PostgreSQL &bull; [Back to Home](HOME.md)*
+*HELIX RSS Documentation Wiki &bull; Built with TypeScript, Node.js, native HTTP & SQLite &bull; [Back to Home](HOME.md)*

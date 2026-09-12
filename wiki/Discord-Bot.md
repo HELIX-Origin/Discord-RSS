@@ -1,12 +1,12 @@
 # 🤖 Discord Bot & Commands
 
-Discord-RSS operates as a Discord application powered by **Discord.js v14**. It delivers notifications directly to channels using Discord's REST API, eliminating the need to manage external webhooks.
+HELIX RSS operates as a Discord application using a **native connection** — a Gateway WebSocket for live events (`src/bot/gateway.ts`) and the Discord REST API for interactions and messages (`src/bot/rest.ts`). No `discord.js` dependency is required. It delivers notifications directly to channels, eliminating the need to manage external webhooks.
 
 ---
 
 ## ⚡ Slash Commands Reference
 
-All commands support Discord's native auto-complete, ephemeral response flags, and permission checks.
+All commands register through Discord's native interaction model and use ephemeral response flags where appropriate (e.g. errors), with owner/team detection for elevated bot features.
 
 | Command | Subcommands / Options | Permissions Required | Description |
 | :--- | :--- | :--- | :--- |

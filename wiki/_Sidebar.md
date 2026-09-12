@@ -1,4 +1,4 @@
-### Discord-RSS Wiki
+### HELIX RSS Wiki
 
 - [🏠 Home](HOME.md)
 - [📡 Feeds & Scrapers Engine](Feeds-and-Scrapers.md)
@@ -17,6 +17,6 @@
 
 ### Resources
 
-- [GitHub Repository](https://github.com/Joshu/Discord-RSS)
-- [Issue Tracker](https://github.com/Joshu/Discord-RSS/issues)
-- [Community Discord](https://discord.gg/discord-rss)
+- [GitHub Repository](https://github.com/HELIX-Origin/HELIX-RSS)
+- [Issue Tracker](https://github.com/HELIX-Origin/HELIX-RSS/issues)
+- [Community Discord](https://discord.gg/Ww3XBZC2HV)

@@ -1,6 +1,6 @@
 # 🩺 Troubleshooting & Frequently Asked Questions
 
-This guide provides diagnostic steps and solutions for common issues encountered when running, deploying, or configuring Discord-RSS.
+This guide provides diagnostic steps and solutions for common issues encountered when running, deploying, or configuring HELIX RSS.
 
 ---
 
@@ -11,14 +11,14 @@ flowchart TD
     Start[Issue Encountered] --> Type{What is failing?}
     Type -->|Feed Not Updating| F1[Check Feed URL in Browser / Validator]
     Type -->|Bot Not Posting| B1[Check Bot Channel Permissions]
-    Type -->|Reddit 429 / Blocked| R1[Set Unique REDDIT_USER_AGENT]
+    Type -->|Reddit 429 / Blocked| R1[Set Descriptive USER_AGENT]
     Type -->|Database Locked| D1[Check Concurrent Instances / Permissions]
     Type -->|OAuth Login Fails| O1[Check DISCORD_CALLBACK_URL in Dev Portal]
 
     F1 -->|URL Valid| F2[Check Live Logs in Dashboard / Settings]
     B1 -->|Missing Perms| B2[Grant View Channel, Send Messages, Embed Links]
-    R1 -->|Still Blocked| R2[Increase POLL_INTERVAL to 300s+]
-    D1 -->|SQLite Busy| D2[Ensure single process or switch to PostgreSQL]
+    R1 -->|Still Blocked| R2[Use a longer dashboard posting interval]
+    D1 -->|SQLite Busy| D2[Ensure single process; WAL mode already enabled]
     O1 -->|Mismatch| O2[Ensure exact match including http/https and port]
 ```
 
@@ -42,11 +42,11 @@ flowchart TD
 **Symptoms**: Reddit feeds fail to refresh and logs show HTTP 429 status.
 
 **Solutions**:
-1. Configure a descriptive `REDDIT_USER_AGENT` in `.env`:
+1. Configure a descriptive User-Agent in `.env`:
    ```env
-   REDDIT_USER_AGENT="Discord-RSS/2.0 (by /u/YourRedditUsername)"
+   USER_AGENT="HelixRSS/0.1.0 (by /u/YourRedditUsername)"
    ```
-2. Do not set `POLL_INTERVAL` below 300 seconds (5 minutes) for Reddit feeds.
+2. Avoid short delivery intervals for Reddit feeds — use the dashboard's 10–60 minute posting options for high-volume subscriptions.
 3. If monitoring multiple subreddits, combine them into a single multi-reddit feed (`r/sub1+sub2+sub3`) instead of creating separate feeds.
 
 ---
@@ -58,7 +58,7 @@ flowchart TD
 **Solutions**:
 1. Open the [Discord Developer Portal](https://discord.com/developers/applications).
 2. Select your application and navigate to **OAuth2 -> General**.
-3. Under **Redirects**, add the exact redirect URI matching `DISCORD_CALLBACK_URL` (e.g., `http://localhost:3000/auth/discord/callback` or `https://rss.yourdomain.com/auth/discord/callback`).
+3. Under **Redirects**, add the exact redirect URI matching `DISCORD_CALLBACK_URL` (e.g., `http://localhost:3131/api/auth/callback/discord` or `https://rss.yourdomain.com/api/auth/callback/discord`).
 4. Ensure trailing slashes and HTTP vs HTTPS protocols match exactly.
 
 ---
@@ -68,8 +68,8 @@ flowchart TD
 **Symptoms**: Log contains `Error: SQLITE_BUSY: database is locked`.
 
 **Solutions**:
-1. Ensure only **one instance** of Discord-RSS is accessing the SQLite database file at a time (e.g., avoid running multiple Docker containers sharing the same volume without clustering).
-2. For high-concurrency or clustered multi-node environments, switch to **PostgreSQL** by providing `DATABASE_URL=postgres://user:pass@host:5432/dbname`.
+1. Ensure only **one instance** of HELIX RSS is accessing the SQLite database file at a time (e.g., avoid running multiple containers sharing the same volume without clustering).
+2. The database runs in **WAL mode** (`PRAGMA journal_mode = WAL`), which already mitigates most read/write contention. SQLite is the only supported engine.
 
 ---
 
@@ -87,9 +87,9 @@ flowchart TD
 ## ❓ Frequently Asked Questions (FAQ)
 
 <details>
-<summary><strong>Q: Does Discord-RSS require webhook URLs for each channel?</strong></summary>
+<summary><strong>Q: Does HELIX RSS require webhook URLs for each channel?</strong></summary>
 
-> **No**. Discord-RSS connects directly using the Discord Bot Token and Discord REST API. You only need to select target channels from the dropdown.
+> **No**. HELIX RSS connects directly using the Discord Bot Token and Discord REST API. You only need to select target channels from the dropdown.
 </details>
 
 <details>

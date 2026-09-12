@@ -429,7 +429,7 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
       <a href="/tos">Terms of Service</a>
       <a href="${repoUrl}" target="_blank" rel="noopener noreferrer">GitHub Repository</a>
     </div>
-    <div>&copy; ${new Date().getFullYear()} ${appName} &bull; Powered by TypeScript, Express, Discord.js &amp; SQLite/PostgreSQL</div>
+    <div>&copy; ${new Date().getFullYear()} ${appName} &bull; Powered by TypeScript, Node.js, native HTTP &amp; SQLite</div>
   </footer>
 </body>
 </html>`;

@@ -1,6 +1,6 @@
-# 📖 Discord-RSS Documentation Wiki
+# 📖 HELIX RSS Documentation Wiki
 
-Welcome to the comprehensive technical and operational wiki for **Discord-RSS** — the modern, high-performance RSS & web scraping feed delivery bot and web management dashboard for Discord communities.
+Welcome to the comprehensive technical and operational wiki for **HELIX RSS** — the modern, high-performance RSS & web scraping feed delivery bot and web management dashboard for Discord communities.
 
 ---
 
@@ -12,10 +12,10 @@ Welcome to the comprehensive technical and operational wiki for **Discord-RSS** 
 | [**🎮 Free Games & Giveaways**](Free-Games-Feeds.md) | Multi-store aggregation (Epic Games, Steam, GOG, Humble, etc.), Monday cron scheduler, and store branding. |
 | [**🤖 Reddit Feeds & Pure Image Mode**](Reddit-Feeds.md) | Reddit scraping, Pure Image Mode vs Standard RSS Mode, animated GIF/gifv banners, and subreddit filtering. |
 | [**🤖 Discord Bot & Commands**](Discord-Bot.md) | Slash commands (`/feed`, `/stats`, `/about`, `/help`), direct channel delivery, embed formatting, and Discord permissions. |
-| [**🔌 REST API Reference**](API-Reference.md) | Complete documentation of all Express REST endpoints, request/response schemas, and query params. |
+| [**🔌 REST API Reference**](API-Reference.md) | Complete documentation of all REST endpoints, request/response schemas, and query params. |
 | [**🏗️ Architecture & Design**](Architecture-and-Design.md) | System components, data flow diagrams, background polling engine, caching, and state management. |
-| [**⚙️ Configuration Guide**](Configuration.md) | Exhaustive reference of all `.env` variables, rate limits, timeouts, and multi-database settings. |
-| [**🚀 Deployment & Hosting**](Deployment-and-Hosting.md) | Deployment guides for Docker, Docker Compose, VPS/PM2, Kubernetes, and Cloud PaaS platforms. |
+| [**⚙️ Configuration Guide**](Configuration.md) | Exhaustive reference of all `.env` variables, timeouts, polling, dashboard themes, and hosting settings. |
+| [**🚀 Deployment & Hosting**](Deployment-and-Hosting.md) | Deployment guides for Docker, Docker Compose, VPS/PM2, systemd, and native SSL. |
 | [**🧪 Development & Testing**](Development-and-Testing.md) | Local environment setup, test runner commands, TypeScript checking, and code style standards. |
 | [**🔒 Integrations & Security**](Integrations-and-Security.md) | Discord OAuth2, Owner ID resolution, CSRF/XSS protection, rate limiting, and database security. |
 | [**🩺 Troubleshooting & FAQ**](Troubleshooting.md) | Diagnostic flows for feed delivery failures, permission errors, Reddit 429s, and database locks. |
@@ -33,13 +33,13 @@ flowchart TD
         Social["Reddit, YouTube, Bluesky, TikTok"]
     end
 
-    subgraph CoreEngine["Discord-RSS Core"]
+    subgraph CoreEngine["HELIX RSS Core"]
         Watcher["Background Feed Watcher (Polling Scheduler)"]
         Parser["Parser & Fallback Scrapers"]
         Dedup["Composite Multi-Factor Deduplication"]
-        DB[(SQLite / PostgreSQL Database)]
-        Bot["Discord.js Bot Engine (Direct REST API)"]
-        Web["Express Web Dashboard & REST API"]
+        DB[(SQLite Database)]
+        Bot["Native Discord Bot Engine (Gateway + REST API)"]
+        Web["Native HTTP Web Dashboard & REST API"]
     end
 
     subgraph Discord["Discord Platform"]

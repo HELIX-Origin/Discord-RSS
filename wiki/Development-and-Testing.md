@@ -1,13 +1,13 @@
 # 🧪 Development & Testing Guide
 
-This guide covers local development workflows, debugging techniques, TypeScript compilation checks, and automated test runners for Discord-RSS.
+This guide covers local development workflows, debugging techniques, TypeScript compilation checks, and verification commands for HELIX RSS.
 
 ---
 
 ## 🛠️ Local Development Environment
 
 ### 1. Requirements
-- **Node.js**: >= 20.0.0 (LTS recommended)
+- **Node.js**: >= 22.9.0 (LTS recommended; native `node:sqlite` required)
 - **npm**: >= 10.0.0
 - **TypeScript**: 5.x
 
@@ -54,4 +54,4 @@ npm test -- src/bot/embeds.test.ts
 Set `LOG_LEVEL=debug` in your `.env` to output detailed payload dumps, HTTP headers, ETag matches, and Discord REST response statuses to stdout.
 
 ### Web Dashboard Diagnostics
-The web dashboard provides a live log viewer at `/settings` streaming real-time events, errors, and background watcher cycles directly from the Express server.
+For Discord bot owners/team members, the **Developer Tools** tab in the dashboard provides a **Service Logs** page (full activity log with level filtering) plus runtime diagnostics, live uptime, memory usage, and manual triggers.
