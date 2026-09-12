@@ -60,21 +60,21 @@ Notifications are styled using Discord rich embeds:
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│ [YouTube] Google DeepMind                                 │
+│ [RSS] The Verge                                           │
 │ ───────────────────────────────────────────────────────── │
 │ Introducing Gemini 2.0 & Autonomous Coding Agents         │
 │                                                           │
 │ Discover how modern foundation models empower developer   │
 │ workflows with agentic code generation and testing...     │
 │                                                           │
-│ Published: Sep 11, 2026 •  Duration: 12:45                │
+│ Published: Sep 11, 2026 •  Author: Example Author         │
 │ ───────────────────────────────────────────────────────── │
-│  Watch on YouTube (https://youtu.be/...)                  │
+│  Read Article (https://example.com/...)                   │
 │ [ High-Resolution Video Poster Thumbnail Banner ]         │
 └───────────────────────────────────────────────────────────┘
 ```
 
-- **Custom Colors**: Each feed can specify a unique hex color (e.g. `#FF0000` for YouTube, `#FF4500` for Reddit, `#0078F2` for Epic Games).
+- **Custom Colors**: Each feed can specify a unique hex color (e.g. `#f59e0b` for RSS feeds, `#FF4500` for Reddit, `#0078F2` for Epic Games).
 - **Author Branding**: Source platforms and storefronts display their high-resolution official branding icons.
 - **Smart Truncation**: Descriptions exceeding Discord embed character limits (4,096 chars for description, 256 for title) are cleanly truncated at word boundaries with ellipsis (`...`).
 - **Role Mentions**: Configured role mentions are prepended to the message payload, triggering push notifications for subscribed server members.

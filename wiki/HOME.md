@@ -8,7 +8,7 @@ Welcome to the comprehensive technical and operational wiki for **HELIX RSS** �
 
 | Section | Description |
 | :--- | :--- |
-| [**📡 Feeds & Scrapers Engine**](Feeds-and-Scrapers.md) | Deep dive into XML/RSS/Atom parsing, YouTube, TikTok, Bluesky, and custom scrapers. |
+| [**📡 Feeds & Scrapers Engine**](Feeds-and-Scrapers.md) | Deep dive into XML/RSS/Atom parsing, Reddit, Free Games, and custom scrapers. |
 | [**🎮 Free Games & Giveaways**](Free-Games-Feeds.md) | Multi-store aggregation (Epic Games, Steam, GOG, Humble, etc.), Monday cron scheduler, and store branding. |
 | [**🤖 Reddit Feeds & Pure Image Mode**](Reddit-Feeds.md) | Reddit scraping, Pure Image Mode vs Standard RSS Mode, animated GIF/gifv banners, and subreddit filtering. |
 | [**🤖 Discord Bot & Commands**](Discord-Bot.md) | Slash commands (`/feed`, `/stats`, `/about`, `/help`), direct channel + forum thread delivery, embed formatting, and Discord permissions. |
@@ -30,7 +30,7 @@ flowchart TD
         RSS["Standard RSS / Atom / JSON Feeds"]
         News["News Feeds Catalog (700+ Presets)"]
         Games["Free Games (Epic, Steam, GOG, Humble, Prime...)"]
-        Social["Reddit, YouTube, Bluesky, TikTok"]
+        Social["Reddit"]
     end
 
     subgraph CoreEngine["HELIX RSS Core"]
@@ -59,7 +59,7 @@ flowchart TD
 ```
 
 ### 🎯 Feature Overview
-1. **Multi-Source Scraping**: Full native support for RSS 0.9x/1.0/2.0, Atom 1.0, JSON Feed, YouTube channels, Reddit subreddits, Bluesky feeds, and TikTok creators.
+1. **Multi-Source Scraping**: Full native support for RSS 0.9x/1.0/2.0, Atom 1.0, JSON Feed, Reddit subreddits, and free games giveaways.
 2. **Dedicated Free Games Aggregator**: Real-time promotions scraping across 10 major digital storefronts with store-specific badge icons and Monday weekly schedule.
 3. **Dedicated Reddit Engine**: Switch seamlessly between **Pure Image Mode** (fullscreen meme & photo banners) and **Standard RSS Mode** (discussion excerpts and link cards).
 4. **News Feeds Catalog**: Instant 1-click subscription to 700+ verified feeds across 15 popular news categories.

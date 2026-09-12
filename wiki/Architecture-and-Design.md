@@ -66,7 +66,7 @@ flowchart TB
 - **Forum Thread Delivery**: routes entries through `FeedThreadManager` (`src/feed/threads.ts`), creating/rotating per-feed threads inside forum channels for thread-enabled guilds, with a keepalive pass (`THREAD_KEEPALIVE_*`) scheduled alongside the watcher loop.
 
 ### 3. Parser & Scrapers Engine (`src/feed/`)
-- Unified parser handling XML (RSS/Atom), JSON Feed, Reddit, YouTube, TikTok, Bluesky, and Free Games storefronts.
+- Unified parser handling XML (RSS/Atom), JSON Feed, Reddit, and Free Games storefronts.
 - Sanitizes malformed XML, extracts CDATA payloads, resolves relative links, and cleans HTML tags for Discord embed descriptions.
 
 ### 4. Persistence Layer (`src/db/`)
@@ -100,7 +100,7 @@ erDiagram
         int thread_entry_count "Entries in current thread"
         string name "Feed Name"
         string url "Feed URL / Identifier"
-        string feed_type "rss | reddit | freegames | youtube | etc."
+        string feed_type "rss | reddit | freegames"
         string role_id "Mention Role ID"
         string color "Hex Embed Color"
         boolean enabled "Active Status"

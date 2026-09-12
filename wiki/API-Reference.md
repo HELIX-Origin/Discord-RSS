@@ -23,7 +23,7 @@ GET /api/feeds
 ```
 **Query Parameters**:
 - `guildId` (optional): Filter feeds for a specific Discord server.
-- `type` (optional): Filter by feed type (`rss`, `reddit`, `freegames`, `youtube`, `tiktok`, `bluesky`).
+- `type` (optional): Filter by feed type (`rss`, `reddit`, `freegames`).
 
 **Response**:
 ```json

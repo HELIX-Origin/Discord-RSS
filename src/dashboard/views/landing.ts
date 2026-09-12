@@ -19,7 +19,7 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${appName} · Modern RSS &amp; Content Syndication for Discord</title>
   ${appIconUrl ? `<link rel="icon" type="image/png" href="${appIconUrl}">` : ''}
-  <meta name="description" content="High-performance RSS, Reddit, YouTube, TikTok, and Free Games giveaway syndication bot with rich embeds and real-time dashboard for Discord.">
+  <meta name="description" content="High-performance RSS, Reddit, and Free Games giveaway syndication bot with rich embeds and a real-time dashboard for Discord.">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root, html.dark {
@@ -267,9 +267,9 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Ultimate Content Syndication Engine</div>
-      <h1 class="hero-title">Automate News, Media &amp; Giveaways directly into <span>Discord</span></h1>
+      <h1 class="hero-title">Automate News, Discussions &amp; Giveaways directly into <span>Discord</span></h1>
       <p class="hero-subtitle">
-        Supercharge your community with real-time RSS/Atom updates, 100% free PC game giveaways, Reddit pure image feeds, YouTube video drops, and 700+ curated news presets.
+        Supercharge your community with real-time RSS/Atom updates, 100% free PC game giveaways, Reddit pure image feeds, and 700+ curated news presets.
       </p>
 
       <div class="hero-cta">
@@ -316,10 +316,8 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
         <div class="source-pill"><i class="fa-solid fa-rss" style="color: #f59e0b;"></i> RSS 2.0 &amp; Atom</div>
         <div class="source-pill"><i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Reddit (Pure Image &amp; RSS)</div>
         <div class="source-pill"><i class="fa-solid fa-gamepad" style="color: #10b981;"></i> Epic Games Store &amp; Steam</div>
-        <div class="source-pill"><i class="fa-brands fa-youtube" style="color: #ef4444;"></i> YouTube Channels</div>
-        <div class="source-pill"><i class="fa-solid fa-cloud" style="color: #38bdf8;"></i> Bluesky AT Protocol</div>
-        <div class="source-pill"><i class="fa-brands fa-tiktok" style="color: #ec4899;"></i> TikTok Creators</div>
         <div class="source-pill"><i class="fa-solid fa-gifts" style="color: #a855f7;"></i> GOG, Prime &amp; Humble Bundle</div>
+        <div class="source-pill"><i class="fa-solid fa-newspaper" style="color: #38bdf8;"></i> 700+ News Presets</div>
       </div>
     </div>
 
@@ -347,7 +345,7 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
           </div>
           <h3 class="feature-title">Multi-Platform Free Games</h3>
           <p class="feature-desc">
-            Aggregates 100% discount promotions across Epic Games, Steam, GOG, and Humble Bundle. Automated weekly Monday cron schedule plus manual poll triggers.
+            Aggregates 100% discount promotions across Epic Games, Steam, GOG, and Humble Bundle. Automated daily polling with deduplication so limited-time drops are never missed.
           </p>
         </div>
 
@@ -408,10 +406,6 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
         <div class="code-line">
           <span class="code-cmd">/feed add url:freegames:all channel:#free-games</span>
           <span class="code-comment"># Subscribe to 100% free game promotions across all stores</span>
-        </div>
-        <div class="code-line">
-          <span class="code-cmd">/feed test id:&lt;feed_id&gt;</span>
-          <span class="code-comment"># Dispatch an instant preview embed to verify permissions</span>
         </div>
         <div class="code-line">
           <span class="code-cmd">/stats</span>
