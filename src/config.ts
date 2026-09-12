@@ -6,7 +6,6 @@ export interface AppConfig {
   host: string;
   port: number;
   internalUrl: string;
-  caddyEnabled: boolean;
   publicBaseUrl: string | null;
   dbPath: string;
   pollIntervalMs: number;
@@ -145,17 +144,10 @@ export function defaultConfig(): AppConfig {
   }
   const pingIntervalMs = parsePositiveInt(process.env['PING_INTERVAL_MS'], 600_000);
 
-  const caddyEnv = process.env['CADDY_ENABLED']?.trim().toLowerCase();
-  const caddyEnabled =
-    caddyEnv !== undefined
-      ? caddyEnv !== 'false' && caddyEnv !== 'off' && caddyEnv !== 'disabled' && caddyEnv !== '0'
-      : !(sslKey && sslCert);
-
   return {
     host,
     port,
     internalUrl,
-    caddyEnabled,
     publicBaseUrl,
     dbPath: resolve(dataDir, 'helix-rss.db'),
     pollIntervalMs: 3_600_000,

@@ -89,35 +89,6 @@ describe('defaultConfig HTTPS_PORT and environment parsing', () => {
     expect(config.publicBaseUrl).toBe('https://rss.example.com');
   });
 
-  it('enables Caddy by default and respects CADDY_ENABLED toggle', () => {
-    expect(defaultConfig().caddyEnabled).toBe(true);
-
-    process.env['CADDY_ENABLED'] = 'false';
-    expect(defaultConfig().caddyEnabled).toBe(false);
-
-    process.env['CADDY_ENABLED'] = 'off';
-    expect(defaultConfig().caddyEnabled).toBe(false);
-
-    process.env['CADDY_ENABLED'] = 'disabled';
-    expect(defaultConfig().caddyEnabled).toBe(false);
-
-    process.env['CADDY_ENABLED'] = '0';
-    expect(defaultConfig().caddyEnabled).toBe(false);
-
-    process.env['CADDY_ENABLED'] = 'true';
-    expect(defaultConfig().caddyEnabled).toBe(true);
-  });
-
-  it('disables Caddy when native SSL certificates are configured unless explicitly enabled', () => {
-    delete process.env['CADDY_ENABLED'];
-    process.env['SITE_SSL_KEY'] = '/path/to/key.pem';
-    process.env['SITE_SSL_CERT'] = '/path/to/cert.pem';
-    expect(defaultConfig().caddyEnabled).toBe(false);
-
-    process.env['CADDY_ENABLED'] = 'true';
-    expect(defaultConfig().caddyEnabled).toBe(true);
-  });
-
   it('supports PUBLIC_URL with domains and custom ports', () => {
     process.env['PUBLIC_URL'] = 'helix.local';
     let config = defaultConfig();

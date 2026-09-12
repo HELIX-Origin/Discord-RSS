@@ -24,10 +24,10 @@ Detailed guides, configuration instructions, and advanced setup documentation ar
 
 ## 💻 Local & VPS Hosting (Cross-Platform)
 
-HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy reverse proxy:
-- **Local Testing**: Automatically provisions a trusted local certificate for `localhost`.
-- **VPS / Bare-Metal**: Automatically provisions and renews real Let's Encrypt / ZeroSSL certificates when a domain is configured via `PUBLIC_URL` (e.g. `https://rss.yourdomain.com`).
-- **Zero Configuration**: Caddy is managed directly by HELIX RSS across Linux, macOS, and Windows with zero npm bloat.
+HELIX RSS provides native self-hosting with zero npm bloat:
+- **Direct Native HTTPS**: Provide `SITE_SSL_KEY` and `SITE_SSL_CERT` in `.env` for direct Node.js TLS encryption.
+- **Reverse Proxy Ready**: Seamlessly runs behind standard reverse proxies (Nginx, Cloudflare Tunnels, Apache) or directly on port `3131`.
+- **Zero Runtime Dependencies**: Ultra-lightweight TypeScript core with SQLite storage.
 
 ### Installation & Quick Start
 
@@ -71,7 +71,7 @@ HELIX RSS includes built-in **automatic HTTPS** powered by an integrated Caddy r
 | [**Linode (Akamai)**](https://www.linode.com/) | ~$5.00 / mo | Excellent networking, reliable 24/7 uptime | Nanode 1GB / Shared 2GB |
 | [**Vultr**](https://www.vultr.com/) | ~$3.50 - $5.00 / mo | 30+ worldwide datacenters, high frequency compute | Cloud Compute (1-2 GB RAM) |
 
-> 💡 **Tip:** A lightweight **1 vCPU / 1 GB RAM** VPS is plenty for running HELIX RSS, its built-in Caddy HTTPS reverse proxy, SQLite database, and Discord bot.
+> 💡 **Tip:** A lightweight **1 vCPU / 1 GB RAM** VPS is plenty for running HELIX RSS, SQLite database, and Discord bot.
 
 ## Contributing
 

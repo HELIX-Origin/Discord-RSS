@@ -11,7 +11,7 @@ HELIX RSS is configured primarily via environment variables loaded from `.env` i
 | Variable       | Default          | Description                                                                                                                                                                                                                           |
 | -------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `INTERNAL_URL` | `127.0.0.1:3131` | The internal bind address and port used by the Discord bot and web dashboard. Specify host and optional port (e.g. `127.0.0.1:3131`, `0.0.0.0:3131`, or `127.0.0.1`). Defaults to host `127.0.0.1` and port `3131`.                                    |
-| `PUBLIC_URL`   | _(empty)_        | **Public URL**. Custom public URL for the service when accessed behind a reverse proxy (Cloudflare, Nginx, Caddy) or native SSL (e.g. `https://your-domain.com` or `https://rss.example.com`). Used for generating OAuth redirect callbacks and public resource links. |
+| `PUBLIC_URL`   | _(empty)_        | **Public URL**. Custom public URL for the service when accessed behind an external reverse proxy (Cloudflare, Nginx, Apache) or native SSL (e.g. `https://your-domain.com` or `https://rss.example.com`). Used for generating OAuth redirect callbacks and public resource links. |
 
 ### Feed Polling & Timeouts
 
@@ -42,9 +42,8 @@ Feed posting intervals are managed directly per-user via the dashboard **Feeds**
 
 | Variable              | Default   | Description                                                                                             |
 | --------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
-| `CADDY_ENABLED`       | `true`    | Enable or disable the built-in Caddy reverse proxy supervisor with automatic HTTPS (`true` or `false`). |
-| `SITE_SSL_KEY`        | _(empty)_ | File path to a PEM-formatted private key or raw PEM string for direct native HTTPS without Caddy.       |
-| `SITE_SSL_CERT`       | _(empty)_ | File path to a PEM-formatted certificate file or raw PEM string for direct native HTTPS without Caddy.  |
+| `SITE_SSL_KEY`        | _(empty)_ | File path to a PEM-formatted private key or raw PEM string for direct native HTTPS without a reverse proxy. |
+| `SITE_SSL_CERT`       | _(empty)_ | File path to a PEM-formatted certificate file or raw PEM string for direct native HTTPS without a reverse proxy. |
 
 ### Keep-Alive Network Ping (Optional)
 

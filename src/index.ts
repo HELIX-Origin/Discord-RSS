@@ -8,9 +8,6 @@ import { createRedisCoordinator } from './state/redis.js';
 import { createLogger } from './util/logger.js';
 import { clearPorts } from './util/ports.js';
 import { KeepAlivePing } from './util/keep-alive.js';
-import { existsSync } from 'node:fs';
-import { ensureCaddyBinary, CaddySupervisor } from './proxy/caddy.js';
-
 import { DiscordBot } from './bot/bot.js';
 
 export async function main(): Promise<void> {
@@ -52,28 +49,7 @@ export async function main(): Promise<void> {
   // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)
   await bot.start();
 
-  // 6. Start Caddy reverse proxy if enabled
-  let caddySupervisor: CaddySupervisor | null = null;
-  if (config.caddyEnabled) {
-    const dataDir = resolve(config.dbPath, '..');
-    const caddyPath = await ensureCaddyBinary(dataDir, logger);
-    if (caddyPath) {
-      const caddyfileCustom = resolve(process.cwd(), 'Caddyfile');
-      const caddyfileExample = resolve(process.cwd(), 'Caddyfile.example');
-      const caddyfilePath = existsSync(caddyfileCustom) ? caddyfileCustom : caddyfileExample;
-      const targetHost = config.host === '0.0.0.0' ? '127.0.0.1' : config.host;
-      caddySupervisor = new CaddySupervisor({
-        caddyPath,
-        caddyfilePath,
-        publicUrl: config.publicBaseUrl,
-        internalTarget: `${targetHost}:${config.botPort}`,
-        logger,
-      });
-      caddySupervisor.start();
-    }
-  }
-
-  // 7. Start network keep-alive ping if configured
+  // 6. Start network keep-alive ping if configured
   let keepAlive: KeepAlivePing | null = null;
   if (config.pingUrl) {
     keepAlive = new KeepAlivePing({
@@ -87,7 +63,6 @@ export async function main(): Promise<void> {
   logger.info('HELIX RSS started with unified server', {
     host: config.host,
     port: config.botPort,
-    caddyRunning: caddySupervisor?.isRunning() ?? false,
     pingUrl: config.pingUrl,
     dbPath: config.dbPath,
     botTokenConfigured: Boolean(config.botToken),
@@ -97,7 +72,6 @@ export async function main(): Promise<void> {
     logger.info(`Received ${signal}; shutting down`);
     scheduler.stop();
     keepAlive?.stop();
-    caddySupervisor?.stop();
     bot.stop();
     void (async () => {
       await redis?.close();

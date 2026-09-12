@@ -84,28 +84,20 @@ In the event that an OAuth authorization flow is canceled or misconfigured, the 
 
 ## 🔒 SSL, HTTPS & Reverse Proxies
  
-### 1. Built-in Caddy Reverse Proxy (Enabled by Default)
+### 1. Direct Native SSL (HTTPS)
 
-HELIX RSS includes a native Caddy supervisor (`CADDY_ENABLED=true` by default) that manages automatic HTTPS without manual certificate setup:
-- **Localhost & Custom Local Domains**: Configures an internal Certificate Authority (CA) with trusted local TLS via `tls internal`. See the [Local CA Trust Guide](Deployment-and-Hosting.md#-trusting-caddys-local-certificate-authority-custom-domains--local-tls) for one-time installation commands across Windows, Linux, and macOS.
-- **Production VPS**: When `PUBLIC_URL=https://your-domain.com` is configured and ports `80` and `443` are open, Caddy automatically provisions and continuously renews production certificates via Let's Encrypt or ZeroSSL.
-- **Zero NPM Dependencies**: The official static binary is fetched directly from GitHub releases if not installed on the system.
-
-### 2. Native Node.js SSL (Direct)
-
-To host HELIX RSS over direct native HTTPS without Caddy, provide valid PEM certificates in `.env`:
+To host HELIX RSS with native Node.js HTTPS encryption directly, provide valid PEM certificates in `.env`:
  
 ```env
 SITE_SSL_KEY=/path/to/privkey.pem
 SITE_SSL_CERT=/path/to/fullchain.pem
 ```
 
-When configured, the unified server boots with native Node.js TLS encryption, automatically bypasses Caddy, and marks session cookies with the `Secure` attribute.
+When configured, the unified server boots with native Node.js TLS encryption and automatically marks session cookies with the `Secure` attribute.
 
-### 3. External Reverse Proxies (Cloudflare, Nginx, Traefik)
+### 2. External Reverse Proxies (Nginx, Apache, Cloudflare)
 
-When running behind an external reverse proxy (e.g. Cloudflare Tunnels, custom Nginx, or Traefik):
-- Set `CADDY_ENABLED=false` in `.env`.
+When running behind an external reverse proxy (e.g. Nginx, Apache, or Cloudflare Tunnels):
 - Configure `PUBLIC_URL=https://your-domain.com` in `.env` to ensure Discord OAuth callback redirects resolve properly.
-- Reverse proxies terminate SSL and forward traffic to HELIX RSS via `INTERNAL_URL` (default `127.0.0.1:3131`).
+- Reverse proxies terminate SSL and forward traffic to HELIX RSS via `127.0.0.1:3131` (or `INTERNAL_URL`).
 - HELIX RSS automatically inspects standard proxy headers such as `x-forwarded-proto: https` to enforce secure session cookie policies.

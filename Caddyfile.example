@@ -1,7 +1,0 @@
-# Production reverse proxy for custom domain and localhost
-# Caddy automatically provisions and renews Let's Encrypt / ZeroSSL certificates:
-{$PUBLIC_URL:localhost}, localhost {
-	reverse_proxy {$INTERNAL_TARGET:127.0.0.1:3131}
-}
-
-
