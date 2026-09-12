@@ -1,98 +1,154 @@
-# Contributing Guidelines
-Thank you for considering contributing to Discord-RSS! We welcome contributions from the community to help improve the project. Please follow these guidelines to ensure a smooth and productive collaboration.
+# Contributing to Discord-RSS
 
-## Commit Name Standards
+Thank you for your interest in contributing to **Discord-RSS**! We welcome contributions ranging from bug fixes, documentation enhancements, feature proposals, to adding new presets to our News Feeds and Free Games scrapers.
 
-When contributing to this project, please follow these commit name standards to maintain a clear and consistent history:
+---
 
-- **Feature**: feat: feature-in-lowercase
-- **Bugfix**: fix: bugfix-in-lowercase
-- **Documentation**: docs: documentation-update-in-lowercase
-- **Chore**: chore: chore-in-lowercase
-- **Refactor**: refactor: refactor-in-lowercase
-- **Test**: test: test-in-lowercase
-- **Build**: build: build-in-lowercase
+## 🌟 Code of Conduct
 
-Examples:
+We are committed to providing a welcoming, inclusive, and harassment-free environment for everyone. Please be respectful, courteous, and constructive in all discussions, issues, and pull requests.
 
-- **Feature**: feat: add-support-for-new-rss-format
-- **Bugfix**: fix: correct-feed-url
-- **Documentation**: docs: update-configuration-guide
-- **Chore**: chore: update-dependencies
-- **Refactor**: refactor: improve-feed-parser
-- **Test**: test: add-unit-tests-for-feed-parser
-- **Build**: build: update-build-scripts
+---
 
-## Comment Standards
+## 🛠️ Development Setup
 
-When contributing to this project, please follow these comment standards to maintain clear and consistent communication within the codebase:
+### Prerequisites
 
-- **Single-line comments**: Use `//` for single-line comments.
-- **Multi-line comments**: Use `/* */` for multi-line comments.
-- **TODO comments**: Use `// TODO:` to indicate tasks that need to be completed.
-- **FIXME comments**: Use `// FIXME:` to indicate code that needs to be fixed.
-- **Explanation comments**: Use comments to explain complex logic or decisions in the code.
-- **Deprecated comments**: Use `// DEPRECATED:` to indicate code that is outdated and should not be used. 
+- **Node.js**: >= 20.0.0 (LTS recommended)
+- **npm**: >= 10.0.0
+- **Git**
+- A Discord Application configured with a Bot token and OAuth2 Client ID/Secret (for local testing).
 
-## Issues
+### Step-by-Step Setup
 
-When contributing to this project, please follow these issue standards to maintain clear and consistent communication within the issue tracker:
-
-- **Bug reports**: Clearly describe the issue, steps to reproduce, and expected behavior.
-- **Feature requests**: Provide a detailed description of the requested feature and its potential benefits.
-- **Issue titles**: Use concise and descriptive titles for issues.
-- **Issue labels**: Apply appropriate labels to categorize issues (e.g., bug, enhancement, question).
-- **Issue comments**: Be respectful and constructive when commenting on issues.
-
-## Pull Requests
-
-When contributing to this project, please follow these pull request standards to maintain clear and consistent communication within the pull request process:
-
-- **Pull request titles**: Use concise and descriptive titles for pull requests.
-- **Pull request descriptions**: Provide a detailed description of the changes made and their purpose.
-- **Pull request labels**: Apply appropriate labels to categorize pull requests (e.g., bugfix, feature, documentation).
-
-## Development Guide
-
-This guide provides instructions and best practices for setting up the development environment, writing code, and contributing to the project.
-
-### Setting Up the Development Environment
-
-
-1. **Fork the repository using GitHub CLI**:
-
+1. **Fork & Clone the Repository**:
    ```bash
-   gh repo fork https://github.com/your-username/Discord-RSS.git
+   git clone https://github.com/your-username/Discord-RSS.git
+   cd Discord-RSS
    ```
 
-2. **Clone your forked repository**: 
-
+2. **Install Dependencies**:
    ```bash
-   gh repo clone https://github.com/your-username/Discord-RSS.git
-   cd Discord-RSS
    npm install
    ```
 
-### Testing and Debugging
+3. **Configure Environment Variables**:
+   Copy the sample environment file and fill in your Discord credentials:
+   ```bash
+   cp .env.example .env
+   ```
+   *For detailed explanation of all environment variables, check the [Configuration Guide](file:///d:/Projects/Discord-RSS/wiki/Configuration.md).*
 
-- **Linting**: Run `npm run lint` to check for code style and potential errors.
-- **Formatting**: Run `npm run format` to automatically format your code according to the project's style guidelines.
-- **Running tests**: Run `npm test` to execute the project's test suite and verify that your changes do not break existing functionality.
-- **Building the project**: Run `npm run build` to compile the project and prepare it for deployment.
-- **Debugging the project**: Use `npm run debug` to start the project in debug mode and troubleshoot issues effectively.
+4. **Start the Development Server**:
+   ```bash
+   npm run dev
+   ```
+   The web dashboard will be available at `http://localhost:3000`.
 
-### Code Review and Collaboration
+---
 
-- **Submit pull requests**: When your changes are ready, submit a pull request to the main repository for review.
-- **Respond to feedback**: Address any feedback or requested changes from reviewers promptly and professionally.
-- **Participate in discussions**: Engage in discussions on issues and pull requests to contribute to the project's development and decision-making process.
+## 🧪 Testing and Quality Checks
 
-## Important Notes
+Before submitting a Pull Request, make sure your code adheres to our formatting, linting, and build standards:
 
-- **Always pull the latest changes**: Before starting new work, ensure your local branch is up-to-date with the main branch to avoid conflicts.
-- **Be mindful of performance**: Consider the performance implications of your changes and strive for efficient solutions.
-- **Keep dependencies updated**: Regularly check for updates to project dependencies and apply them as needed.
-- **Communicate effectively**: Keep open lines of communication with the project maintainers and other contributors to ensure smooth collaboration.
-- **Be patient and respectful**: Understand that maintainers and contributors may have limited time, and always interact with others respectfully and professionally.
-- **Provide constructive feedback**: When reviewing code or discussing changes, focus on providing helpful and constructive feedback rather than criticism.
-- **Test thoroughly**: Ensure that your changes are thoroughly tested to catch potential issues before they are merged into the main branch.
+```bash
+# Run TypeScript compilation check
+npm run check
+
+# Run ESLint validation
+npm run lint
+
+# Format codebase with Prettier
+npm run format
+
+# Run test suite
+npm run test
+
+# Verify production build
+npm run build
+```
+
+---
+
+## 📁 Repository Structure
+
+```
+Discord-RSS/
+├── src/
+│   ├── bot/                # Discord.js bot client, slash commands & embed generators
+│   │   ├── commands/       # /feed, /stats, /about, /help
+│   │   ├── client.ts       # Bot client lifecycle & registration
+│   │   └── embeds.ts       # Rich embed builders for all feed types
+│   ├── dashboard/          # Express web UI dashboard & API server
+│   │   ├── routes/         # REST API routes (feeds, presets, settings, analytics)
+│   │   ├── public/         # Vanilla CSS & client-side dashboard JS
+│   │   └── server.ts       # Express server entry point
+│   ├── db/                 # SQLite / PostgreSQL persistence layer & migrations
+│   │   ├── database.ts     # Database connection & pooling
+│   │   ├── schema.ts       # Table schemas & DDL
+│   │   └── repositories/   # Feed, Guild, Settings, and Stats repositories
+│   ├── feed/               # Feed engine, scrapers & background watcher
+│   │   ├── parser.ts       # Fast-feed parser & fallback extractors
+│   │   ├── watcher.ts      # Polling scheduler & cron engine
+│   │   ├── deduplication.ts# Guid/link/hash deduplication logic
+│   │   ├── freegames.ts    # Epic Promotions + GamerPower multi-platform giveaway engine
+│   │   └── scrapers/       # YouTube, Reddit, Reddit Image, TikTok, Bluesky scrapers
+│   ├── oauth/              # Discord OAuth2 authentication & session management
+│   └── types/              # Global TypeScript interfaces & type definitions
+├── wiki/                   # Complete comprehensive GitHub Wiki documentation
+├── .env.example            # Environment variable template
+├── Dockerfile              # Container image definition
+└── docker-compose.yml      # Multi-container local deployment
+```
+
+---
+
+## 🚀 Contribution Workflow
+
+1. **Create a Topic Branch**:
+   ```bash
+   git checkout -b feature/awesome-feature
+   # or
+   git checkout -b fix/issue-description
+   ```
+
+2. **Make Your Changes**:
+   - Write clean, well-documented, and type-safe TypeScript.
+   - Keep functions focused and modular.
+   - Include inline documentation for non-obvious logic.
+
+3. **Validate Your Changes**:
+   ```bash
+   npm run check && npm run lint && npm run test && npm run build
+   ```
+
+4. **Commit with Clear Messages**:
+   We encourage semantic, human-readable commit messages with emojis for improved clarity:
+   - `✨ feat: add new giveaway platform provider`
+   - `🐛 fix: resolve Reddit pure image banner thumbnail fallback`
+   - `📝 docs: update API reference for free games endpoint`
+   - `🎨 style: improve glassmorphism button styling`
+   - `⚡ perf: optimize database query in feed watcher`
+
+5. **Push and Open a Pull Request**:
+   ```bash
+   git push origin feature/awesome-feature
+   ```
+   Open a PR against the `main` branch with a clear description of changes, motivation, and testing steps.
+
+---
+
+## 💡 Adding New Feed Presets
+
+To contribute new verified feed presets into the **News Feeds** catalog:
+1. Open [`src/dashboard/routes/presets.ts`](file:///d:/Projects/Discord-RSS/src/dashboard/routes/presets.ts).
+2. Locate the corresponding category array (e.g., `Technology`, `Gaming`, `AI`, `Cybersecurity`).
+3. Add your verified feed entry with `name`, `url`, `description`, `icon`, and optional tags.
+4. Verify that the RSS feed URL produces valid XML and responds quickly.
+
+---
+
+## ❓ Getting Help
+
+- Join our Discord Community or open an issue on GitHub if you have any questions.
+- Browse the [Discord-RSS Wiki](file:///d:/Projects/Discord-RSS/wiki/HOME.md) for deep dives on architecture, scrapers, and bot configuration.

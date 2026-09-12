@@ -1,98 +1,168 @@
 <div align="center">
-<img src="banner.png" width="98%" height="auto" />
-<h1>HELIX RSS</h1>
-<p>A lightweight and efficient utility designed to bridge RSS and Atom feeds directly into Discord channels.</p>
+  <img src="banner.png" width="100%" alt="HELIX RSS Banner" />
+
+  # 📡 HELIX RSS
+  **A modern, self-hosted RSS, Web Scraper, Reddit, & Free Games syndication hub for Discord.**
+
+  [![GitHub release](https://img.shields.io/github/v/release/HELIX-Origin/HELIX-RSS?color=blue&style=flat-square)](https://github.com/HELIX-Origin/HELIX-RSS/releases)
+  [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)](LICENSE.md)
+  [![Discord](https://img.shields.io/discord/1078749842602102875?color=5865F2&label=Discord&logo=discord&logoColor=white&style=flat-square)](https://discord.com/invite/Ww3XBZC2HV)
+  [![Node.js](https://img.shields.io/badge/Node.js-v22.9.0%2B-339933?logo=node.js&logoColor=white&style=flat-square)](https://nodejs.org/)
+  [![Deploy on Heroku](https://img.shields.io/badge/Deploy%20to-Heroku-79589F?logo=heroku&logoColor=white&style=flat-square)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS)
 </div>
 
-## Overview
+---
 
-**HELIX RSS** automates content delivery from RSS and Atom feeds straight into your Discord server channels using the built-in Discord Bot. Whether you're tracking release logs, blog updates, or news streams, this tool keeps your community in the loop without manual monitoring.
+## 📖 Overview
 
-## Features
+**HELIX RSS** is a lightweight, multi-user feed syndication engine and Discord bot built natively in TypeScript ESM. It automatically monitors RSS/Atom feeds, custom CSS webpage scrapers, curated subreddit streams, and weekly 100% OFF free game promotions—delivering clean, rich Discord embeds straight to your server channels without any webhook management overhead.
 
-* **Automated Feed Polling:** Regularly checks configured RSS/Atom endpoints for new items with hourly rate-limiting.
-* **Discord Bot Channel Integration:** Cleanly formats and pushes rich embed updates straight to designated channels, with interactive Discord slash commands (`/feed`, `/stats`, `/about`, `/help`).
-* **Lightweight and Efficient:** Minimal resource usage with zero runtime dependencies while maintaining high performance.
+Featuring a built-in web dashboard, Discord OAuth2 authentication, zero frontend npm dependencies, SQLite persistent storage, and optional Redis clustering, HELIX RSS provides everything you need to keep your Discord community informed in real time.
 
-## Documentation & Wiki
+---
 
-Detailed guides, configuration instructions, and advanced setup documentation are maintained in the project wiki:
+## ✨ Core Features
 
-* [Home & Getting Started](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Home)
-* [Configuration Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Configuration)
-* [Troubleshooting](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Troubleshooting)
+### 🎮 Free Games Giveaway Alerts
+- **Multi-Platform Support**: Official support for **Epic Games Store**, **Steam**, **GOG.com**, **IndieGala**, **Humble Bundle**, **Itch.io**, **Ubisoft Store**, **EA App / Origin**, **Prime Gaming**, and **Battle.net**.
+- **Automated Monday Drops**: Runs on an automated weekly schedule (every Monday) with an instant manual polling trigger in the dashboard.
+- **Rich Store Embeds**: Standardized Discord embeds with official store branding, high-contrast badges, pricing worth, expiration timers, and direct claim links.
 
-## 💻 Local & VPS Hosting (Cross-Platform)
+### 🤖 Custom Reddit Feeds
+- **Subreddit & User Feeds**: Subscribe to any subreddit (e.g. `r/technology`, `r/wallpapers`, `r/EarthPorn`), user stream, or custom `.rss` URL.
+- **Dual Display Modes**:
+  - 🖼️ **Pure Image Mode**: Extracts full-resolution images and animated GIFs while stripping out message text bodies.
+  - 📰 **Standard RSS Mode**: Formats complete message prose, author badges, and dedicated discussion link fields.
+- **Animated GIF Prioritization**: Automatically resolves and displays direct `.gif` animations and Imgur `.gifv` media.
+- **Interactive Mode Switcher**: Toggle any active Reddit feed between Image and RSS mode in one click.
 
-HELIX RSS provides native self-hosting with zero npm bloat:
-- **Direct Native HTTPS**: Provide `SITE_SSL_KEY` and `SITE_SSL_CERT` in `.env` for direct Node.js TLS encryption.
-- **Reverse Proxy Ready**: Seamlessly runs behind standard reverse proxies (Nginx, Cloudflare Tunnels, Apache) or directly on port `3131`.
-- **Zero Runtime Dependencies**: Ultra-lightweight TypeScript core with SQLite storage.
+### 📰 Curated News Feeds Catalog
+- **700+ Verified Presets**: One-click subscription to top publications across Technology, Artificial Intelligence, Gaming, Science, Cybersecurity, Hardware, Apple, Linux, Programming, Finance, and Entertainment.
+- **Organized Categories**: Clean category grouping with automated Discord channel routing.
 
-### Installation & Quick Start
+### 🕷️ Custom CSS Webpage Scraper
+- **Scrape Any Site Without RSS**: Turn any website, blog, or forum into an automated Discord feed using standard CSS selectors (`itemSelector`, `titleSelector`, `linkSelector`, `descriptionSelector`).
+- **Relative URL Resolution**: Automatically expands relative links (`/posts/123`) to full canonical HTTP addresses.
 
-1. **Clone the repository:**
+### 🎨 Uniform Standardized Embeds
+- **Single Shared Width**: Uniform card layout across all feeds and platforms.
+- **Structured Fields**: Links, source attribution, and metadata are cleanly placed in dedicated embed fields rather than cluttered inline text.
 
-   ```bash
-   git clone https://github.com/HELIX-Origin/HELIX-RSS.git
-   cd HELIX-RSS
-   ```
+### 🤖 Discord Bot Integration
+- **Direct Channel Delivery**: Delivers directly to text channels via the Discord REST API—no webhook creation or management required.
+- **Slash Commands**: Interactive commands (`/feed`, `/stats`, `/about`, `/help`) for checking feed statuses directly in Discord.
+- **Automatic Owner Detection**: Automatically grants full Owner rights to Discord Application owners and team members upon Discord login.
 
-2. **Configure environment:**
+---
 
-   ```bash
-   cp .env.example .env
-   # Edit .env and enter your DISCORD_TOKEN, DISCORD_CLIENT_ID, DISCORD_CLIENT_SECRET
-   ```
+## 🚀 Quick Start
 
-3. **Install dependencies and launch:**
+### Prerequisites
+- **Node.js**: `v22.9.0` or higher (uses native `node:sqlite`).
+- **Discord Bot**: Application registered on the [Discord Developer Portal](https://discord.com/developers/applications).
 
-   ```bash
-   npm install
-   npm run build
-   npm start
-   ```
+### 1. Clone & Setup
 
-4. **(Optional) Run 24/7 as a Linux systemd Service:**
+```bash
+# Clone the repository
+git clone https://github.com/HELIX-Origin/HELIX-RSS.git
+cd HELIX-RSS
 
-   ```bash
-   sudo ./scripts/install-service.sh
-   ```
+# Copy environment template
+cp .env.example .env
+```
 
-> 📖 For a detailed setup guide covering Linux systemd services, Windows services, and Docker Compose, see the [Deployment & Hosting Wiki Guide](https://github.com/HELIX-Origin/HELIX-RSS/wiki/Deployment-and-Hosting).
+### 2. Configure Environment (`.env`)
 
-### 🌐 Recommended Low-Cost Compatible VPS Providers
+Edit `.env` and enter your Discord Application credentials:
 
-| Provider | Starting Price | Key Benefits | Recommended Plan |
-| :--- | :--- | :--- | :--- |
-| [**Hetzner Cloud**](https://www.hetzner.com/cloud) | ~€3.79 / mo | High performance, fast NVMe, EU/US locations | CX22 (2 vCPU, 4 GB RAM) / CAX11 |
-| [**OVHcloud**](https://www.ovhcloud.com/en/vps/) | ~$4.20 / mo | Unmetered bandwidth, anti-DDoS, global datacenters | Starter / Value VPS |
-| [**DigitalOcean**](https://www.digitalocean.com/) | ~$4.00 - $6.00 / mo | 1-Click Docker droplets, global regions | Basic Droplet (1-2 GB RAM) |
-| [**Linode (Akamai)**](https://www.linode.com/) | ~$5.00 / mo | Excellent networking, reliable 24/7 uptime | Nanode 1GB / Shared 2GB |
-| [**Vultr**](https://www.vultr.com/) | ~$3.50 - $5.00 / mo | 30+ worldwide datacenters, high frequency compute | Cloud Compute (1-2 GB RAM) |
+```env
+DISCORD_TOKEN=your_discord_bot_token_here
+DISCORD_CLIENT_ID=your_discord_application_client_id
+DISCORD_CLIENT_SECRET=your_discord_client_secret
+PORT=3131
+PUBLIC_BASE_URL=http://localhost:3131
+APP_REPO_URL=https://github.com/HELIX-Origin/HELIX-RSS
+APP_REPO_USER_AGENT=HELIX-Origin/HELIX-RSS
+```
 
-> 💡 **Tip:** A lightweight **1 vCPU / 1 GB RAM** VPS is plenty for running HELIX RSS, SQLite database, and Discord bot.
+### 3. Build & Run
 
-## Contributing
+```bash
+npm install
+npm run build
+npm start
+```
 
-* 💡 Contributions are welcome! Please fork the repository and submit pull requests for any improvements or bug fixes.
-* 📝 Report issues and suggest features through the GitHub issue tracker.
-* 🔧 Ensure that your code follows the project's coding standards and includes appropriate tests where applicable.
-* 💬 Participate in discussions and provide constructive feedback on other contributors' pull requests.
-* 🔄 Keep your fork up to date with the main repository to minimize merge conflicts.
-* 📜 Follow the project's code of conduct to maintain a respectful and collaborative community environment.
-* 📖 Review the project wiki for any changes in configuration or usage instructions to ensure smooth operation.
-* 🧪 Test the setup in a controlled environment before deploying it to a live server to prevent disruptions.
-* 💾 Regularly back up your configuration and important data to avoid loss in case of unexpected issues.
-* 📊 Monitor the application's performance and resource usage to ensure it operates efficiently and does not negatively impact your Discord server.
-* 👀 Keep an eye on the RSS feed sources for any changes in structure or availability that might affect the application's ability to fetch and post updates.
-* 🌐 Engage with the community through discussions and forums to stay updated on best practices and common issues.
-* 📝 Provide feedback and suggestions to help improve the project and its documentation.
-* 🔔 Stay informed about updates and changes in Discord's API that might affect bot messaging functionality.
+Open **`http://localhost:3131`** in your browser and click **Log In with Discord**!
 
-## Community Links
+---
 
-* 😎 [HELIX Origin Discord](https://discord.com/invite/Ww3XBZC2HV)
-* 🌐 [Project Wiki](https://github.com/HELIX-Origin/HELIX-RSS/wiki)
-* 🐛 [Issue Tracker](https://github.com/HELIX-Origin/HELIX-RSS/issues)
-* 💡 [Feature Requests](https://github.com/HELIX-Origin/HELIX-RSS/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22)
+## 🐳 Docker & VPS Deployment
+
+### Docker Compose
+
+```yaml
+services:
+  helix-rss:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    ports:
+      - "3131:3131"
+    environment:
+      - NODE_ENV=production
+    command: sh -c "npm install && npm run build && npm start"
+    restart: unless-stopped
+```
+
+### One-Click Heroku Deployment
+
+Deploy instantly to Heroku with one click:
+
+[![Deploy to Heroku](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/HELIX-Origin/HELIX-RSS)
+
+### Linux systemd Service
+
+Install HELIX RSS as a managed 24/7 background systemd service:
+
+```bash
+sudo ./scripts/install-service.sh
+```
+
+---
+
+## 📚 Extensive Wiki & Documentation
+
+Comprehensive guides, architecture breakdowns, configuration settings, and API specifications are maintained in the project wiki:
+
+| Wiki Page | Description |
+|---|---|
+| [🏠 Wiki Home](wiki/HOME.md) | Central documentation index and quick reference. |
+| [🎁 Free Games Feeds](wiki/Free-Games-Feeds.md) | Supported platforms, weekly Monday cron, manual poll triggers, and embed schemas. |
+| [🤖 Reddit Feeds](wiki/Reddit-Feeds.md) | Pure Image vs Standard RSS modes, animated GIFs, sort filters, and presets. |
+| [📰 Feeds & Web Scraper](wiki/Feeds-and-Scrapers.md) | RSS/Atom parsing, CSS webpage scrapers, and the 700+ News Feeds catalog. |
+| [🤖 Discord Bot & Commands](wiki/Discord-Bot.md) | Developer Portal configuration, slash commands, direct channel delivery, and embed styling. |
+| [🏗️ Architecture & Design](wiki/Architecture-and-Design.md) | SQLite schema, AppState in-memory caching, RedisCoordinator, and FeedWatcher engine. |
+| [⚙️ Configuration Guide](wiki/Configuration.md) | Exhaustive reference for all `.env` environment variables and settings. |
+| [🚀 Deployment & Hosting](wiki/Deployment-and-Hosting.md) | Docker, systemd, Heroku, Fly.io, Railway, VPS hosting, and native SSL. |
+| [💻 Development & Testing](wiki/Development-and-Testing.md) | Developer environment setup, ESLint, Prettier, TypeScript, and build verification. |
+| [🔒 Integrations & Security](wiki/Integrations-and-Security.md) | Discord OAuth2, session cookies, RBAC permissions, and anti-bot challenge detection. |
+| [📡 REST API Reference](wiki/API-Reference.md) | Complete documentation of all dashboard, feed, and management REST endpoints. |
+| [🔧 Troubleshooting Playbook](wiki/Troubleshooting.md) | Step-by-step diagnostic guide for common configuration and network errors. |
+
+---
+
+## 🤝 Contributing
+
+Contributions, feature suggestions, and bug reports are welcome!
+- Review [CONTRIBUTING.md](CONTRIBUTING.md) for code quality standards and git commit conventions.
+- Report issues and request features on our [GitHub Issue Tracker](https://github.com/HELIX-Origin/HELIX-RSS/issues).
+
+---
+
+## 📄 License
+
+This project is open source and available under the terms of the [MIT License](LICENSE.md).

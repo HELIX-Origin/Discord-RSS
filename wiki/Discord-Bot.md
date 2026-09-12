@@ -1,65 +1,61 @@
-# Discord Bot & Slash Commands
+# 🤖 Discord Bot & Commands
 
-The Discord Bot is the primary application process for HELIX RSS. It manages the Discord Gateway connection, slash commands, Discord OAuth login & callbacks, and supervises the web dashboard as a managed sub-process.
-
----
-
-## 🛠️ Discord Developer Portal Setup
-
-1. Go to the [Discord Developer Portal](https://discord.com/developers/applications) and click **New Application**.
-2. Name your application (e.g., `HELIX RSS`) and save.
-3. Under **General Information**, copy your **Application ID** and set `DISCORD_CLIENT_ID=<id>` in `.env`.
-4. Under **OAuth2** -> **General**:
-   - Reset and copy your **Client Secret**, then set `DISCORD_CLIENT_SECRET=<secret>` in `.env`.
-   - Under **Redirects**, click **Add Redirect** and add `http://localhost:3131/api/auth/callback/discord` (or your `PUBLIC_URL` equivalent, e.g. `https://your-domain.com/api/auth/callback/discord`). Discord OAuth callbacks route to the address configured in `PUBLIC_URL` or `INTERNAL_URL`, which seamlessly authenticates users for the web dashboard.
-5. Under the **Bot** tab:
-   - Click **Reset Token** and copy the bot token. Set `DISCORD_TOKEN=<token>` in `.env`.
-   - Enable **Server Members Intent** and **Message Content Intent** if using extended member lookup.
-6. Under **OAuth2** -> **URL Generator**:
-   - Select Scopes: `bot`, `applications.commands`
-    - Select Bot Permissions: `Send Messages`, `Embed Links`, `View Channels`, `Read Message History` (or `Administrator`).
-    - Copy the generated URL and save it as `DISCORD_REDIRECT_URL` in `.env`.
+Discord-RSS operates as a Discord application powered by **Discord.js v14**. It delivers notifications directly to channels using Discord's REST API, eliminating the need to manage external webhooks.
 
 ---
 
-## 👑 Automatic Owner Detection
+## ⚡ Slash Commands Reference
 
-HELIX RSS automatically links your developer identity to the dashboard without hardcoded usernames or manual database changes:
+All commands support Discord's native auto-complete, ephemeral response flags, and permission checks.
 
-1. On startup, the bot queries the Discord Application API (`/applications/@me`).
-2. It detects the application **Owner User ID** (or **Developer Team Members**).
-3. When you click **"Log In with Discord"** on the web dashboard:
-   - If your Discord ID matches the detected application owner, you are automatically assigned the **Owner** (`owner`) role!
-   - If you belong to the Discord developer team with administrative privileges, you are granted the **Admin** (`admin`) role.
-   - All other Discord users authenticate as standard members (`member`).
+| Command | Subcommands / Options | Permissions Required | Description |
+| :--- | :--- | :--- | :--- |
+| `/feed add` | `url: <string>`, `channel: <channel>`, `role: <role?>`, `color: <hex?>` | `Manage Channels` or `Administrator` | Adds a new feed subscription to a channel. |
+| `/feed list` | `channel: <channel?>` | `Manage Channels` or `Administrator` | Displays all active feed subscriptions on the server. |
+| `/feed remove` | `id: <feed_id>` | `Manage Channels` or `Administrator` | Removes an existing feed subscription by ID. |
+| `/feed test` | `id: <feed_id>` | `Manage Channels` or `Administrator` | Dispatches a sample notification to verify permissions & format. |
+| `/stats` | *None* | Everyone | Displays bot uptime, memory usage, and delivery analytics. |
+| `/about` | *None* | Everyone | Shows version info, repository links, and developer credits. |
+| `/help` | `topic: <string?>` | Everyone | Interactive documentation browser with command usage tips. |
 
 ---
 
-## 💬 Slash Commands Reference
+## 🔒 Required Discord Bot Permissions
 
-All commands are registered globally and available in any Discord server where the bot is present.
+When inviting the bot to your Discord server, ensure it is granted the following permissions in target channels:
 
-### `/feed` — Feed Management
+| Permission Name | Flag | Purpose |
+| :--- | :--- | :--- |
+| **View Channel** | `ViewChannel` | Discover channel and read status |
+| **Send Messages** | `SendMessages` | Post text notifications and role mentions |
+| **Embed Links** | `EmbedLinks` | Render rich embed cards with thumbnails and links |
+| **Attach Files** | `AttachFiles` | Upload images/banners when remote hotlinking is blocked |
+| **Mention Everyone / Roles** | `MentionEveryone` | Ping configured notification roles (`@role`) |
+| **Use External Emojis** | `UseExternalEmojis` | Display custom source platform icons |
 
-| Subcommand     | Arguments                                                                                                  | Description                                                                                          |
-| -------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `/feed add`    | `name` (required)<br>`url` (required)<br>`channel` (optional)<br>`feed_type` (optional: `rss` or `scrape`) | Adds a new feed. Posts updates directly to the specified channel (or the current channel if omitted). |
-| `/feed list`   | _none_                                                                                                     | Displays all feeds configured for this Discord server.                                               |
-| `/feed remove` | `id` (required, feed ID or name)                                                                           | Removes the feed subscription.                                                                       |
-| `/feed poll`   | `id` (required, feed ID or name)                                                                           | Manually triggers an immediate poll of the feed.                                                     |
-| `/feed toggle` | `id` (required)<br>`enabled` (true/false)                                                                  | Enables or pauses automatic polling for the feed.                                                    |
+---
 
-### `/stats` — System Health & Diagnostics
+## 🎨 Rich Embed Formatting & Customization
 
-- **Usage**: `/stats`
-- **Output**: Returns service uptime, database size, active subscriptions, and an **"Add Bot to Server"** button.
+Notifications are styled using Discord rich embeds:
 
-### `/about` — Service Information & Overview
+```
+┌───────────────────────────────────────────────────────────┐
+│ 🔴 [YouTube] Google DeepMind                               │
+│ ───────────────────────────────────────────────────────── │
+│ Introducing Gemini 2.0 & Autonomous Coding Agents         │
+│                                                           │
+│ Discover how modern foundation models empower developer   │
+│ workflows with agentic code generation and testing...     │
+│                                                           │
+│ 📅 Published: Sep 11, 2026 • ⏱️ Duration: 12:45           │
+│ ───────────────────────────────────────────────────────── │
+│ 🔗 Watch on YouTube (https://youtu.be/...)                │
+│ [ High-Resolution Video Poster Thumbnail Banner ]         │
+└───────────────────────────────────────────────────────────┘
+```
 
-- **Usage**: `/about`
-- **Output**: Returns comprehensive details regarding HELIX RSS architecture, capabilities, runtime dependencies, and repository links.
-
-### `/help` — Available Slash Commands
-
-- **Usage**: `/help`
-- **Output**: Returns an interactive formatted guide with all available slash commands and usage instructions.
+- **Custom Colors**: Each feed can specify a unique hex color (e.g. `#FF0000` for YouTube, `#FF4500` for Reddit, `#0078F2` for Epic Games).
+- **Author Branding**: Source platforms and storefronts display their high-resolution official branding icons.
+- **Smart Truncation**: Descriptions exceeding Discord embed character limits (4,096 chars for description, 256 for title) are cleanly truncated at word boundaries with ellipsis (`...`).
+- **Role Mentions**: Configured role mentions are prepended to the message payload, triggering push notifications for subscribed server members.

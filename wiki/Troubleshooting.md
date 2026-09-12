@@ -1,125 +1,105 @@
-# Troubleshooting Guide
+# 🩺 Troubleshooting & Frequently Asked Questions
 
-This guide covers common issues and resolutions when deploying and maintaining HELIX RSS.
+This guide provides diagnostic steps and solutions for common issues encountered when running, deploying, or configuring Discord-RSS.
 
 ---
 
-## 🛑 Port Conflicts (`EADDRINUSE`)
+## 🔍 Diagnostic Decision Flowchart
 
-### Root Cause
+```mermaid
+flowchart TD
+    Start[Issue Encountered] --> Type{What is failing?}
+    Type -->|Feed Not Updating| F1[Check Feed URL in Browser / Validator]
+    Type -->|Bot Not Posting| B1[Check Bot Channel Permissions]
+    Type -->|Reddit 429 / Blocked| R1[Set Unique REDDIT_USER_AGENT]
+    Type -->|Database Locked| D1[Check Concurrent Instances / Permissions]
+    Type -->|OAuth Login Fails| O1[Check DISCORD_CALLBACK_URL in Dev Portal]
 
-An earlier instance of Node or Redis was not cleanly terminated and is still holding onto port `3131` (Bot), `3132` (Site), or `3535` (Redis).
-
-### Automatic Resolution
-
-HELIX RSS automatically performs a preflight port sweep on startup and terminates lingering processes holding these ports.
-
-### Manual Resolution (PowerShell)
-
-To manually free the ports on Windows:
-
-```powershell
-# Check which process is using the port
-Get-NetTCPConnection -LocalPort 3131, 3132, 3535 -ErrorAction SilentlyContinue | Format-Table -Property LocalPort, OwningProcess
-
-# Kill the process by PID
-Stop-Process -Id <OwningProcessId> -Force
+    F1 -->|URL Valid| F2[Check Live Logs in Dashboard / Settings]
+    B1 -->|Missing Perms| B2[Grant View Channel, Send Messages, Embed Links]
+    R1 -->|Still Blocked| R2[Increase POLL_INTERVAL to 300s+]
+    D1 -->|SQLite Busy| D2[Ensure single process or switch to PostgreSQL]
+    O1 -->|Mismatch| O2[Ensure exact match including http/https and port]
 ```
 
 ---
 
-## 🗄️ Redis Diagnostics
+## ⚠️ Common Problems & Resolutions
 
-### Behavior
+### 1. Bot is Not Posting Feed Updates to Channel
 
-- If `redis-server` is installed in `PATH` or `C:\Program Files\Redis\`, HELIX RSS automatically spawns it on port `3535`.
-- If Redis fails to connect or is absent, the application logs:
-  `Redis unreachable at redis://127.0.0.1:3535; running in standalone (single-instance) mode`
-- The service will **not** hang or crash; it seamlessly continues running with local in-memory deduplication and SQLite.
+**Symptoms**: Feeds appear active in the dashboard, but no messages appear in Discord.
 
-### Verifying Redis Connection
-
-Run:
-
-```powershell
-Test-NetConnection -ComputerName 127.0.0.1 -Port 3535
-```
+**Solutions**:
+1. **Verify Bot Channel Permissions**: Ensure the bot has `View Channel`, `Send Messages`, and `Embed Links` in the specific target channel or category overrides.
+2. **Send a Test Message**: In the dashboard, click the **Send Test** button on the feed card. If an error is returned, review the error code (e.g. `50001: Missing Access` or `50013: Missing Permissions`).
+3. **Check Feed Polling Timestamp**: Inspect `lastPolledAt` to ensure the background watcher loop is running.
 
 ---
 
-## 🤖 Discord Bot & Gateway Issues
+### 2. Reddit Feeds Return `429 Too Many Requests`
 
-### Bot Does Not Come Online
+**Symptoms**: Reddit feeds fail to refresh and logs show HTTP 429 status.
 
-1. Verify `DISCORD_TOKEN` in `.env` has no quotes or extra whitespace.
-2. Ensure you have enabled **Privileged Gateway Intents** in the [Discord Developer Portal](https://discord.com/developers/applications):
-   - **Server Members Intent**
-   - **Message Content Intent**
-
-### Slash Commands Not Showing Up in Discord
-
-1. Global slash commands can take a few minutes to populate across all Discord clients. Restarting your Discord desktop client (`Ctrl + R`) forces an immediate sync.
-2. Confirm `DISCORD_CLIENT_ID` in `.env` matches the Application ID in the Developer Portal.
+**Solutions**:
+1. Configure a descriptive `REDDIT_USER_AGENT` in `.env`:
+   ```env
+   REDDIT_USER_AGENT="Discord-RSS/2.0 (by /u/YourRedditUsername)"
+   ```
+2. Do not set `POLL_INTERVAL` below 300 seconds (5 minutes) for Reddit feeds.
+3. If monitoring multiple subreddits, combine them into a single multi-reddit feed (`r/sub1+sub2+sub3`) instead of creating separate feeds.
 
 ---
 
-## 📬 Discord Channel Delivery Failures
+### 3. OAuth2 "Invalid OAuth2 Redirect URL"
 
-### Missing Permissions / Unknown Channel
+**Symptoms**: Clicking "Login with Discord" redirects to a Discord error page saying the redirect URL is invalid.
 
-Ensure the bot has `View Channel` and `Send Messages` (and `Embed Links`) permissions in the target channel. If the channel was deleted, update the feed's target channel in the HELIX RSS dashboard.
-
-### 429 Too Many Requests
-
-Discord is rate-limiting message delivery. HELIX RSS automatically enforces rate-limiting per feed according to your configured interval and backs off using the `Retry-After` header. If rate limits persist, select a longer posting interval (e.g. 30 minutes or 1 hour) in the dashboard Feeds tab.
-
----
-
-## 💾 SQLite Maintenance & Dev Tools
-
-Owners and Admins can access built-in database maintenance:
-
-1. Navigate to the **Dev Tools** tab on the dashboard.
-2. Click **Optimize SQLite Database** (`POST /api/admin/optimize`).
-3. This runs `PRAGMA wal_checkpoint(TRUNCATE)` and `VACUUM` to reclaim disk space and maintain peak query performance.
+**Solutions**:
+1. Open the [Discord Developer Portal](https://discord.com/developers/applications).
+2. Select your application and navigate to **OAuth2 -> General**.
+3. Under **Redirects**, add the exact redirect URI matching `DISCORD_CALLBACK_URL` (e.g., `http://localhost:3000/auth/discord/callback` or `https://rss.yourdomain.com/auth/discord/callback`).
+4. Ensure trailing slashes and HTTP vs HTTPS protocols match exactly.
 
 ---
 
-## 🔏 Self-Signed Certificate Warnings (`net::ERR_CERT_AUTHORITY_INVALID`)
+### 4. SQLite `database is locked` / `SQLITE_BUSY`
 
-### Root Cause
-When accessing HELIX RSS over direct HTTPS using self-signed development certificates or non-public authority keys, browsers will display a security warning.
+**Symptoms**: Log contains `Error: SQLITE_BUSY: database is locked`.
 
-### Quick Fix
-- **For Local Testing / Private IP Access**: Click **Advanced -> Proceed to site** to access the dashboard.
-- **For Production Access**: Use a valid CA-signed certificate (Let's Encrypt, ZeroSSL, or Cloudflare Origin CA) and specify the paths in `.env` via `SITE_SSL_CERT` and `SITE_SSL_KEY`, or terminate SSL via an external reverse proxy (Nginx / Cloudflare).
+**Solutions**:
+1. Ensure only **one instance** of Discord-RSS is accessing the SQLite database file at a time (e.g., avoid running multiple Docker containers sharing the same volume without clustering).
+2. For high-concurrency or clustered multi-node environments, switch to **PostgreSQL** by providing `DATABASE_URL=postgres://user:pass@host:5432/dbname`.
 
 ---
 
-## ⚙️ systemd Service Diagnostics (`helix-rss.service`)
+### 5. Free Games Feed Not Announcing Giveaways
 
-### Service Fails to Start (`status=203/EXEC` or `status=217/USER`)
+**Symptoms**: A new free game promotion is live on Epic Games Store or Steam, but no message has been sent.
 
-- **`status=203/EXEC` (Executable Not Found):**
-  The path to `npm` in `ExecStart` is incorrect. Run `which npm` on your server (e.g. `/usr/bin/npm` or `/usr/local/bin/npm`) and update `ExecStart` in `/etc/systemd/system/helix-rss.service`.
-- **`status=217/USER` (User Not Found):**
-  The user configured in `User=` or `Group=` does not exist on your system. Update to your current username (e.g. `User=ubuntu` or `User=debian`).
-- **Reload after editing:**
-  ```bash
-  sudo systemctl daemon-reload
-  sudo systemctl restart helix-rss
-  ```
+**Solutions**:
+1. Free Games feeds run on an automated **weekly Monday cron** schedule (`now.getUTCDay() === 1`).
+2. To force an immediate poll, click **Trigger Poll** in the Free Games tab or send `POST /api/feeds/freegames/poll`.
+3. Verify that `FREE_GAMES_MIN_PRICE=0` in `.env` (if set higher, deals below that original retail price are filtered out).
 
-### Permission Denied Writing to `./data`
+---
 
-Ensure the user running the service owns the `./data` directory:
-```bash
-sudo chown -R $USER:$USER /opt/helix-rss/data
-```
+## ❓ Frequently Asked Questions (FAQ)
 
-### Inspecting Detailed Failure Logs
+<details>
+<summary><strong>Q: Does Discord-RSS require webhook URLs for each channel?</strong></summary>
 
-View the full systemd journal stream with stack traces:
-```bash
-sudo journalctl -u helix-rss -e --no-pager
-```
+> **No**. Discord-RSS connects directly using the Discord Bot Token and Discord REST API. You only need to select target channels from the dropdown.
+</details>
+
+<details>
+<summary><strong>Q: Can I format Reddit feeds to only post the image banner without text?</strong></summary>
+
+> **Yes!** In the Reddit Feeds tab, toggle the mode switcher to **Pure Image Mode** (`feedType: 'reddit'`).
+</details>
+
+<details>
+<summary><strong>Q: How many feeds can I add to a single server?</strong></summary>
+
+> There is no hardcoded software limit. Thousands of feeds can be tracked concurrently with appropriate `FEED_CONCURRENCY` and memory allocation.
+</details>

@@ -1,19 +1,22 @@
-### HELIX RSS Wiki
+### Discord-RSS Wiki
 
-- [Home](Home)
-- [Architecture & Design](Architecture-and-Design)
-- [Configuration Guide](Configuration)
-- [Deployment & Hosting](Deployment-and-Hosting)
-- [Development & Testing](Development-and-Testing)
-- [Discord Bot & Commands](Discord-Bot)
-- [Feeds & Web Scraper](Feeds-and-Scrapers)
-- [Integrations & Security](Integrations-and-Security)
-- [Troubleshooting](Troubleshooting)
+- [🏠 Home](HOME.md)
+- [📡 Feeds & Scrapers Engine](Feeds-and-Scrapers.md)
+- [🎮 Free Games & Giveaways](Free-Games-Feeds.md)
+- [🤖 Reddit Feeds & Pure Image Mode](Reddit-Feeds.md)
+- [🤖 Discord Bot & Commands](Discord-Bot.md)
+- [🔌 REST API Reference](API-Reference.md)
+- [🏗️ Architecture & Design](Architecture-and-Design.md)
+- [⚙️ Configuration Guide](Configuration.md)
+- [🚀 Deployment & Hosting](Deployment-and-Hosting.md)
+- [🧪 Development & Testing](Development-and-Testing.md)
+- [🔒 Integrations & Security](Integrations-and-Security.md)
+- [🩺 Troubleshooting & FAQ](Troubleshooting.md)
 
 ---
 
 ### Resources
 
-- [GitHub Repository](https://github.com/HELIX-Origin/Discord-RSS)
-- [Issue Tracker](https://github.com/HELIX-Origin/Discord-RSS/issues)
-- [Community Discord](https://discord.com/invite/Ww3XBZC2HV)
+- [GitHub Repository](https://github.com/Joshu/Discord-RSS)
+- [Issue Tracker](https://github.com/Joshu/Discord-RSS/issues)
+- [Community Discord](https://discord.gg/discord-rss)

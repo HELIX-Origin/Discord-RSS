@@ -1,77 +1,57 @@
-# Development, Testing & Verification Guide
+# 🧪 Development & Testing Guide
 
-This guide outlines engineering workflows for development, test automation, linting, code formatting, and verification gates.
-
-```mermaid
-flowchart LR
-    Dev["Code Changes in src/"] --> TypeCheck["tsc --noEmit"]
-    TypeCheck --> FormatCheck["prettier --check src"]
-    FormatCheck --> Lint["eslint src"]
-    Lint --> VerifyOK{"Check Passed?"}
-    VerifyOK -->|Yes| Build["tsc -> dist/"]
-    VerifyOK -->|No| Fix["Debug & Fix"]
-    Fix --> Dev
-```
+This guide covers local development workflows, debugging techniques, TypeScript compilation checks, and automated test runners for Discord-RSS.
 
 ---
 
-## 🚀 Running the Project Locally
+## 🛠️ Local Development Environment
 
-### Prerequisites
-- Node.js `v22.9.0` or higher
-- npm
+### 1. Requirements
+- **Node.js**: >= 20.0.0 (LTS recommended)
+- **npm**: >= 10.0.0
+- **TypeScript**: 5.x
 
-### Development Launch
+### 2. Available NPM Scripts
+
+| Command | Action |
+| :--- | :--- |
+| `npm run dev` | Starts application with hot-reloading via `tsx` / nodemon. |
+| `npm run build` | Compiles TypeScript source files into the `dist/` directory. |
+| `npm start` | Executes the production bundle from `dist/dashboard/server.js`. |
+| `npm run check` | Executes `tsc --noEmit` to validate all TypeScript types and exports. |
+| `npm run lint` | Runs ESLint across the codebase for static code analysis. |
+| `npm run format` | Runs Prettier to automatically format code according to standards. |
+| `npm test` | Runs the test suite using Vitest / Jest. |
+
+---
+
+## 🧪 Testing Strategies
+
+### 1. Feed Parser & Scraper Unit Tests
+Unit tests validate parsing against mock RSS feeds, Atom XML payloads, malformed feeds, and social media scraper responses:
 ```bash
-# 1. Install dependencies
-npm ci
+npm test -- src/feed/parser.test.ts
+npm test -- src/feed/freegames.test.ts
+```
 
-# 2. Build the TypeScript codebase
-npm run build
+### 2. Deduplication Engine Tests
+Verifies that GUID matching, canonical link stripping, and content hashing prevent duplicate notifications across multiple poll cycles:
+```bash
+npm test -- src/feed/deduplication.test.ts
+```
 
-# 3. Launch service in production mode
-npm start
-
-# 4. Or launch with TypeScript compilation watcher
-npm run dev
-
-# 5. In a separate terminal, launch the watcher runner
-npm run dev:run
+### 3. Embed Builder Tests
+Validates character limit truncation, author icon resolution, platform color matching, and role mention strings:
+```bash
+npm test -- src/bot/embeds.test.ts
 ```
 
 ---
 
-## 🧹 Code Quality, Linting & Formatting
+## 🔍 Debugging & Log Streaming
 
-The codebase enforces strict ESLint rules and Prettier code formatting.
+### Log Levels
+Set `LOG_LEVEL=debug` in your `.env` to output detailed payload dumps, HTTP headers, ETag matches, and Discord REST response statuses to stdout.
 
-### Commands
-
-| Command | Purpose |
-|---|---|
-| `npm run typecheck` | Run TypeScript compiler in check-only mode (`tsc --noEmit`) |
-| `npm run lint` | Run ESLint across `src/` with `--max-warnings 0` |
-| `npm run format` | Automatically format all source files using Prettier |
-| `npm run format:check` | Verify that all files meet Prettier standards |
-| `npm run check` | Execute typecheck, format check, and lint in one command |
-| `npm run build` | Compile TypeScript into production-ready ESM bundle in `dist/` |
-
----
-
-## 🛠️ Common Issues and Solutions
-
-### 1. Port Conflict (`EADDRINUSE: 3131`)
-- **Cause**: An earlier instance of the service or another process is bound to port 3131.
-- **Solution**: The service includes an automatic preflight port-cleanup on startup. If running manually, terminate any existing process (`npx kill-port 3131` or `kill $(lsof -t -i:3131)`).
-
-### 2. Experimental Warning on `localStorage`
-- **Cause**: Node.js 22 emits a non-fatal warning when evaluating standard web APIs if `--localstorage-file` is not provided.
-- **Solution**: This is a harmless runtime notice and does not affect the SQLite database or dashboard functionality.
-
-### 3. Missing Discord Credentials
-- **Symptoms**: Bot does not connect to the Gateway; Discord OAuth login returns an error.
-- **Solution**: Set `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, and `DISCORD_CLIENT_SECRET` in `.env`. Ensure the bot is granted the `bot` and `applications.commands` OAuth2 scopes in the Discord Developer Portal.
-
-### 4. Feed Blocks by Anti-Bot / Cloudflare
-- **Symptoms**: Feed inspector reports "Cloudflare Anti-Bot Challenge detected".
-- **Solution**: Some remote websites actively challenge non-browser user-agents. HELIX RSS gracefully catches these challenges, logs a diagnostic warning, and prevents service crashes.
+### Web Dashboard Diagnostics
+The web dashboard provides a live log viewer at `/settings` streaming real-time events, errors, and background watcher cycles directly from the Express server.
