@@ -33,67 +33,71 @@ export const PLATFORM_BRANDING: Record<string, { name: string; color: number; ic
   epic: {
     name: 'Epic Games Store',
     color: 0x0078f2, // Epic blue
-    iconUrl: 'https://cdn2.unrealengine.com/epic-games-logo-1024x1024-1024x1024-2b9a7c36a46a.png',
+    iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/epic-games.png',
     tag: 'Epic Games',
   },
   steam: {
     name: 'Steam',
     color: 0x1b2838, // Steam navy
-    iconUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/200px-Steam_icon_logo.svg.png',
+    iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/steam.png',
     tag: 'Steam',
   },
   gog: {
     name: 'GOG',
     color: 0x86328a, // GOG purple
-    iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/GOG.com_logo.svg/200px-GOG.com_logo.svg.png',
+    iconUrl:
+      'https://images.weserv.nl/?url=upload.wikimedia.org/wikipedia/commons/2/2e/GOG.com_logo.svg&w=128&h=128&output=png',
     tag: 'GOG',
   },
   indiegala: {
     name: 'IndieGala',
     color: 0xe52534, // IndieGala red
-    iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/IndieGala_logo.png/200px-IndieGala_logo.png',
+    iconUrl: 'https://images.weserv.nl/?url=https://indiegala.com/favicon.ico&w=128&h=128&output=png',
     tag: 'IndieGala',
   },
   humble: {
     name: 'Humble Bundle',
     color: 0xcc292b, // Humble red
-    iconUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Humble_Bundle_logo.svg/200px-Humble_Bundle_logo.svg.png',
+    iconUrl: 'https://cdn.jsdelivr.net/gh/selfhst/icons@main/png/humble-bundle.png',
     tag: 'Humble',
   },
   itchio: {
     name: 'Itch.io',
     color: 0xfa5c5c, // Itch red
-    iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Itch.io_logo.svg/200px-Itch.io_logo.svg.png',
+    iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/itch.png',
     tag: 'Itch.io',
   },
   ubisoft: {
     name: 'Ubisoft',
     color: 0x0070ff, // Ubisoft blue
-    iconUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Ubisoft_logo.svg/200px-Ubisoft_logo.svg.png',
+    iconUrl:
+      'https://images.weserv.nl/?url=raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/ubisoft.svg&w=128&h=128&output=png',
     tag: 'Ubisoft',
   },
   ea: {
     name: 'EA App',
     color: 0xff4747, // EA red
-    iconUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Electronic-Arts-Logo.svg/200px-Electronic-Arts-Logo.svg.png',
+    iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/origin.png',
     tag: 'EA',
   },
   prime: {
     name: 'Prime Gaming',
     color: 0x9146ff, // Twitch purple
-    iconUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Twitch_Glitch_Logo_Purple.svg/200px-Twitch_Glitch_Logo_Purple.svg.png',
+    iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/amazon-prime.png',
     tag: 'Prime Gaming',
   },
   battlenet: {
     name: 'Battle.net',
     color: 0x00aeff, // Blizzard blue
     iconUrl:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Battle.net_icon.svg/200px-Battle.net_icon.svg.png',
+      'https://images.weserv.nl/?url=raw.githubusercontent.com/simple-icons/simple-icons/develop/icons/battledotnet.svg&w=128&h=128&output=png',
     tag: 'Battle.net',
+  },
+  all: {
+    name: 'Free Games',
+    color: 0x10b981,
+    iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/epic-games.png',
+    tag: 'All Platforms',
   },
 };
 

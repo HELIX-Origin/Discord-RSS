@@ -269,11 +269,12 @@ export function feedEmbed(args: {
 }
 
 export function freeGameEmbed(game: FreeGameItem, feedTitle = 'Free Games'): DiscordEmbed {
-  const branding = PLATFORM_BRANDING[game.platformKey] || {
-    name: game.platform,
-    color: 0x10b981,
-    iconUrl: 'https://cdn2.unrealengine.com/epic-games-logo-1024x1024-1024x1024-2b9a7c36a46a.png',
-  };
+  const branding = PLATFORM_BRANDING[game.platformKey] ||
+    PLATFORM_BRANDING['epic'] || {
+      name: game.platform,
+      color: 0x10b981,
+      iconUrl: 'https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons@main/png/epic-games.png',
+    };
 
   const cleanT = cleanTitle(game.title);
   const embed: DiscordEmbed = {
