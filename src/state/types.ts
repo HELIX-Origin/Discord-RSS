@@ -35,6 +35,22 @@ export interface OAuthState {
   createdAt: string;
 }
 
+export type FeedType =
+  | 'rss'
+  | 'scrape'
+  | 'reddit'
+  | 'free_games'
+  | 'free_games_epic'
+  | 'free_games_steam'
+  | 'free_games_gog'
+  | 'free_games_indiegala'
+  | 'free_games_humble'
+  | 'free_games_itchio'
+  | 'free_games_ubisoft'
+  | 'free_games_ea'
+  | 'free_games_prime'
+  | 'free_games_battlenet';
+
 export interface Feed {
   id: number;
   userId: number;
@@ -43,7 +59,7 @@ export interface Feed {
   channelId: string | null;
   guildId?: string | null;
   enabled: number;
-  feedType: 'rss' | 'scrape' | 'reddit';
+  feedType: FeedType;
   scrape: { item: string; title: string; link: string; description?: string } | null;
   lastEntryId: string | null;
   lastCheckedAt: string | null;

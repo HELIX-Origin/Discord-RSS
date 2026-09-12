@@ -1,4 +1,5 @@
 import { decodeHtmlEntities, extractImageFromHtml, isTrackingPixel, normalizeImageUrl } from '../feed/parser.js';
+import { PLATFORM_BRANDING, type FreeGameItem } from '../feed/freegames.js';
 import type { DiscordEmbed } from './types.js';
 
 export type Embed = DiscordEmbed;
@@ -260,6 +261,79 @@ export function feedEmbed(args: {
   // Standardize single shared full-width image scaling: Discord `image` spans 100% full width of the embed card
   const rawImage = imageUrl ?? extractImageFromHtml(description ?? null);
   const primaryImage = normalizeImageUrl(rawImage);
+  if (primaryImage && isValidEmbedImageUrl(primaryImage)) {
+    embed.image = { url: primaryImage.trim() };
+  }
+
+  return embed;
+}
+
+export function freeGameEmbed(game: FreeGameItem, feedTitle = 'Free Games'): DiscordEmbed {
+  const branding = PLATFORM_BRANDING[game.platformKey] || {
+    name: game.platform,
+    color: 0x10b981,
+    iconUrl: 'https://cdn2.unrealengine.com/epic-games-logo-1024x1024-1024x1024-2b9a7c36a46a.png',
+  };
+
+  const cleanT = cleanTitle(game.title);
+  const embed: DiscordEmbed = {
+    title: cleanT,
+    url: game.url,
+    color: branding.color,
+    author: {
+      name: `${branding.name} · Free Game`,
+      icon_url: branding.iconUrl,
+    },
+    footer: {
+      text: `${feedTitle} · Weekly Free Games`,
+    },
+  };
+
+  if (branding.iconUrl) {
+    embed.thumbnail = { url: branding.iconUrl };
+  }
+
+  const { description: cleanDesc } = extractDescriptionAndLinks(game.description, STANDARD_DESC_LENGTH);
+  if (cleanDesc) {
+    embed.description = cleanDesc;
+  }
+
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = [
+    {
+      name: '🏷️ Platform',
+      value: game.platform,
+      inline: true,
+    },
+    {
+      name: '💰 Value',
+      value: game.worth || 'Free to Keep',
+      inline: true,
+    },
+  ];
+
+  if (game.endDate) {
+    fields.push({
+      name: '⏰ Availability',
+      value: game.endDate,
+      inline: true,
+    });
+  }
+
+  if (game.url) {
+    fields.push({
+      name: '🔗 Claim Game',
+      value: `[Claim Free on ${game.platform} ↗](${game.url})`,
+      inline: false,
+    });
+  }
+
+  embed.fields = fields;
+
+  if (game.publishedAt) {
+    embed.timestamp = normalizeTimestamp(game.publishedAt);
+  }
+
+  const primaryImage = normalizeImageUrl(game.imageUrl);
   if (primaryImage && isValidEmbedImageUrl(primaryImage)) {
     embed.image = { url: primaryImage.trim() };
   }

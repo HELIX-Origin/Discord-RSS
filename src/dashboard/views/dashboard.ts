@@ -227,6 +227,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         <button onclick="switchTab('reddit')" id="tab-btn-reddit" class="tab-btn">
           <i class="fa-brands fa-reddit" style="color: #ff4500;"></i> Reddit Image Feeds
         </button>
+        <button onclick="switchTab('freegames')" id="tab-btn-freegames" class="tab-btn">
+          <i class="fa-solid fa-gift" style="color: #10b981;"></i> Free Games Feeds
+        </button>
         <button onclick="switchTab('popular')" id="tab-btn-popular" class="tab-btn">
           <i class="fa-solid fa-star"></i> Popular Feeds
         </button>
@@ -414,6 +417,88 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         </div>
       </section>
 
+      <!-- TAB: FREE GAMES FEEDS -->
+      <section id="tab-freegames" class="tab-pane">
+        <!-- Add Free Games Feed Card -->
+        <div class="card" style="border-left: 4px solid #10b981;">
+          <div class="card-header">
+            <div>
+              <div class="card-title" style="color: #10b981;"><i class="fa-solid fa-gift" style="font-size: 1.25rem;"></i> Free Games Feeds (Epic Games, Steam, GOG)</div>
+              <div class="card-desc">Automatically tracks and delivers 100% OFF free-to-keep game promotions and giveaways directly to your Discord channels.</div>
+            </div>
+            <span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); font-size: 0.75rem;">
+              <i class="fa-solid fa-calendar-week"></i> Weekly Poll: Every Monday
+            </span>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Game Store Platform</label>
+              <select id="add-freegames-platform" onchange="handleFreeGamesPlatformChange(this.value)">
+                <option value="all">🎮 All Platforms (Epic + Steam + GOG + IndieGala + Humble)</option>
+                <option value="epic">🚀 Epic Games Store Only</option>
+                <option value="steam">♨️ Steam Giveaways Only</option>
+                <option value="gog">💜 GOG Promotions Only</option>
+                <option value="indiegala">🎁 IndieGala Freebies Only</option>
+                <option value="humble">📦 Humble Bundle Giveaways Only</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Feed Display Name</label>
+              <input type="text" id="add-freegames-name" placeholder="Free Games · All Platforms">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Destination Discord Channel</label>
+              <select id="add-freegames-channel">
+                <option value="">-- Select Discord Channel --</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+            <div style="font-size: 0.8125rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.5rem;">
+              <i class="fa-solid fa-clock-rotate-left" style="color: #10b981;"></i>
+              <span>Runs on automated weekly Monday schedule + instant manual trigger anytime.</span>
+            </div>
+            <button onclick="submitAddFreeGamesFeed()" class="btn btn-primary" style="background: #10b981; border-color: #10b981; box-shadow: 0 4px 12px rgba(16,185,129,0.25);">
+              <i class="fa-solid fa-gift"></i> Add Free Games Feed
+            </button>
+          </div>
+        </div>
+
+        <!-- Curated Free Game Presets Grid -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-gamepad" style="color: #10b981;"></i> Instant Platform Presets</div>
+              <div class="card-desc">Quickly configure a dedicated free game alerts channel for each store.</div>
+            </div>
+          </div>
+          <div id="freegames-curated-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.875rem;">
+            <div class="empty-state">Loading platforms...</div>
+          </div>
+        </div>
+
+        <!-- Active Free Games Feeds List Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-list-check" style="color: #10b981;"></i> My Free Games Feeds</div>
+              <div class="card-desc">Active free games subscriptions delivering weekly Monday drops to your server.</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button onclick="triggerFreeGamesPollNow()" class="btn btn-primary btn-sm" style="background: #10b981; border-color: #10b981;">
+                <i class="fa-solid fa-bolt"></i> Poll Free Games Now
+              </button>
+              <button onclick="loadFreeGamesTab()" class="btn btn-ghost btn-sm"><i class="fa-solid fa-rotate-right"></i> Refresh</button>
+            </div>
+          </div>
+          <div id="freegames-feeds-list-container" style="display: flex; flex-direction: column; gap: 0.75rem;">
+            <div class="empty-state">Loading Free Games feeds...</div>
+          </div>
+        </div>
+      </section>
+
       <!-- TAB 4: POPULAR FEEDS CATALOG -->
       <section id="tab-popular" class="tab-pane">
         <div class="card">
@@ -492,6 +577,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       if (tabId === 'overview') loadOverviewTab();
       else if (tabId === 'feeds') loadFeedsTab();
       else if (tabId === 'reddit') loadRedditTab();
+      else if (tabId === 'freegames') loadFreeGamesTab();
       else if (tabId === 'popular') loadPopularTab();
       else if (tabId === 'settings') loadSettingsTab();
     }
@@ -575,6 +661,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const redditSel = document.getElementById('add-reddit-channel');
         if (redditSel) redditSel.innerHTML = buildChannelOptionsHtml(redditSel.value);
 
+        // Populate Add Free Games dropdown
+        const freegamesSel = document.getElementById('add-freegames-channel');
+        if (freegamesSel) freegamesSel.innerHTML = buildChannelOptionsHtml(freegamesSel.value);
+
         // Update connected channels count on overview
         const chCountEl = document.getElementById('stat-channels-count');
         if (chCountEl) {
@@ -583,7 +673,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         }
 
         // Refresh any preset channel selects
-        document.querySelectorAll('select[data-preset-channel], select[data-reddit-preset-channel]').forEach(s => {
+        document.querySelectorAll('select[data-preset-channel], select[data-reddit-preset-channel], select[data-freegames-preset-channel]').forEach(s => {
           s.innerHTML = buildChannelOptionsHtml(s.value);
         });
       } catch {}
@@ -649,11 +739,14 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
         container.innerHTML = feeds.map(f => {
           const isImageFeed = f.feedType === 'reddit';
+          const isFreeGames = f.feedType === 'free_games' || (f.feedType && f.feedType.startsWith('free_games'));
           const typeBadge = isImageFeed
             ? '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-brands fa-reddit"></i> Image Feed</span>'
-            : f.feedType === 'scrape'
-              ? '<span class="badge badge-amber"><i class="fa-solid fa-code"></i> Scraper</span>'
-              : '<span class="badge badge-gray"><i class="fa-solid fa-rss"></i> RSS</span>';
+            : isFreeGames
+              ? '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-gift"></i> Free Games</span>'
+              : f.feedType === 'scrape'
+                ? '<span class="badge badge-amber"><i class="fa-solid fa-code"></i> Scraper</span>'
+                : '<span class="badge badge-gray"><i class="fa-solid fa-rss"></i> RSS</span>';
           const statusBadge = f.enabled
             ? '<span class="badge badge-green">Active</span>'
             : '<span class="badge badge-gray">Paused</span>';
@@ -764,6 +857,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         });
         if (!checkAuth(res)) return;
         if (activeTabName === 'reddit') loadRedditTab();
+        else if (activeTabName === 'freegames') loadFreeGamesTab();
         else loadFeedsTab();
       } catch {}
     }
@@ -774,6 +868,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         if (!checkAuth(res)) return;
         alert('Feed poll initiated.');
         if (activeTabName === 'reddit') loadRedditTab();
+        else if (activeTabName === 'freegames') loadFreeGamesTab();
         else loadFeedsTab();
       } catch {}
     }
@@ -784,6 +879,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         if (!checkAuth(res)) return;
         alert('Polled all feeds successfully.');
         if (activeTabName === 'reddit') loadRedditTab();
+        else if (activeTabName === 'freegames') loadFreeGamesTab();
         else loadFeedsTab();
       } catch {}
     }
@@ -794,6 +890,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const res = await fetch('/api/feeds/' + id, { method: 'DELETE' });
         if (!checkAuth(res)) return;
         if (activeTabName === 'reddit') loadRedditTab();
+        else if (activeTabName === 'freegames') loadFreeGamesTab();
         else loadFeedsTab();
       } catch {}
     }
@@ -1025,7 +1122,189 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       }
     }
 
-    // TAB 3: POPULAR FEEDS
+    // ==================== FREE GAMES FEEDS CONTROLLER ====================
+    const FREEGAMES_PLATFORMS = [
+      { key: 'all', name: 'Free Games · All Stores', desc: 'All active free-to-keep game drops from Epic, Steam, GOG, IndieGala, Humble, Itch.io & more.', icon: 'fa-solid fa-gamepad', color: '#10b981', tag: 'All Sources' },
+      { key: 'epic', name: 'Free Games · Epic Games Store', desc: 'Weekly Thursday-to-Monday 100% OFF free full games on the Epic Games Store.', icon: 'fa-solid fa-rocket', color: '#0078f2', tag: 'Epic Store' },
+      { key: 'steam', name: 'Free Games · Steam Giveaways', desc: 'Active 100% OFF promotional giveaways & free-to-claim full games on Steam.', icon: 'fa-brands fa-steam', color: '#66c0f4', tag: 'Steam' },
+      { key: 'gog', name: 'Free Games · GOG Promotions', desc: 'DRM-free classic and modern full game giveaways directly on GOG.com.', icon: 'fa-solid fa-cube', color: '#a855f7', tag: 'GOG' },
+      { key: 'indiegala', name: 'Free Games · IndieGala Freebies', desc: 'Indie and studio PC game giveaways and free-to-keep titles from IndieGala.', icon: 'fa-solid fa-gift', color: '#e52534', tag: 'IndieGala' },
+      { key: 'humble', name: 'Free Games · Humble Bundle', desc: 'Limited-time free full game promotions and keys from Humble Store.', icon: 'fa-solid fa-box-open', color: '#cc292b', tag: 'Humble' },
+      { key: 'itchio', name: 'Free Games · Itch.io Freebies', desc: 'Popular 100% OFF indie games and developer promotions on Itch.io.', icon: 'fa-brands fa-itch-io', color: '#fa5c5c', tag: 'Itch.io' },
+      { key: 'ubisoft', name: 'Free Games · Ubisoft Giveaways', desc: 'Official free game giveaways and promotions on Ubisoft Connect.', icon: 'fa-solid fa-gamepad', color: '#0070ff', tag: 'Ubisoft' },
+      { key: 'prime', name: 'Free Games · Prime Gaming', desc: 'Full PC game drops and giveaways through Prime Gaming.', icon: 'fa-brands fa-twitch', color: '#9146ff', tag: 'Prime' }
+    ];
+
+    function handleFreeGamesPlatformChange(val) {
+      const nameInput = document.getElementById('add-freegames-name');
+      if (!nameInput) return;
+      const found = FREEGAMES_PLATFORMS.find(p => p.key === val);
+      if (found && (!nameInput.value || nameInput.value.startsWith('Free Games ·'))) {
+        nameInput.placeholder = found.name;
+      }
+    }
+
+    async function loadFreeGamesTab() {
+      loadDiscordChannels();
+
+      // 1. Render Curated Platform Presets Grid
+      const curatedContainer = document.getElementById('freegames-curated-container');
+      if (curatedContainer) {
+        curatedContainer.innerHTML = FREEGAMES_PLATFORMS.map(item => {
+          return '<div style="background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">' +
+            '<div style="display: flex; flex-direction: column; gap: 0.25rem;">' +
+              '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                '<span style="font-weight: 700; font-size: 0.9375rem; color: ' + item.color + '; display: flex; align-items: center; gap: 0.375rem;"><i class="' + item.icon + '"></i> ' + esc(item.name) + '</span>' +
+                '<span class="badge badge-gray">' + esc(item.tag) + '</span>' +
+              '</div>' +
+              '<div style="font-size: 0.8125rem; color: var(--text-muted); line-height: 1.4;">' + esc(item.desc) + '</div>' +
+            '</div>' +
+            '<div style="display: flex; gap: 0.5rem; align-items: center;">' +
+              '<select data-freegames-preset-channel style="font-size: 0.75rem; padding: 0.4rem 0.6rem; flex: 1;">' +
+                buildChannelOptionsHtml('') +
+              '</select>' +
+              '<button data-preset-key="' + esc(item.key) + '" data-preset-name="' + esc(item.name) + '" onclick="enableFreeGamesPreset(this.dataset.presetKey, this.dataset.presetName, this)" class="btn btn-sm" style="background: ' + item.color + '; color: #fff; white-space: nowrap;">' +
+                '<i class="fa-solid fa-plus"></i> Add' +
+              '</button>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      }
+
+      // 2. Load User's Free Games Feeds
+      const feedsContainer = document.getElementById('freegames-feeds-list-container');
+      try {
+        const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
+        if (res.status === 401 || res.status === 403) {
+          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Sign in with Discord to view and manage your free games feeds.</div>';
+          return;
+        }
+        const feeds = await res.json();
+        const freeGamesFeeds = Array.isArray(feeds) ? feeds.filter(f => f.feedType === 'free_games' || (f.feedType && f.feedType.startsWith('free_games'))) : [];
+
+        if (!freeGamesFeeds.length) {
+          if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">No Free Games feeds added yet. Add a platform above or choose an instant preset to receive weekly Monday game drops!</div>';
+          return;
+        }
+
+        if (feedsContainer) {
+          feedsContainer.innerHTML = freeGamesFeeds.map(f => {
+            const statusBadge = f.enabled
+              ? '<span class="badge badge-green">Active</span>'
+              : '<span class="badge badge-gray">Paused</span>';
+            const lastPolled = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never polled';
+
+            return '<div class="feed-item" style="border-left: 3px solid #10b981;">' +
+              '<div class="feed-details">' +
+                '<div class="feed-name-row">' +
+                  '<span class="feed-name" style="color: #10b981;"><i class="fa-solid fa-gift"></i> ' + esc(f.name) + '</span>' +
+                  '<span class="badge" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-calendar-week"></i> Weekly Monday</span>' +
+                  statusBadge +
+                '</div>' +
+                '<div class="feed-url">' + esc(f.url) + '</div>' +
+                '<div class="feed-meta">Channel: ' + (f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked') + ' &middot; Checked: ' + lastPolled + '</div>' +
+              '</div>' +
+              '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
+                '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
+                  '<i class="fa-solid ' + (f.enabled ? 'fa-pause' : 'fa-play') + '"></i> ' + (f.enabled ? 'Pause' : 'Resume') +
+                '</button>' +
+                '<button onclick="pollSingleFeed(' + f.id + ')" class="btn btn-ghost btn-sm" title="Poll now"><i class="fa-solid fa-rotate"></i></button>' +
+                '<button onclick="deleteFeed(' + f.id + ')" class="btn btn-danger btn-sm" title="Delete"><i class="fa-solid fa-trash"></i></button>' +
+              '</div>' +
+            '</div>';
+          }).join('');
+        }
+      } catch {
+        if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">Failed to load Free Games feeds.</div>';
+      }
+    }
+
+    async function submitAddFreeGamesFeed() {
+      const platSelect = document.getElementById('add-freegames-platform');
+      const nameInput = document.getElementById('add-freegames-name');
+      const chanInput = document.getElementById('add-freegames-channel');
+
+      const platformKey = platSelect ? platSelect.value : 'all';
+      let name = nameInput ? nameInput.value.trim() : '';
+      if (!name) {
+        const found = FREEGAMES_PLATFORMS.find(p => p.key === platformKey);
+        name = found ? found.name : 'Free Games · All Stores';
+      }
+
+      const channelVal = chanInput ? chanInput.value : '';
+      let channelId = null;
+      if (channelVal.startsWith('channel:')) channelId = channelVal.replace('channel:', '');
+      else if (/^[0-9]+$/.test(channelVal)) channelId = channelVal;
+
+      const feedType = platformKey === 'all' ? 'free_games' : ('free_games_' + platformKey);
+      const url = 'freegames://' + platformKey;
+
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, url, channelId, feedType })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          if (nameInput) nameInput.value = '';
+          loadFreeGamesTab();
+        } else {
+          alert(data.error || 'Failed to add Free Games feed');
+        }
+      } catch (err) {
+        alert('Network error adding Free Games feed: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    async function enableFreeGamesPreset(platformKey, defaultName, btn) {
+      const row = btn.closest('div');
+      const sel = row ? row.querySelector('select[data-freegames-preset-channel]') : null;
+      const rawVal = sel ? sel.value : '';
+
+      if (!rawVal) {
+        return alert('Please select a destination Discord channel for "' + defaultName + '".');
+      }
+
+      let channelId = null;
+      if (rawVal.startsWith('channel:')) channelId = rawVal.replace('channel:', '');
+      else if (/^[0-9]+$/.test(rawVal)) channelId = rawVal;
+
+      const feedType = platformKey === 'all' ? 'free_games' : ('free_games_' + platformKey);
+      const url = 'freegames://' + platformKey;
+
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: defaultName, url, channelId, feedType })
+        });
+        if (!checkAuth(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          alert('Enabled Free Games Feed: "' + defaultName + '".');
+          loadFreeGamesTab();
+        } else {
+          alert(data.error || 'Failed to enable Free Games feed');
+        }
+      } catch (err) {
+        alert('Network error enabling Free Games feed: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    async function triggerFreeGamesPollNow() {
+      try {
+        const res = await fetch('/api/feeds/freegames/poll', { method: 'POST' });
+        if (!checkAuth(res)) return;
+        alert('Free Games polling triggered! Check your Discord channel(s).');
+        loadFreeGamesTab();
+      } catch (err) {
+        alert('Error triggering poll: ' + (err && err.message ? err.message : String(err)));
+      }
+    }
+
+    // TAB 4: POPULAR FEEDS
     async function loadPopularTab() {
       const container = document.getElementById('presets-list-container');
       if (!container) return;

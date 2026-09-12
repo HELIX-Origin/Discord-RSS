@@ -1,5 +1,6 @@
 import type { AppDeps } from '../../app.js';
 import { FEED_PRESETS } from '../../feed/presets.js';
+import type { FeedType } from '../../state/types.js';
 import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
 import { authedUserId, canUserManageGuild, isValidHttpUrl, requireDashboardUser } from './shared.js';
@@ -56,13 +57,15 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
       name?: string;
       url?: string;
       channelId?: string | null;
-      feedType?: 'rss' | 'scrape' | 'reddit';
+      feedType?: FeedType;
       scrape?: { item?: string; title?: string; link?: string; description?: string } | null;
     };
     const name = body.name?.trim();
     const url = body.url?.trim();
     if (!name || !url) return sendError(res, 400, 'name and url are required');
-    if (!isValidHttpUrl(url)) return sendError(res, 400, 'Invalid URL');
+    if (!isValidHttpUrl(url) && !url.startsWith('freegames://') && !url.startsWith('https://')) {
+      return sendError(res, 400, 'Invalid URL');
+    }
 
     const channelId = body.channelId?.trim() || null;
     let guildId: string | null = null;
@@ -83,7 +86,15 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     }
 
     try {
-      const feedType = body.feedType === 'scrape' ? 'scrape' : body.feedType === 'reddit' ? 'reddit' : 'rss';
+      const rawType = body.feedType || 'rss';
+      const feedType: FeedType =
+        rawType === 'scrape'
+          ? 'scrape'
+          : rawType === 'reddit'
+            ? 'reddit'
+            : rawType.startsWith('free_games')
+              ? (rawType as FeedType)
+              : 'rss';
       const scrape =
         body.scrape && body.scrape.item && body.scrape.title && body.scrape.link
           ? {
@@ -94,7 +105,14 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
             }
           : null;
       const feed = d.repo.addFeed(userId, name, url, channelId, feedType, scrape, guildId);
-      const typeLabel = feedType === 'reddit' ? 'Reddit image ' : feedType === 'scrape' ? 'scrape ' : '';
+      const typeLabel =
+        feedType === 'reddit'
+          ? 'Reddit image '
+          : feedType === 'scrape'
+            ? 'scrape '
+            : feedType.startsWith('free_games')
+              ? 'Free Games '
+              : '';
       d.repo.logActivity(userId, 'info', 'feeds', `Added ${typeLabel}feed "${feed.name}"`);
       sendJson(res, 201, feed);
     } catch (err) {
@@ -164,6 +182,13 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     const userId = await requireDashboardUser(req, res, d);
     if (userId === null) return;
     await d.feeds.pollFeed(userId, Number(ctx.params['id']), true);
+    sendJson(res, 200, { ok: true });
+  });
+
+  router.add('POST', '/api/feeds/freegames/poll', async (req, res, _ctx, d) => {
+    const userId = await requireDashboardUser(req, res, d);
+    if (userId === null) return;
+    await d.feeds.pollFreeGamesFeeds(userId, true);
     sendJson(res, 200, { ok: true });
   });
 }

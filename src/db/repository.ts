@@ -4,9 +4,18 @@ import { UserRepository } from './repositories/users.js';
 import { OAuthRepository } from './repositories/oauth.js';
 import { FeedRepository } from './repositories/feeds.js';
 import { SettingsRepository } from './repositories/settings.js';
-import type { ActivityEntry, Feed, OAuthConnection, Session, User, UserRole } from '../state/types.js';
+import type { ActivityEntry, Feed, FeedType, OAuthConnection, Session, User, UserRole } from '../state/types.js';
 
-export type { ActivityEntry, Feed, OAuthConnection, OAuthState, Session, User, UserRole } from '../state/types.js';
+export type {
+  ActivityEntry,
+  Feed,
+  FeedType,
+  OAuthConnection,
+  OAuthState,
+  Session,
+  User,
+  UserRole,
+} from '../state/types.js';
 
 /**
  * Write-through persistence facade.
@@ -142,7 +151,7 @@ export class Repository {
     name: string,
     url: string,
     channelId: string | null,
-    feedType: 'rss' | 'scrape' | 'reddit',
+    feedType: FeedType,
     scrape: Feed['scrape'],
     guildId?: string | null,
   ): Feed {

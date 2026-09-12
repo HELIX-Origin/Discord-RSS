@@ -1,6 +1,6 @@
 import type { Database } from '../database.js';
 import { AppState } from '../../state/app-state.js';
-import { nowIso, type Feed } from '../../state/types.js';
+import { nowIso, type Feed, type FeedType } from '../../state/types.js';
 
 /**
  * Feed persistence.
@@ -28,7 +28,7 @@ export class FeedRepository {
     name: string,
     url: string,
     channelId: string | null,
-    feedType: 'rss' | 'scrape' | 'reddit',
+    feedType: FeedType,
     scrape: Feed['scrape'],
     guildId?: string | null,
   ): Feed {

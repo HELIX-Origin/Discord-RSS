@@ -1,4 +1,5 @@
 import type { AppDeps } from '../../app.js';
+import type { FeedType } from '../../state/types.js';
 import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
 import { requireAdminOrOwner } from './shared.js';
@@ -142,7 +143,7 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
       feedId: number;
       feedName: string;
       feedUrl: string;
-      feedType: 'rss' | 'scrape' | 'reddit';
+      feedType: FeedType;
       userId: number;
       userEmail: string;
       userDisplayName: string;
@@ -192,7 +193,8 @@ export function registerSettingsRoutes(router: Router<AppDeps>): void {
         });
       }
 
-      if (!isValidHttpUrl(feed.url)) {
+      const isFreeGamesUrl = feed.url.startsWith('freegames://');
+      if (!isValidHttpUrl(feed.url) && !isFreeGamesUrl) {
         feedProblems.push({
           type: 'invalid_url',
           severity: 'error',
