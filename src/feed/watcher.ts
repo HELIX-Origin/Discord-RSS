@@ -36,7 +36,7 @@ export class FeedWatcher {
     this.threads = threads;
   }
 
-  async pollFeed(userId: number, feedId: number, force = false): Promise<void> {
+  async pollFeed(userId: number, feedId: number): Promise<void> {
     const feed = this.repo.getFeed(userId, feedId);
     if (!feed) return;
     if (!feed.enabled) return;
@@ -46,7 +46,7 @@ export class FeedWatcher {
       return; // another instance is polling this feed
     }
     try {
-      await this.pollFeedLocked(userId, feed, force);
+      await this.pollFeedLocked(userId, feed);
     } finally {
       await this.redis?.releaseLock(lockKey);
     }
@@ -66,9 +66,9 @@ export class FeedWatcher {
     return 3_600_000;
   }
 
-  private async pollFeedLocked(userId: number, feed: Feed, force = false): Promise<void> {
+  private async pollFeedLocked(userId: number, feed: Feed): Promise<void> {
     const minElapsed = this.getFeedPollIntervalMs(userId);
-    if (!force && feed.lastCheckedAt) {
+    if (feed.lastCheckedAt) {
       const lastCheck = new Date(feed.lastCheckedAt).getTime();
       if (!Number.isNaN(lastCheck) && Date.now() - lastCheck < minElapsed) {
         this.logger.debug('Skipping feed poll; feed was polled within the configured interval', {
@@ -95,30 +95,16 @@ export class FeedWatcher {
 
     const isFreeGamesFeed = feed.feedType === 'free_games' || feed.feedType?.startsWith('free_games');
 
-    // For Free Games feeds: automated polling runs weekly on Mondays (UTC)
+    // For Free Games feeds: automated polling runs daily (UTC) so limited-time giveaways are not missed.
     if (isFreeGamesFeed) {
-      if (!force) {
-        const now = new Date();
-        const isMonday = now.getUTCDay() === 1; // 1 = Monday
-        if (!isMonday) {
-          this.logger.debug('Skipping free games poll; today is not Monday', {
-            feedId: feed.id,
-            feedName: feed.name,
-            day: now.getUTCDay(),
-          });
-          return;
-        }
-        if (feed.lastCheckedAt) {
-          const lastCheck = new Date(feed.lastCheckedAt).getTime();
-          if (!Number.isNaN(lastCheck) && Date.now() - lastCheck < 20 * 3600 * 1000) {
-            this.logger.debug('Skipping free games poll; already polled this Monday', {
-              feedId: feed.id,
-              feedName: feed.name,
-              lastCheckedAt: feed.lastCheckedAt,
-            });
-            return;
-          }
-        }
+      const todayIso = new Date().toISOString().slice(0, 10);
+      if (feed.lastCheckedAt && feed.lastCheckedAt.slice(0, 10) === todayIso) {
+        this.logger.debug('Skipping free games poll; already polled today', {
+          feedId: feed.id,
+          feedName: feed.name,
+          lastCheckedAt: feed.lastCheckedAt,
+        });
+        return;
       }
 
       await this.pollFreeGamesLocked(userId, feed);
@@ -340,7 +326,7 @@ export class FeedWatcher {
     this.logger.info('Free games feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
   }
 
-  async pollAllFeeds(force = false): Promise<void> {
+  async pollAllFeeds(): Promise<void> {
     const userIds = new Set<number>();
     const allFeeds: Array<{ userId: number; id: number }> = [];
     for (const feed of this.repo.listFeedsForAllUsers()) {
@@ -348,6 +334,6 @@ export class FeedWatcher {
       userIds.add(feed.userId);
       allFeeds.push({ userId: feed.userId, id: feed.id });
     }
-    await Promise.all(allFeeds.map((f) => this.pollFeed(f.userId, f.id, force)));
+    await Promise.all(allFeeds.map((f) => this.pollFeed(f.userId, f.id)));
   }
 }
