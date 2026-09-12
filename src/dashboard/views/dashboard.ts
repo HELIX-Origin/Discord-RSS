@@ -244,6 +244,18 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       backdrop-filter: blur(12px) !important;
       border: 1px solid rgba(255, 255, 255, 0.08) !important;
     }
+    html.glassmorphism select {
+      background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%) !important;
+      background-position: calc(100% - 1.3rem) calc(1em + 0.35rem), calc(100% - 0.95rem) calc(1em + 0.35rem) !important;
+      background-size: 0.4rem 0.4rem !important;
+      background-repeat: no-repeat !important;
+    }
+    html.glassmorphism select option,
+    html.glassmorphism select optgroup {
+      background: #151b2e;
+      color: var(--text);
+    }
     html.cyberpunk {
       --bg: #05050a;
       --card-bg: rgba(14, 14, 24, 0.92);
@@ -320,6 +332,10 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       --primary-border: rgba(16, 185, 129, 0.45);
       --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     }
+
+    /* Native control chrome (select dropdowns, checkboxes, scrollbars) follows the theme. */
+    html.light { color-scheme: light; }
+    html.dark, html.glassmorphism, html.cyberpunk, html.dracula, html.nord, html.emerald { color-scheme: dark; }
 
     /* Color Scheme Overrides */
     html.scheme-purple, html[class*="scheme-purple"] {
@@ -432,6 +448,20 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     .form-group { display: flex; flex-direction: column; gap: 0.375rem; }
     .form-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
     input[type="text"], select, textarea { width: 100%; background: var(--card-inner); border: 1px solid var(--border); border-radius: 0.75rem; padding: 0.75rem 1rem; font-size: 0.875rem; color: var(--text); outline: none; transition: border-color 0.15s; }
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      padding-right: 2.5rem !important;
+      background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+        linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+      background-position: calc(100% - 1.3rem) calc(1em + 0.35rem), calc(100% - 0.95rem) calc(1em + 0.35rem);
+      background-size: 0.4rem 0.4rem;
+      background-repeat: no-repeat;
+    }
+    select option, select optgroup { background: var(--card-inner); color: var(--text); }
+    select option:disabled { color: var(--text-dim); }
+    input[type="checkbox"], input[type="radio"] { accent-color: var(--primary); width: 1rem; height: 1rem; cursor: pointer; }
     input[type="text"]:focus, select:focus { border-color: var(--primary); }
     .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; text-decoration: none; transition: all 0.15s; }
     .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(6,182,212,0.25); }
