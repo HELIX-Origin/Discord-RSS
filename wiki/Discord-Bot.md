@@ -41,16 +41,16 @@ Notifications are styled using Discord rich embeds:
 
 ```
 ┌───────────────────────────────────────────────────────────┐
-│ 🔴 [YouTube] Google DeepMind                               │
+│ [YouTube] Google DeepMind                                 │
 │ ───────────────────────────────────────────────────────── │
 │ Introducing Gemini 2.0 & Autonomous Coding Agents         │
 │                                                           │
 │ Discover how modern foundation models empower developer   │
 │ workflows with agentic code generation and testing...     │
 │                                                           │
-│ 📅 Published: Sep 11, 2026 • ⏱️ Duration: 12:45           │
+│ Published: Sep 11, 2026 •  Duration: 12:45                │
 │ ───────────────────────────────────────────────────────── │
-│ 🔗 Watch on YouTube (https://youtu.be/...)                │
+│  Watch on YouTube (https://youtu.be/...)                  │
 │ [ High-Resolution Video Poster Thumbnail Banner ]         │
 └───────────────────────────────────────────────────────────┘
 ```
