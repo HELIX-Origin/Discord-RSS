@@ -159,8 +159,7 @@ async function handleAdd(
   const channelOption = options.find((o) => o.name === 'channel')?.value as string | undefined;
   const targetChannelId = channelOption || interaction.channel_id || null;
   const rawType = options.find((o) => o.name === 'feed_type')?.value as string | undefined;
-  const feedType =
-    rawType === 'scrape' ? 'scrape' : rawType === 'reddit' || /reddit\.com\/(?:r|user)\//i.test(url) ? 'reddit' : 'rss';
+  const feedType = rawType === 'scrape' ? 'scrape' : rawType === 'reddit' ? 'reddit' : 'rss';
 
   if (!name || !url) {
     return {

@@ -83,12 +83,7 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
     }
 
     try {
-      const feedType =
-        body.feedType === 'scrape'
-          ? 'scrape'
-          : body.feedType === 'reddit' || /reddit\.com\/(?:r|user)\//i.test(url)
-            ? 'reddit'
-            : 'rss';
+      const feedType = body.feedType === 'scrape' ? 'scrape' : body.feedType === 'reddit' ? 'reddit' : 'rss';
       const scrape =
         body.scrape && body.scrape.item && body.scrape.title && body.scrape.link
           ? {

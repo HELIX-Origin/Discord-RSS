@@ -174,8 +174,9 @@ export function feedEmbed(args: {
   feedType?: string;
 }): DiscordEmbed {
   const { title, url, description, author, publishedAt, feedTitle, imageUrl, feedType } = args;
-  const isReddit = feedType === 'reddit' || /reddit\.com\/(?:r|user)\//i.test(url);
-  const color = args.color ?? (isReddit ? REDDIT_EMBED_COLOR : STANDARD_EMBED_COLOR);
+  const isRedditImageFeed = feedType === 'reddit';
+  const isRedditDomain = /reddit\.com\/(?:r|user)\//i.test(url);
+  const color = args.color ?? (isRedditImageFeed || isRedditDomain ? REDDIT_EMBED_COLOR : STANDARD_EMBED_COLOR);
   const cleanT = cleanTitle(title);
 
   const embed: DiscordEmbed = {
@@ -184,8 +185,9 @@ export function feedEmbed(args: {
     color,
   };
 
-  // For Reddit image feeds, suppress HTML message content so the embed only displays the image and post title
-  if (!isReddit) {
+  // For pure Reddit image feeds (feedType === 'reddit'), suppress HTML description text so only image & title show.
+  // For standard RSS feeds (including Reddit text/discussion feeds with feedType === 'rss'), format and show description.
+  if (!isRedditImageFeed) {
     const cleanDesc = formatMessageDescription(description ?? null, STANDARD_DESC_LENGTH);
     if (cleanDesc) {
       embed.description = cleanDesc;
@@ -194,7 +196,7 @@ export function feedEmbed(args: {
 
   if (author) {
     let authorName = cleanTitle(author, 100);
-    if (isReddit) {
+    if (isRedditImageFeed || isRedditDomain) {
       authorName = authorName.replace(/^(\/?u\/)+/i, '');
       authorName = `u/${authorName}`;
     }

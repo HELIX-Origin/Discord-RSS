@@ -648,9 +648,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         if (!container) return;
 
         container.innerHTML = feeds.map(f => {
-          const isReddit = f.feedType === 'reddit' || (f.url && f.url.includes('reddit.com'));
-          const typeBadge = isReddit
-            ? '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-brands fa-reddit"></i> Reddit Image</span>'
+          const isImageFeed = f.feedType === 'reddit';
+          const typeBadge = isImageFeed
+            ? '<span class="badge" style="background: rgba(255,69,0,0.15); color: #ff4500; border: 1px solid rgba(255,69,0,0.3);"><i class="fa-brands fa-reddit"></i> Image Feed</span>'
             : f.feedType === 'scrape'
               ? '<span class="badge badge-amber"><i class="fa-solid fa-code"></i> Scraper</span>'
               : '<span class="badge badge-gray"><i class="fa-solid fa-rss"></i> RSS</span>';
@@ -908,7 +908,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           return;
         }
         const feeds = await res.json();
-        const redditFeeds = Array.isArray(feeds) ? feeds.filter(f => f.feedType === 'reddit' || (f.url && f.url.includes('reddit.com'))) : [];
+        const redditFeeds = Array.isArray(feeds) ? feeds.filter(f => f.feedType === 'reddit') : [];
 
         if (!redditFeeds.length) {
           if (feedsContainer) feedsContainer.innerHTML = '<div class="empty-state">No Reddit image feeds added yet. Add a custom subreddit above or choose from the popular ones!</div>';
