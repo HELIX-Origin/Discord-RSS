@@ -4,10 +4,10 @@ import https from 'node:https';
 import type { AppDeps } from '../app.js';
 import { getRequestBaseUrl, sendError, sendHtml, sendJson, sendText } from './http/helpers.js';
 import { Router } from './http/router.js';
-import { renderDashboardHtml } from './render/render.js';
-import { registerDevToolsRoutes } from './http/dev-tools.js';
-import { renderLoginHtml } from './http/login.js';
-import { renderLegalHtml } from './http/legal.js';
+import { renderDashboardHtml } from './views/dashboard.js';
+import { renderLoginHtml } from './views/login.js';
+import { renderLegalHtml } from './views/legal.js';
+import { registerAdminRoutes } from './routes/admin.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerOAuthRoutes } from './routes/oauth.js';
 import { registerFeedsRoutes } from './routes/feeds.js';
@@ -37,7 +37,6 @@ export function loadTlsCredentials(
 export function createHelixRssServer(deps: AppDeps): Server {
   const router = new Router<AppDeps>();
   const logger = createLogger('http', deps.config.logLevel);
-  registerDevToolsRoutes(router);
 
   // Root redirect / status
   router.add('GET', '/', async (req, res) => {
@@ -165,6 +164,7 @@ export function createHelixRssServer(deps: AppDeps): Server {
   registerDiscordRoutes(router);
   registerSettingsRoutes(router);
   registerStatsRoutes(router);
+  registerAdminRoutes(router);
 
   const requestHandler = async (req: IncomingMessage, res: ServerResponse) => {
     const baseUrl = getRequestBaseUrl(req, deps.config.publicBaseUrl, `${deps.config.host}:${deps.config.port}`);

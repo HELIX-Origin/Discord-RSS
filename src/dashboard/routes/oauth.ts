@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { AppDeps } from '../../app.js';
-import { renderOAuthCallbackHtml, renderOAuthErrorHtml } from '../http/oauth-callback.js';
+import { renderOAuthCallbackHtml, renderOAuthErrorHtml } from '../views/oauth-callback.js';
 import { sendError, sendHtml, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
 import { redirectUriForProvider, requireUser } from './shared.js';

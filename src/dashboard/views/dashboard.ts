@@ -2,7 +2,7 @@ import type { AppDeps } from '../../app.js';
 import { isOwnerUser, isAdminOrOwner, canUserAccessDashboard } from '../routes/shared.js';
 
 export function renderDashboardHtml(deps: AppDeps, userId: number | null): string {
-  // Permission barrier for non-admin Discord users without Manage Channels
+  // Permission check for logged in Discord users without server manage permissions
   if (userId !== null && !canUserAccessDashboard(userId, deps)) {
     return `<!DOCTYPE html>
 <html lang="en">
@@ -12,13 +12,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   <title>Access Denied · HELIX RSS</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background: #0b0f19; color: #f3f4f6; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1rem; }
-    .card { background: #111827; border: 1px solid #1f2937; border-radius: 1rem; padding: 2rem; max-width: 440px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
-    .icon { display: inline-flex; width: 4rem; height: 4rem; align-items: center; justify-content: center; border-radius: 1rem; background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); font-size: 1.75rem; margin-bottom: 1rem; }
-    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.75rem; color: #fff; }
+    .card { background: #111827; border: 1px solid #1f2937; border-radius: 1.25rem; padding: 2rem; max-width: 440px; text-align: center; }
+    .icon { display: inline-flex; width: 3.5rem; height: 3.5rem; align-items: center; justify-content: center; border-radius: 1rem; background: rgba(245,158,11,0.1); color: #f59e0b; font-size: 1.5rem; margin-bottom: 1rem; }
+    h1 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; }
     p { font-size: 0.875rem; color: #9ca3af; line-height: 1.5; margin-bottom: 1.5rem; }
-    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; background: #1f2937; color: #d1d5db; font-size: 0.875rem; font-weight: 600; text-decoration: none; border: 1px solid #374151; cursor: pointer; transition: all 0.15s; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 0.75rem; background: #1f2937; color: #d1d5db; font-size: 0.875rem; font-weight: 600; text-decoration: none; border: 1px solid #374151; cursor: pointer; }
     .btn:hover { background: #374151; color: #fff; }
   </style>
 </head>
@@ -26,7 +26,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   <div class="card">
     <div class="icon"><i class="fa-solid fa-lock"></i></div>
     <h1>Manage Channels Required</h1>
-    <p>Access to the HELIX RSS dashboard is restricted to Discord server owners and members with the <strong>Manage Channels</strong> permission.</p>
+    <p>Access to the dashboard is restricted to Discord server owners and administrators with <strong>Manage Channels</strong> permission.</p>
     <button onclick="logout()" class="btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out</button>
   </div>
   <script>
@@ -52,7 +52,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HELIX RSS · Discord Feed Syndication</title>
+  <title>HELIX RSS · Feed Syndication</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
@@ -88,13 +88,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       --primary-bg: rgba(14, 165, 233, 0.12);
       --primary-border: rgba(14, 165, 233, 0.35);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background-color 0.2s, color 0.2s; }
     
     /* Header */
     header { position: sticky; top: 0; z-index: 50; background: var(--card-bg); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
     .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--text); }
-    .brand-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: #06b6d4; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
+    .brand-icon { width: 2.5rem; height: 2.5rem; border-radius: 0.75rem; background: linear-gradient(135deg, #06b6d4, #3b82f6); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(6,182,212,0.3); }
     .brand-title { font-size: 1.125rem; font-weight: 800; letter-spacing: -0.02em; }
     .brand-title span { color: var(--primary); }
     .brand-sub { font-size: 0.75rem; color: var(--text-muted); }
@@ -121,7 +121,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     .tab-pane.active { display: flex; }
 
     /* Cards & Components */
-    .card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; box-shadow: 0 4px 20px -2px rgba(0,0,0,0.15); }
+    .card { background: var(--card-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); border-radius: 1.25rem; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .card-header { display: flex; justify-content: space-between; align-items: center; }
     .card-title { font-size: 1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
     .card-desc { font-size: 0.8125rem; color: var(--text-muted); }
@@ -151,14 +151,13 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     .btn-sm { padding: 0.375rem 0.75rem; font-size: 0.75rem; border-radius: 0.5rem; }
 
     /* Feed & List Items */
-    .feed-item { background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; transition: border-color 0.15s; }
-    .feed-item:hover { border-color: var(--border-hover); }
+    .feed-item { background: var(--card-inner); border: 1px solid var(--border); border-radius: 1rem; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
     .feed-details { min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
     .feed-name-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
     .feed-name { font-weight: 700; font-size: 0.9375rem; color: var(--text); }
     .feed-url { font-size: 0.75rem; color: var(--text-dim); font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 480px; }
     .feed-meta { font-size: 0.6875rem; color: var(--text-dim); }
-    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; border-radius: 0.375rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; border-radius: 0.375rem; font-size: 0.6875rem; font-weight: 600; text-transform: uppercase; }
     .badge-green { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
     .badge-gray { background: rgba(156,163,175,0.12); color: #9ca3af; border: 1px solid var(--border); }
     .badge-amber { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
@@ -173,7 +172,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   </style>
 </head>
 <body>
-  <!-- Top Navigation -->
+  <!-- Header -->
   <header>
     <a href="/dashboard" class="brand">
       <div class="brand-icon"><i class="fa-solid fa-rss"></i></div>
