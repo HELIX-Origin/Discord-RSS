@@ -1,7 +1,7 @@
 import type { AppDeps } from '../../app.js';
 import { getThemeInfo, getColorSchemeInfo } from './dashboard.js';
 
-export function renderLandingHtml(deps: AppDeps, userId: number | null = null): string {
+export function renderLandingHtml(deps: AppDeps, _userId: number | null = null): string {
   const appName = deps.bot?.getAppName() || 'HELIX RSS';
   const appIconUrl = deps.bot?.getAppIconUrl() || null;
   const theme = getThemeInfo(deps.config.defaultTheme);

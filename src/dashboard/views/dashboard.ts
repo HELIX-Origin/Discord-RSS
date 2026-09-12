@@ -879,7 +879,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       else if (tabId === 'feeds') loadFeedsTab();
       else if (tabId === 'reddit') loadRedditTab();
       else if (tabId === 'freegames') loadFreeGamesTab();
-      else if (tabId === 'news' || tabId === 'popular') loadNewsTab();
+      else if (tabId === 'news') loadNewsTab();
       else if (tabId === 'settings') loadSettingsTab();
     }
 
@@ -1736,7 +1736,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         const data = await res.json();
         if (res.ok) {
           alert('Enabled "' + preset.name + '".');
-          loadPopularTab();
+          loadNewsTab();
         } else {
           alert(data.error || 'Failed to enable feed');
         }

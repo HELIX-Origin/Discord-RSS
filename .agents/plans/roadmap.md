@@ -34,10 +34,17 @@ flowchart TD
         M5["#18 Agent Modernization & AGENTS.md Refresh ✅"]
     end
 
+    subgraph Dashboard ["5. Dashboard Update (Plan #19)"]
+        D1["DASHBOARD_THEME / COLOR_SCHEME env engine ✅"]
+        D2["Landing Page toggle ✅"]
+        D3["News Feeds tab bug fix ✅"]
+    end
+
     P0 --> A --> S1 --> S2 --> S3 --> S4 --> S5
     A --> R
     S5 --> S6 --> S7 --> S8
     S8 --> M1 --> M2 --> M3 --> M4 --> M5
+    M5 --> D1 --> D2 --> D3
 ```
 
 ---
@@ -62,6 +69,7 @@ flowchart TD
 | **Bot Commands & Rich Presentation** | `/about` and `/help` commands (dynamic import, human-readable embeds), RSS primary images and clean links | Complete | `src/bot/commands/` & `src/webhook/` |
 | **Site Status Monitors Retirement** | Complete removal of site monitors from backend, DB, UI, and bot commands | Complete | Plan #13 / Roadmap |
 | **Cloud Hosting Retirement** | All cloud PaaS hosting (Heroku, Render, Fly.io, Railway, Vercel) removed; `app.json`, Deploy button, `Procfile`, and `$PORT` binding retired. Self-hosting only via Local, VPS, and Docker. | Complete | Roadmap |
+| **Env Themes, Landing Page & News Feeds Fix** | `DASHBOARD_THEME` / `DASHBOARD_COLOR_SCHEME` / `LANDING_PAGE_ENABLED` env-driven theme engine, landing page routes, and News Feeds tab regression fix | Complete | [#19](https://github.com/HELIX-Origin/HELIX-RSS/issues/19) (Plan #19) |
 
 ---
 
@@ -89,6 +97,18 @@ flowchart TD
   - [x] Documented resolved issues in `AGENTS.md` (`Current Issues`).
   - [x] Created dedicated agent specification files under `.agents/agents/`.
   - [x] Passed all unified checks (`npm run check`) with 100% passing tests (33 test files, 149 tests).
+
+---
+
+## Plan 19: Dashboard Update ([#19](https://github.com/HELIX-Origin/HELIX-RSS/issues/19))
+
+> 👉 Tracked locally in `PLAN.md` at the repo root.
+
+- [x] **Env-Driven Theme Engine** — `DASHBOARD_THEME` (glassmorphism, dark, light, cyberpunk, dracula, nord, emerald) + `DASHBOARD_COLOR_SCHEME` (11 accents) parsed in `src/config.ts` and applied across dashboard, landing, login, and legal views via `getThemeInfo()` / `getColorSchemeInfo()`.
+- [x] **Landing Page Toggle** — `LANDING_PAGE_ENABLED`; `/`, `/home`, `/landing` routes in `src/dashboard/server.ts`; when disabled `/` redirects to `/dashboard`.
+- [x] **News Feeds Tab Bug Fix** — removed lingering `loadPopularTab()` call and stale `'popular'` tab alias in `src/dashboard/views/dashboard.ts` (tab was renamed to News Feeds).
+- [x] **Docs & Tracking Sync** — added `PLAN.md`, documented vars in `.env.example`, updated `AGENTS.md` Current Issues.
+- [x] Passed unified verification gate (`npm run check`).
 
 ---
 
