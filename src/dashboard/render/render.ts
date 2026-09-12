@@ -520,6 +520,9 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         btn.classList.add('bg-cyan-600/20', 'text-cyan-300', 'border', 'border-cyan-500/30');
         btn.classList.remove('text-gray-400');
       }
+      if (tabId === 'popular') {
+        fetchPresets();
+      }
     }
 
     async function logout() {
@@ -690,48 +693,61 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     async function fetchPresets() {
-      const res = await fetch('/api/presets');
-      const presets = await res.json();
-      presetsCache = presets;
-
-      const groups = {};
-      presets.forEach(p => {
-        (groups[p.category] = groups[p.category] || []).push(p);
-      });
-
       const container = document.getElementById('presets-body');
-      if (!presets.length) {
-        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
-        return;
-      }
+      try {
+        const res = await fetch('/api/presets');
+        if (!res.ok) {
+          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
+          return;
+        }
+        const presets = await res.json();
+        if (!Array.isArray(presets)) {
+          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
+          return;
+        }
+        presetsCache = presets;
 
-      container.innerHTML = Object.keys(groups).map(cat => \`
-        <div class="mt-4 first:mt-0">
-          <div class="text-xs font-bold uppercase tracking-wider text-amber-400/90 mb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i>\${escapeHtmlAttr(cat)}</div>
-          <div class="space-y-2">
-            \${groups[cat].map(p => \`
-              <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/40 transition">
-                <div class="space-y-1 min-w-0">
-                  <div class="flex items-center gap-2">
-                    <span class="font-bold text-white text-sm">\${escapeHtmlAttr(p.name)}</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded \${p.alreadyAdded ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${p.alreadyAdded ? 'Added' : 'Popular'}</span>
+        const groups = {};
+        presets.forEach(p => {
+          (groups[p.category] = groups[p.category] || []).push(p);
+        });
+
+        if (!container) return;
+        if (!presets.length) {
+          container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
+          return;
+        }
+
+        container.innerHTML = Object.keys(groups).map(cat => \`
+          <div class="mt-4 first:mt-0">
+            <div class="text-xs font-bold uppercase tracking-wider text-amber-400/90 mb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i>\${escapeHtmlAttr(cat)}</div>
+            <div class="space-y-2">
+              \${groups[cat].map(p => \`
+                <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/40 transition">
+                  <div class="space-y-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <span class="font-bold text-white text-sm">\${escapeHtmlAttr(p.name)}</span>
+                      <span class="text-[10px] px-2 py-0.5 rounded \${p.alreadyAdded ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${p.alreadyAdded ? 'Added' : 'Popular'}</span>
+                    </div>
+                    <div class="text-xs text-gray-500">\${escapeHtmlAttr(p.description)}</div>
+                    <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(p.url)}</div>
                   </div>
-                  <div class="text-xs text-gray-500">\${escapeHtmlAttr(p.description)}</div>
-                  <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(p.url)}</div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <select data-preset-channel class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
+                      <option value="">-- Select Discord channel --</option>
+                    </select>
+                    <button onclick="enablePreset('\${p.id}', this)" \${p.alreadyAdded ? 'disabled' : ''} class="px-3 py-2 rounded-lg \${p.alreadyAdded ? 'bg-green-950/60 text-green-400 border border-green-800 cursor-default' : 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40'} text-xs font-semibold transition"><i class="fa-solid \${p.alreadyAdded ? 'fa-check' : 'fa-bolt'} mr-1"></i>\${p.alreadyAdded ? 'Added' : 'Enable'}</button>
+                  </div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                  <select data-preset-channel class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                    <option value="">-- Select Discord channel --</option>
-                  </select>
-                  <button onclick="enablePreset('\${p.id}', this)" \${p.alreadyAdded ? 'disabled' : ''} class="px-3 py-2 rounded-lg \${p.alreadyAdded ? 'bg-green-950/60 text-green-400 border border-green-800 cursor-default' : 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40'} text-xs font-semibold transition"><i class="fa-solid \${p.alreadyAdded ? 'fa-check' : 'fa-bolt'} mr-1"></i>\${p.alreadyAdded ? 'Added' : 'Enable'}</button>
-                </div>
-              </div>
-            \`).join('')}
+              \`).join('')}
+            </div>
           </div>
-        </div>
-      \`).join('');
+        \`).join('');
 
-      refreshPresetChannelOptions();
+        refreshPresetChannelOptions();
+      } catch {
+        if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Error loading popular feeds.</div>';
+      }
     }
 
     async function enablePreset(presetId, btn) {

@@ -2,7 +2,7 @@ import type { AppDeps } from '../../app.js';
 import { FEED_PRESETS } from '../../feed/presets.js';
 import { readBodyJson, sendError, sendJson } from '../http/helpers.js';
 import type { Router } from '../http/router.js';
-import { canUserManageGuild, isValidHttpUrl, requireDashboardUser } from './shared.js';
+import { authedUserId, canUserManageGuild, isValidHttpUrl, requireDashboardUser } from './shared.js';
 
 export function registerFeedsRoutes(router: Router<AppDeps>): void {
   router.add('GET', '/api/feeds', async (req, res, _ctx, d) => {
@@ -12,9 +12,8 @@ export function registerFeedsRoutes(router: Router<AppDeps>): void {
   });
 
   router.add('GET', '/api/presets', async (req, res, _ctx, d) => {
-    const userId = await requireDashboardUser(req, res, d);
-    if (userId === null) return;
-    const existing = new Set(d.repo.listFeeds(userId).map((f) => f.url));
+    const userId = await authedUserId(req, d);
+    const existing = userId !== null ? new Set(d.repo.listFeeds(userId).map((f) => f.url)) : new Set<string>();
     sendJson(
       res,
       200,
