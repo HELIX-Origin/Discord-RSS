@@ -708,11 +708,11 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       try {
         const res = await fetch('/api/presets');
         if (!res.ok) {
-          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
+          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available at this time.</div>';
           return;
         }
         const presets = await res.json();
-        if (!Array.isArray(presets)) {
+        if (!Array.isArray(presets) || !presets.length) {
           if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
           return;
         }
@@ -720,44 +720,52 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
 
         const groups = {};
         presets.forEach(p => {
-          (groups[p.category] = groups[p.category] || []).push(p);
+          const cat = p.category || 'General';
+          (groups[cat] = groups[cat] || []).push(p);
         });
 
         if (!container) return;
-        if (!presets.length) {
-          container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No popular feeds available.</div>';
-          return;
+
+        let fullHtml = '';
+        for (const cat of Object.keys(groups)) {
+          const items = groups[cat] || [];
+          let itemsHtml = '';
+          for (const p of items) {
+            const addedBadge = p.alreadyAdded
+              ? '<span class="text-[10px] px-2 py-0.5 rounded bg-green-950 text-green-300 border border-green-800 font-semibold">Added</span>'
+              : '<span class="text-[10px] px-2 py-0.5 rounded bg-gray-800 text-gray-400 border border-gray-700">Popular</span>';
+            const btnHtml = p.alreadyAdded
+              ? '<button disabled class="px-3 py-2 rounded-lg bg-green-950/60 text-green-400 border border-green-800 cursor-default text-xs font-semibold"><i class="fa-solid fa-check mr-1"></i>Added</button>'
+              : '<button onclick="enablePreset(\\'' + escapeHtmlAttr(p.id) + '\\', this)" class="px-3 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40 text-xs font-semibold transition shadow-sm shadow-amber-600/20"><i class="fa-solid fa-bolt mr-1"></i>Enable</button>';
+
+            itemsHtml += '<div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/40 transition">' +
+              '<div class="space-y-1 min-w-0">' +
+                '<div class="flex items-center gap-2">' +
+                  '<span class="font-bold text-white text-sm">' + escapeHtmlAttr(p.name) + '</span>' +
+                  addedBadge +
+                '</div>' +
+                '<div class="text-xs text-gray-400">' + escapeHtmlAttr(p.description) + '</div>' +
+                '<div class="text-[10px] text-gray-500 font-mono truncate">' + escapeHtmlAttr(p.url) + '</div>' +
+              '</div>' +
+              '<div class="flex items-center gap-2 shrink-0">' +
+                '<select data-preset-channel class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">' +
+                  '<option value="">-- Select Discord channel --</option>' +
+                '</select>' +
+                btnHtml +
+              '</div>' +
+            '</div>';
+          }
+
+          fullHtml += '<div class="mt-5 first:mt-0">' +
+            '<div class="text-xs font-bold uppercase tracking-wider text-amber-400/90 mb-2.5 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i>' + escapeHtmlAttr(cat) + '</div>' +
+            '<div class="space-y-2">' + itemsHtml + '</div>' +
+          '</div>';
         }
 
-        container.innerHTML = Object.keys(groups).map(cat => \`
-          <div class="mt-4 first:mt-0">
-            <div class="text-xs font-bold uppercase tracking-wider text-amber-400/90 mb-2 flex items-center gap-2"><i class="fa-solid fa-folder-open"></i>\${escapeHtmlAttr(cat)}</div>
-            <div class="space-y-2">
-              \${groups[cat].map(p => \`
-                <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/40 transition">
-                  <div class="space-y-1 min-w-0">
-                    <div class="flex items-center gap-2">
-                      <span class="font-bold text-white text-sm">\${escapeHtmlAttr(p.name)}</span>
-                      <span class="text-[10px] px-2 py-0.5 rounded \${p.alreadyAdded ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${p.alreadyAdded ? 'Added' : 'Popular'}</span>
-                    </div>
-                    <div class="text-xs text-gray-500">\${escapeHtmlAttr(p.description)}</div>
-                    <div class="text-[10px] text-gray-500 font-mono truncate">\${escapeHtmlAttr(p.url)}</div>
-                  </div>
-                  <div class="flex items-center gap-2 shrink-0">
-                    <select data-preset-channel class="w-48 bg-gray-800 border border-gray-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-amber-500">
-                      <option value="">-- Select Discord channel --</option>
-                    </select>
-                    <button onclick="enablePreset('\${p.id}', this)" \${p.alreadyAdded ? 'disabled' : ''} class="px-3 py-2 rounded-lg \${p.alreadyAdded ? 'bg-green-950/60 text-green-400 border border-green-800 cursor-default' : 'bg-amber-600 hover:bg-amber-500 text-white border border-amber-500/40'} text-xs font-semibold transition"><i class="fa-solid \${p.alreadyAdded ? 'fa-check' : 'fa-bolt'} mr-1"></i>\${p.alreadyAdded ? 'Added' : 'Enable'}</button>
-                  </div>
-                </div>
-              \`).join('')}
-            </div>
-          </div>
-        \`).join('');
-
+        container.innerHTML = fullHtml;
         refreshPresetChannelOptions();
-      } catch {
-        if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Error loading popular feeds.</div>';
+      } catch (err) {
+        if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Error loading popular feeds catalog. Please refresh.</div>';
       }
     }
 
@@ -774,25 +782,29 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         return alert('Please select a destination Discord channel for "' + preset.name + '".');
       }
       const dest = parseDestinationPayload(destination);
-      const res = await fetch('/api/feeds', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: preset.name, url: preset.url, feedType: 'rss', ...dest })
-      });
-      if (checkAuthError(res)) return;
-      const data = await res.json();
-      if (res.ok) {
-        alert('Enabled "' + preset.name + '".');
-        fetchPresets();
-        fetchFeeds();
-      } else {
-        alert(data.error || 'Failed to enable feed');
+      try {
+        const res = await fetch('/api/feeds', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: preset.name, url: preset.url, feedType: 'rss', ...dest })
+        });
+        if (checkAuthError(res)) return;
+        const data = await res.json();
+        if (res.ok) {
+          alert('Enabled "' + preset.name + '".');
+          fetchPresets();
+          fetchFeeds();
+        } else {
+          alert(data.error || 'Failed to enable feed');
+        }
+      } catch (err) {
+        alert('Network error while enabling feed: ' + (err && err.message ? err.message : String(err)));
       }
     }
 
     function checkAuthError(res) {
       if (res.status === 401) {
-        if (confirm('You must be logged in to perform this action. Go to login page?')) {
+        if (confirm('You must be logged in with Discord to perform this action. Go to login page?')) {
           window.location.href = '/login';
         }
         return true;
@@ -801,58 +813,75 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
     }
 
     async function fetchFeeds() {
-      const res = await fetch('/api/feeds');
-      const feeds = await res.json();
       const container = document.getElementById('feeds-table-body');
-      if (!Array.isArray(feeds)) {
-        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in to view and manage feeds.</div>';
-        document.getElementById('stat-feeds').textContent = '0';
-        return;
-      }
-      if (!feeds.length) {
-        container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No feeds yet. Add one above.</div>';
-        document.getElementById('stat-feeds').textContent = '0';
-        return;
-      }
-      document.getElementById('stat-feeds').textContent = feeds.length;
-      container.innerHTML = feeds.map(f => \`
-        <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-cyan-500/40 transition">
-          <div class="space-y-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
-              <span class="text-[10px] px-2 py-0.5 rounded \${f.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${f.enabled ? 'Enabled' : 'Disabled'}</span>
+      const statFeeds = document.getElementById('stat-feeds');
+      try {
+        const res = await fetch('/api/feeds');
+        if (res.status === 401 || res.status === 403) {
+          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in with Discord to view and manage feeds.</div>';
+          if (statFeeds) statFeeds.textContent = '0';
+          return;
+        }
+        const feeds = await res.json();
+        if (!Array.isArray(feeds)) {
+          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in to view and manage feeds.</div>';
+          if (statFeeds) statFeeds.textContent = '0';
+          return;
+        }
+        if (!feeds.length) {
+          if (container) container.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">No feeds yet. Add one above or enable popular feeds.</div>';
+          if (statFeeds) statFeeds.textContent = '0';
+          return;
+        }
+        if (statFeeds) statFeeds.textContent = feeds.length;
+        if (!container) return;
+        container.innerHTML = feeds.map(f => \`
+          <div class="p-4 rounded-xl bg-gray-900 border border-gray-800 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-cyan-500/40 transition">
+            <div class="space-y-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-white text-sm">\${escapeHtmlAttr(f.name)}</span>
+                <span class="text-[10px] px-2 py-0.5 rounded \${f.enabled ? 'bg-green-950 text-green-300 border border-green-800' : 'bg-gray-800 text-gray-400 border border-gray-700'}">\${f.enabled ? 'Enabled' : 'Disabled'}</span>
+              </div>
+              <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(f.url)}</div>
+              <div class="text-[10px] text-gray-500">Delivery: \${f.channelId ? \`Discord Channel (<#\${escapeHtmlAttr(f.channelId)}>)\` : 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
             </div>
-            <div class="text-xs text-gray-400 font-mono truncate">\${escapeHtmlAttr(f.url)}</div>
-            <div class="text-[10px] text-gray-500">Delivery: \${f.channelId ? \`Discord Channel (<#\${escapeHtmlAttr(f.channelId)}>)\` : 'Not linked'} · Last checked: \${f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never'}</div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="toggleFeed(\${f.id}, \${f.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${f.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${f.enabled ? 'Pause' : 'Resume'}</button>
+              <button onclick="pollFeed(\${f.id})" title="Poll now" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid fa-rotate"></i></button>
+              <button onclick="deleteItem('feeds', \${f.id}, 'feed')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-trash"></i></button>
+            </div>
           </div>
-          <div class="flex items-center gap-2 shrink-0">
-            <button onclick="toggleFeed(\${f.id}, \${f.enabled ? 'false' : 'true'})" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid \${f.enabled ? 'fa-pause' : 'fa-play'} mr-1"></i>\${f.enabled ? 'Pause' : 'Resume'}</button>
-            <button onclick="pollFeed(\${f.id})" title="Poll now" class="px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition border border-gray-700"><i class="fa-solid fa-rotate"></i></button>
-            <button onclick="deleteItem('feeds', \${f.id}, 'feed')" class="px-3 py-1.5 rounded-lg bg-red-950/80 hover:bg-red-900 text-red-300 text-xs border border-red-800 transition"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </div>
-      \`).join('');
+        \`).join('');
+      } catch {
+        if (container) container.innerHTML = '<div class="text-red-400 py-4 text-center font-mono text-xs">Failed to load feeds.</div>';
+      }
     }
 
     async function fetchStats() {
+      const feed = document.getElementById('activity-feed');
       try {
         const res = await fetch('/api/stats');
+        if (res.status === 401 || res.status === 403) {
+          if (feed) feed.innerHTML = '<div class="text-gray-500 py-4 text-center font-mono text-xs">Sign in with Discord to view recent activity.</div>';
+          return;
+        }
         const data = await res.json();
-        const feed = document.getElementById('activity-feed');
         if (feed && data.activity && data.activity.length) {
           feed.innerHTML = data.activity.map(a => \`
             <div class="p-3 rounded-xl bg-gray-900/90 border border-gray-800/80 flex justify-between items-center hover:border-cyan-500/40 transition">
               <div class="flex items-center gap-2">
                 <span class="\${a.level === 'error' ? 'text-red-400' : a.level === 'warn' ? 'text-amber-400' : 'text-cyan-400'}"><i class="fa-solid \${a.level === 'error' ? 'fa-circle-exclamation' : a.level === 'warn' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i></span>
-                <span class="text-gray-300">\${a.message}</span>
+                <span class="text-gray-300">\${escapeHtmlAttr(a.message)}</span>
               </div>
-              <span class="text-[10px] text-gray-500 shrink-0">\${a.ts}</span>
+              <span class="text-[10px] text-gray-500 shrink-0">\${escapeHtmlAttr(a.ts)}</span>
             </div>
           \`).join('');
         } else if (feed) {
           feed.innerHTML = '<div class="text-gray-500 py-3 text-center">No activity recorded yet.</div>';
         }
-      } catch {}
+      } catch {
+        if (feed) feed.innerHTML = '<div class="text-gray-500 py-3 text-center font-mono text-xs">No activity recorded yet.</div>';
+      }
     }
 
     let selectedPollIntervalMs = 3600000;
@@ -894,23 +923,27 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           selectPollInterval(data.pollIntervalMs);
         }
         (data.oauthProviders || []).forEach(p => {
-          // Credentials intentionally not echoed back; only show enabled state
           const enabledEl = document.getElementById('cfg-' + p.provider + '-enabled');
           if (enabledEl) enabledEl.checked = p.enabled;
         });
       } catch {}
     }
 
-
-
     async function fetchAll() {
-      const tasks = [fetchMe(), fetchStats(), fetchFeeds(), fetchDiscordChannels(), fetchPresets(), fetchUserPollInterval()];
+      const tasks = [
+        fetchMe(),
+        fetchStats(),
+        fetchFeeds(),
+        fetchDiscordChannels(),
+        fetchPresets(),
+        fetchUserPollInterval(),
+      ];
       if (document.getElementById('setting-base-url') || document.getElementById('users-table-body')) {
         tasks.push(fetchSettings());
         tasks.push(fetchUsers());
         tasks.push(fetchFeedDiagnostics());
       }
-      await Promise.all(tasks);
+      await Promise.allSettled(tasks);
     }
 
     async function addFeed() {

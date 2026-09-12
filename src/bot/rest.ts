@@ -28,6 +28,8 @@ function formatErrorText(status: number, text: string): string {
   return `HTTP ${status} - ${trimmed}`;
 }
 
+const DISCORD_API_TIMEOUT_MS = 8000;
+
 export class DiscordRestClient {
   private readonly baseUrl: string;
 
@@ -51,6 +53,7 @@ export class DiscordRestClient {
     const res = await fetch(`${this.baseUrl}/oauth2/applications/@me`, {
       method: 'GET',
       headers: this.headers(),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -66,6 +69,7 @@ export class DiscordRestClient {
       method: 'PUT',
       headers: this.headers(),
       body: JSON.stringify(commands),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -78,6 +82,7 @@ export class DiscordRestClient {
     const res = await fetch(`${this.baseUrl}/users/@me/guilds`, {
       method: 'GET',
       headers: this.headers(),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -94,6 +99,7 @@ export class DiscordRestClient {
     const res = await fetch(`${this.baseUrl}/guilds/${guildId}/channels`, {
       method: 'GET',
       headers: this.headers(),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -111,6 +117,7 @@ export class DiscordRestClient {
       method: 'POST',
       headers: this.headers(),
       body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -133,6 +140,7 @@ export class DiscordRestClient {
         'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body: JSON.stringify(response),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -153,6 +161,7 @@ export class DiscordRestClient {
         'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body: JSON.stringify(data),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {
@@ -173,6 +182,7 @@ export class DiscordRestClient {
         'User-Agent': 'DiscordBot (https://github.com/HELIX-Origin/HELIX-RSS, 0.1.0)',
       },
       body: JSON.stringify(data),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
     });
 
     if (!res.ok) {

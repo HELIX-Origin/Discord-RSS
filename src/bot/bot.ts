@@ -171,6 +171,14 @@ export class DiscordBot {
     }
   }
 
+  private cachedGuildsWithChannels: Array<{
+    id: string;
+    name: string;
+    icon: string | null;
+    channels: Array<{ id: string; name: string; type: number; position?: number }>;
+  }> | null = null;
+  private cachedGuildsTimestamp = 0;
+
   async getGuildsWithChannels(): Promise<
     Array<{
       id: string;
@@ -179,30 +187,38 @@ export class DiscordBot {
       channels: Array<{ id: string; name: string; type: number; position?: number }>;
     }>
   > {
+    const now = Date.now();
+    if (this.cachedGuildsWithChannels && now - this.cachedGuildsTimestamp < 15_000) {
+      return this.cachedGuildsWithChannels;
+    }
+
     try {
       const guilds = await this.rest.getBotGuilds();
-      const results = [];
-      for (const guild of guilds) {
-        try {
-          const channels = await this.rest.getGuildChannels(guild.id);
-          results.push({
-            id: guild.id,
-            name: guild.name,
-            icon: guild.icon,
-            channels,
-          });
-        } catch {
-          results.push({
-            id: guild.id,
-            name: guild.name,
-            icon: guild.icon,
-            channels: [],
-          });
-        }
-      }
+      const results = await Promise.all(
+        guilds.map(async (guild) => {
+          try {
+            const channels = await this.rest.getGuildChannels(guild.id);
+            return {
+              id: guild.id,
+              name: guild.name,
+              icon: guild.icon,
+              channels,
+            };
+          } catch {
+            return {
+              id: guild.id,
+              name: guild.name,
+              icon: guild.icon,
+              channels: [],
+            };
+          }
+        }),
+      );
+      this.cachedGuildsWithChannels = results;
+      this.cachedGuildsTimestamp = now;
       return results;
     } catch {
-      return [];
+      return this.cachedGuildsWithChannels ?? [];
     }
   }
 
