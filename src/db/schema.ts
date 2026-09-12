@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta (
@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS feeds (
   last_entry_id TEXT,
   last_checked_at TEXT,
   created_at TEXT NOT NULL,
+  thread_channel_id TEXT,
+  thread_entry_count INTEGER NOT NULL DEFAULT 0,
   UNIQUE (user_id, url),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
@@ -93,7 +95,8 @@ CREATE TABLE IF NOT EXISTS discord_guilds (
   user_id INTEGER NOT NULL,
   name TEXT NOT NULL DEFAULT '',
   created_at TEXT NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  threads_enabled INTEGER NOT NULL DEFAULT 0,
+  forum_channel_ids TEXT NOT NULL DEFAULT '[]'
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);

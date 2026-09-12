@@ -4,7 +4,7 @@ import type { AppDeps } from '../app.js';
 import { createLogger, type Logger } from '../util/logger.js';
 import { allBotCommands, dispatchInteraction } from './commands/index.js';
 import { DiscordGatewayClient } from './gateway.js';
-import { DiscordRestClient, type DiscordApplicationInfo } from './rest.js';
+import { DiscordRestClient, type DiscordApplicationInfo, type DiscordChannelSnapshot } from './rest.js';
 import { InteractionResponseType, type DiscordInteraction } from './types.js';
 import { createHelixRssServer } from '../dashboard/server.js';
 
@@ -225,6 +225,31 @@ export class DiscordBot {
 
   async sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void> {
     await this.rest.sendChannelMessage(channelId, payload);
+  }
+
+  async getGuildChannelsAll(
+    guildId: string,
+  ): Promise<Array<{ id: string; name: string; type: number; position?: number }>> {
+    return this.rest.getGuildChannelsAll(guildId);
+  }
+
+  async getChannel(threadId: string): Promise<DiscordChannelSnapshot> {
+    return this.rest.getChannel(threadId);
+  }
+
+  async createForumThread(
+    forumChannelId: string,
+    payload: {
+      name: string;
+      message?: { content?: string; embeds?: unknown[] } | null;
+      autoArchiveDuration?: number;
+    },
+  ): Promise<{ id: string; name: string; type: number }> {
+    return this.rest.createForumThread(forumChannelId, payload);
+  }
+
+  async archiveThread(threadId: string): Promise<void> {
+    await this.rest.archiveThread(threadId);
   }
 
   async detectApplicationOwners(): Promise<{ ownerIds: string[]; adminIds: string[] }> {

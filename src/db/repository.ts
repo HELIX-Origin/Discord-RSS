@@ -4,7 +4,16 @@ import { UserRepository } from './repositories/users.js';
 import { OAuthRepository } from './repositories/oauth.js';
 import { FeedRepository } from './repositories/feeds.js';
 import { SettingsRepository } from './repositories/settings.js';
-import type { ActivityEntry, Feed, FeedType, OAuthConnection, Session, User, UserRole } from '../state/types.js';
+import type {
+  ActivityEntry,
+  DiscordGuild,
+  Feed,
+  FeedType,
+  OAuthConnection,
+  Session,
+  User,
+  UserRole,
+} from '../state/types.js';
 
 export type {
   ActivityEntry,
@@ -168,9 +177,21 @@ export class Repository {
       channelId?: string | null;
       guildId?: string | null;
       enabled?: number;
+      threadChannelId?: string | null;
+      threadEntryCount?: number;
     },
   ): Feed | null {
     return this.feeds.updateFeed(userId, id, fields);
+  }
+
+  setFeedThread(userId: number, id: number, threadChannelId: string | null, threadEntryCount: number): void {
+    this.feeds.setFeedThread(userId, id, threadChannelId, threadEntryCount);
+  }
+
+  setGuildThreadConfig(guildId: string, config: { threadsEnabled: boolean; forumChannelIds: string[] }): DiscordGuild {
+    const updated = this.users.setGuildThreadConfig(guildId, config);
+    if (!updated) throw new Error(`Guild ${guildId} thread config could not be saved`);
+    return updated;
   }
 
   deleteGuildData(guildId: string): { feedsDeleted: number; guildsDeleted: number } {

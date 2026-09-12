@@ -29,6 +29,11 @@ export interface AppConfig {
   defaultTheme: string;
   dashboardColorScheme: string;
   landingPageEnabled: boolean;
+  forumChannelIds: string[];
+  threadKeepaliveEnabled: boolean;
+  threadKeepaliveIntervalMs: number;
+  threadKeepaliveGraceMs: number;
+  threadMaxMessages: number;
 }
 
 export function defaultConfig(): AppConfig {
@@ -178,6 +183,12 @@ export function defaultConfig(): AppConfig {
     process.env['ACCENT_COLOR']?.trim().toLowerCase() ||
     'default';
 
+  const forumChannelIds = parseCsvIds(process.env['FORUM_CHANNEL_IDS'] || process.env['THREAD_FORUM_CHANNEL_IDS']);
+
+  const threadKeepaliveEnabled =
+    process.env['THREAD_KEEPALIVE_ENABLED']?.toLowerCase() !== 'false' &&
+    process.env['KEEP_THREADS_OPEN']?.toLowerCase() !== 'false';
+
   return {
     host,
     port,
@@ -205,7 +216,21 @@ export function defaultConfig(): AppConfig {
     defaultTheme,
     dashboardColorScheme,
     landingPageEnabled,
+    forumChannelIds,
+    threadKeepaliveEnabled,
+    threadKeepaliveIntervalMs: parsePositiveInt(process.env['THREAD_KEEPALIVE_INTERVAL_MS'], 6 * 3600 * 1000),
+    threadKeepaliveGraceMs: parsePositiveInt(process.env['THREAD_KEEPALIVE_GRACE_MS'], 24 * 3600 * 1000),
+    threadMaxMessages: parsePositiveInt(process.env['THREAD_MAX_MESSAGES'], 100),
   };
+}
+
+function parseCsvIds(raw: string | undefined): string[] {
+  if (!raw) return [];
+  const ids = raw
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => /^\d{10,25}$/.test(part));
+  return Array.from(new Set(ids));
 }
 
 function parseLogLevel(raw: string | undefined): LogLevel {

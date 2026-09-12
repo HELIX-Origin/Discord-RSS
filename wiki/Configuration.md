@@ -67,6 +67,20 @@ HELIX RSS is configured entirely via environment variables defined in a `.env` f
 | `PING_URL` | No | `http://<host>:<port>/health` | URL to ping periodically. Accepts `INTERNAL_URL` / `DISCORD_PORT` placeholders. Alias: `KEEP_ALIVE_URL`. |
 | `PING_INTERVAL_MS` | No | `600000` | Ping frequency in milliseconds (default 10 minutes). |
 
+### 🧵 Forum Thread Delivery (Optional)
+
+Thread delivery is a **per-server** feature — each feed delivers into its own dedicated thread inside a **forum channel** (one thread per feed). Enable it per server from the dashboard **Feeds tab**, or provide a global default set of forums via env:
+
+| Variable | Required | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `FORUM_CHANNEL_IDS` | No | — | Comma-separated list of Discord **forum channel** IDs used as a global default. When set, servers that contain one of these forums get thread delivery automatically unless overridden per server in the dashboard. Alias: `THREAD_FORUM_CHANNEL_IDS`. Leave empty to keep thread delivery disabled everywhere by default. |
+| `THREAD_KEEPALIVE_ENABLED` | No | `true` | Set to `false` to stop polling feed threads to keep them open. Alias: `KEEP_THREADS_OPEN=false`. |
+| `THREAD_KEEPALIVE_INTERVAL_MS` | No | `21600000` | How often the keepalive pass checks open feed threads (default 6 hours). |
+| `THREAD_KEEPALIVE_GRACE_MS` | No | `86400000` | Post a keep-alive message once a thread is within this window of its auto-archive time (default 24 hours ≈ once/week per thread). |
+| `THREAD_MAX_MESSAGES` | No | `100` | Rotate a feed's thread after this many delivered entries: the large thread is archived/locked and a fresh thread opens in its place. |
+
+> Threads auto-archive if left idle. The keepalive pass polls each open feed thread and posts a tiny message shortly before Discord would archive it, so active feeds stay visible. Threads that grow past `THREAD_MAX_MESSAGES` are auto-rotated (archived + fresh thread).
+
 ### 🎨 Dashboard Appearance
 
 | Variable | Required | Default | Description |
@@ -124,6 +138,13 @@ SITE_SSL_CERT=
 
 # Optional: Keep-Alive ping
 PING_INTERVAL_MS=600000
+
+# Optional: Forum Thread Delivery (per-server, dashboard configurable)
+# FORUM_CHANNEL_IDS=123456789012345678,987654321098765432
+# THREAD_KEEPALIVE_ENABLED=true
+# THREAD_KEEPALIVE_INTERVAL_MS=21600000
+# THREAD_KEEPALIVE_GRACE_MS=86400000
+# THREAD_MAX_MESSAGES=100
 
 # Optional: Dashboard theme & landing page
 DASHBOARD_THEME=dark

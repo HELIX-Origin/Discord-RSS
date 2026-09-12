@@ -2,6 +2,7 @@ import { defaultConfig } from './config.js';
 import { Database } from './db/database.js';
 import { Repository } from './db/repository.js';
 import { FeedWatcher } from './feed/watcher.js';
+import { FeedThreadManager } from './feed/threads.js';
 import { OAuthService } from './oauth/service.js';
 import { Scheduler } from './scheduler/scheduler.js';
 import { createRedisCoordinator } from './state/redis.js';
@@ -46,8 +47,14 @@ export async function main(): Promise<void> {
   );
   feeds.setBot(bot);
 
+  // 4b. Wire optional per-guild forum thread delivery (one thread per feed).
+  const threads = new FeedThreadManager(repo, bot, config, config.logLevel);
+  feeds.setThreads(threads);
+  scheduler.schedule('thread-keepalive', config.threadKeepaliveIntervalMs, () => threads.keepAliveAll());
+
   // 5. Start primary bot process (which starts Gateway, bot HTTP server, and site sub-process)
   await bot.start();
+  void threads.keepAliveAll();
 
   // 6. Start network keep-alive ping if configured
   let keepAlive: KeepAlivePing | null = null;

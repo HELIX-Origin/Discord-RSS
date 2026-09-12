@@ -57,6 +57,29 @@ export class Database {
     } catch {
       // Column may already exist
     }
+
+    // Schema v5: per-feed thread tracking
+    try {
+      this.db.exec('ALTER TABLE feeds ADD COLUMN thread_channel_id TEXT;');
+    } catch {
+      // Column may already exist
+    }
+    try {
+      this.db.exec('ALTER TABLE feeds ADD COLUMN thread_entry_count INTEGER NOT NULL DEFAULT 0;');
+    } catch {
+      // Column may already exist
+    }
+    // Schema v5: per-guild thread delivery configuration
+    try {
+      this.db.exec('ALTER TABLE discord_guilds ADD COLUMN threads_enabled INTEGER NOT NULL DEFAULT 0;');
+    } catch {
+      // Column may already exist
+    }
+    try {
+      this.db.exec("ALTER TABLE discord_guilds ADD COLUMN forum_channel_ids TEXT NOT NULL DEFAULT '[]';");
+    } catch {
+      // Column may already exist
+    }
     // Fix oauth_states user_id nullability if created under legacy schema
     try {
       const info = this.db.prepare('PRAGMA table_info(oauth_states)').all() as Array<{

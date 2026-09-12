@@ -67,9 +67,14 @@ This section documents active and recently resolved critical issues as required 
   - Rewrote `markdownToHtml` in `src/dashboard/views/legal.ts` as a line-based renderer (headings, bold/italic/code, `[text](url)` links, lists, `---` rules) for `/privacy` and `/tos`.
   - App name now derives from the Discord application (`DiscordBot.getAppName()` via `appDisplayName(deps)` in `src/app.ts`) across bot embeds (`/about`, `/stats`, `/help`, `/feed`), dashboard views, auth/error pages, and OAuth views.
 
-### 9. Discord Threads as Feed Delivery Targets (Planned / Roadmap)
-- **Problem**: Feeds can only deliver into text/announcement channels; Discord Threads (types 10/11/12) are filtered out of channel discovery in `src/bot/rest.ts` and unsupported as delivery targets.
-- **Status**: **Planned — not implemented.** Roadmap captured in [#20](https://github.com/HELIX-Origin/HELIX-RSS/issues/20) with mermaid diagrams, phases (data model, discovery/validation, delivery engine, dashboard UI, slash commands, docs/tests), permission-bit requirements, risks, and acceptance criteria. Implement only per that issue.
+### 9. Discord Threads as Feed Delivery Targets (Implemented)
+- **Problem**: Feeds could only deliver into text/announcement channels; Discord Threads were filtered out of channel discovery in `src/bot/rest.ts` and unsupported as delivery targets.
+- **Resolution**:
+  - **Implemented per [#20](https://github.com/HELIX-Origin/HELIX-RSS/issues/20)**: optional, per-guild forum/thread delivery. Each feed in a thread-enabled guild delivers into its own dedicated thread inside a forum channel (one thread per feed; first entry is the opening post).
+  - `FeedThreadManager` in `src/feed/threads.ts`: forum channel selection (per-guild dashboard config or `FORUM_CHANNEL_IDS` env default), thread creation/rotation, keepalive polling, archive-at-size (`THREAD_MAX_MESSAGES`, default 100).
+  - Schema v5: `feeds.thread_channel_id`/`thread_entry_count`; `discord_guilds.threads_enabled`/`forum_channel_ids`.
+  - Config via dashboard **Feeds tab** (per server, not host-only) or env (`FORUM_CHANNEL_IDS`, `THREAD_KEEPALIVE_ENABLED`, `THREAD_KEEPALIVE_INTERVAL_MS`, `THREAD_KEEPALIVE_GRACE_MS`, `THREAD_MAX_MESSAGES`).
+  - Legacy channel delivery is unchanged for guilds without thread delivery enabled.
 
 ---
 

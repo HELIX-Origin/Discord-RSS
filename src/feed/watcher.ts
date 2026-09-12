@@ -8,6 +8,7 @@ import { parseFeed, withGuid, type FeedEntry } from './parser.js';
 import { scrapeItems, absoluteUrl } from './scraper.js';
 import { feedEmbed, freeGameEmbed } from '../bot/embeds.js';
 import { createLogger, type LogLevel } from '../util/logger.js';
+import { FeedThreadManager } from './threads.js';
 
 export interface ChannelMessageSender {
   sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void>;
@@ -16,6 +17,7 @@ export interface ChannelMessageSender {
 
 export class FeedWatcher {
   private readonly logger;
+  private threads: FeedThreadManager | null = null;
 
   constructor(
     private readonly repo: Repository,
@@ -28,6 +30,10 @@ export class FeedWatcher {
 
   setBot(bot: ChannelMessageSender | null): void {
     this.bot = bot;
+  }
+
+  setThreads(threads: FeedThreadManager | null): void {
+    this.threads = threads;
   }
 
   async pollFeed(userId: number, feedId: number, force = false): Promise<void> {
@@ -77,11 +83,14 @@ export class FeedWatcher {
 
     const targetChannelId = feed.channelId;
     if (!targetChannelId) {
-      this.logger.warn('Feed has no configured Discord channel; skipping poll', {
-        feedId: feed.id,
-        feedName: feed.name,
-      });
-      return;
+      const canThread = this.threads ? Boolean(await this.threads.forumChannelForFeed(feed)) : false;
+      if (!canThread) {
+        this.logger.warn('Feed has no configured Discord channel and no thread target; skipping poll', {
+          feedId: feed.id,
+          feedName: feed.name,
+        });
+        return;
+      }
     }
 
     const isFreeGamesFeed = feed.feedType === 'free_games' || feed.feedType?.startsWith('free_games');
@@ -112,7 +121,7 @@ export class FeedWatcher {
         }
       }
 
-      await this.pollFreeGamesLocked(userId, feed, targetChannelId);
+      await this.pollFreeGamesLocked(userId, feed);
       return;
     }
 
@@ -210,17 +219,8 @@ export class FeedWatcher {
       let delivered = false;
       let errorDetail: string | null = null;
 
-      if (!this.bot) {
-        this.logger.warn('Discord bot is offline; skipping channel message delivery', {
-          feedId: feed.id,
-          channelId: targetChannelId,
-        });
-        break;
-      }
-
       try {
-        await this.bot.sendChannelMessage(targetChannelId, { embeds: [embed] });
-        delivered = true;
+        delivered = await this.deliverEntry(feed, { embeds: [embed] });
       } catch (err) {
         errorDetail = err instanceof Error ? err.message : String(err);
       }
@@ -247,7 +247,17 @@ export class FeedWatcher {
     this.logger.info('Feed polled', { feedId: feed.id, feedName: feed.name, newEntries: toSend.length });
   }
 
-  private async pollFreeGamesLocked(userId: number, feed: Feed, targetChannelId: string): Promise<void> {
+  private async deliverEntry(feed: Feed, payload: { content?: string; embeds?: unknown[] }): Promise<boolean> {
+    if (this.threads) {
+      const outcome = await this.threads.deliver(feed, payload);
+      if (outcome.mode === 'thread') return outcome.delivered;
+    }
+    if (!this.bot || !feed.channelId) return false;
+    await this.bot.sendChannelMessage(feed.channelId, payload);
+    return true;
+  }
+
+  private async pollFreeGamesLocked(userId: number, feed: Feed): Promise<void> {
     let platformKey: FreeGamePlatformKey = 'all';
     const lowerName = feed.name.toLowerCase();
     const lowerUrl = feed.url.toLowerCase();
@@ -306,17 +316,8 @@ export class FeedWatcher {
       let delivered = false;
       let errorDetail: string | null = null;
 
-      if (!this.bot) {
-        this.logger.warn('Discord bot is offline; skipping free games channel message delivery', {
-          feedId: feed.id,
-          channelId: targetChannelId,
-        });
-        break;
-      }
-
       try {
-        await this.bot.sendChannelMessage(targetChannelId, { embeds: [embed] });
-        delivered = true;
+        delivered = await this.deliverEntry(feed, { embeds: [embed] });
       } catch (err) {
         errorDetail = err instanceof Error ? err.message : String(err);
       }

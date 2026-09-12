@@ -232,7 +232,7 @@ function handleList(userId: number, deps: AppDeps): InteractionResponse {
   const fields = feeds.slice(0, 25).map((f) => {
     const status = f.enabled ? '🟢 Enabled' : '⏸️ Paused';
     const lastChecked = f.lastCheckedAt ? new Date(f.lastCheckedAt).toLocaleString() : 'Never';
-    const target = f.channelId ? `<#${f.channelId}>` : 'None';
+    const target = f.threadChannelId ? `<#${f.threadChannelId}> (thread)` : f.channelId ? `<#${f.channelId}>` : 'None';
     return {
       name: `#${f.id} — ${f.name} (${status})`,
       value: `**URL:** \`${f.url}\`\n**Channel:** ${target}\n**Last Checked:** ${lastChecked}`,

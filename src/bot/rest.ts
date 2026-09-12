@@ -39,6 +39,22 @@ function formatErrorText(status: number, text: string): string {
 
 const DISCORD_API_TIMEOUT_MS = 8000;
 
+export type DiscordChannelSnapshot = {
+  id: string;
+  name: string;
+  type: number;
+  guild_id?: string;
+  parent_id?: string | null;
+  auto_archive_duration?: number;
+  thread_metadata?: {
+    archived: boolean;
+    archive_timestamp?: string | null;
+    locked?: boolean;
+  } | null;
+  message_count?: number;
+  total_message_sent?: number;
+};
+
 export class DiscordRestClient {
   private readonly baseUrl: string;
   private readonly userAgent: string;
@@ -132,6 +148,89 @@ export class DiscordRestClient {
     const all = (await res.json()) as Array<{ id: string; name: string; type: number; position?: number }>;
     // Filter to text and announcement channels (0 = GUILD_TEXT, 5 = GUILD_ANNOUNCEMENT)
     return all.filter((c) => c.type === 0 || c.type === 5);
+  }
+
+  /** Returns every channel of a guild without filtering (includes forums and categories). */
+  async getGuildChannelsAll(
+    guildId: string,
+  ): Promise<Array<{ id: string; name: string; type: number; position?: number }>> {
+    const res = await fetch(`${this.baseUrl}/guilds/${guildId}/channels`, {
+      method: 'GET',
+      headers: this.headers(),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to fetch channels for guild ${guildId}: ${formatErrorText(res.status, text)}`);
+    }
+
+    return (await res.json()) as Array<{ id: string; name: string; type: number; position?: number }>;
+  }
+
+  /** Fetches a channel (including threads) with its metadata, archive state and message counts. */
+  async getChannel(channelId: string): Promise<DiscordChannelSnapshot> {
+    const res = await fetch(`${this.baseUrl}/channels/${channelId}`, {
+      method: 'GET',
+      headers: this.headers(),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to fetch channel ${channelId}: ${formatErrorText(res.status, text)}`);
+    }
+
+    return (await res.json()) as DiscordChannelSnapshot;
+  }
+
+  /**
+   * Creates a thread (post) inside a forum channel. When `message` carries embeds
+   * they become the very first message of the thread.
+   */
+  async createForumThread(
+    forumChannelId: string,
+    payload: {
+      name: string;
+      message?: { content?: string; embeds?: unknown[] } | null;
+      autoArchiveDuration?: number;
+    },
+  ): Promise<{ id: string; name: string; type: number }> {
+    const res = await fetch(`${this.baseUrl}/channels/${forumChannelId}/threads`, {
+      method: 'POST',
+      headers: this.headers(),
+      body: JSON.stringify({
+        name: payload.name.slice(0, 100),
+        type: 11,
+        auto_archive_duration: payload.autoArchiveDuration,
+        message: payload.message ?? undefined,
+      }),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(
+        `Failed to create forum thread in channel ${forumChannelId}: ${formatErrorText(res.status, text)}`,
+      );
+    }
+
+    return (await res.json()) as { id: string; name: string; type: number };
+  }
+
+  /** Closes a thread: archives it and locks it so no further messages can be sent. */
+  async archiveThread(threadId: string): Promise<void> {
+    const res = await fetch(`${this.baseUrl}/channels/${threadId}`, {
+      method: 'PATCH',
+      headers: this.headers(),
+      body: JSON.stringify({ archived: true, locked: true }),
+      signal: AbortSignal.timeout(DISCORD_API_TIMEOUT_MS),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Failed to archive thread ${threadId}: ${formatErrorText(res.status, text)}`);
+    }
   }
 
   async sendChannelMessage(channelId: string, payload: { content?: string; embeds?: unknown[] }): Promise<void> {

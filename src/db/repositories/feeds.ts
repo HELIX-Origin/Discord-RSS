@@ -67,6 +67,8 @@ export class FeedRepository {
       lastEntryId: null,
       lastCheckedAt: null,
       createdAt: nowIso(),
+      threadChannelId: null,
+      threadEntryCount: 0,
     };
     this.state.putFeed(feed);
     return feed;
@@ -82,6 +84,8 @@ export class FeedRepository {
       channelId?: string | null;
       guildId?: string | null;
       enabled?: number;
+      threadChannelId?: string | null;
+      threadEntryCount?: number;
     },
   ): Feed | null {
     const current = this.state.getFeed(userId, id);
@@ -94,10 +98,12 @@ export class FeedRepository {
       channelId: fields.channelId !== undefined ? fields.channelId : current.channelId,
       guildId: fields.guildId !== undefined ? fields.guildId : current.guildId,
       enabled: fields.enabled ?? current.enabled,
+      threadChannelId: fields.threadChannelId !== undefined ? fields.threadChannelId : current.threadChannelId,
+      threadEntryCount: fields.threadEntryCount ?? current.threadEntryCount,
     };
     this.db.raw
       .prepare(
-        'UPDATE feeds SET name = ?, url = ?, feed_type = ?, channel_id = ?, guild_id = ?, enabled = ? WHERE id = ? AND user_id = ?',
+        'UPDATE feeds SET name = ?, url = ?, feed_type = ?, channel_id = ?, guild_id = ?, enabled = ?, thread_channel_id = ?, thread_entry_count = ? WHERE id = ? AND user_id = ?',
       )
       .run(
         updated.name,
@@ -106,11 +112,27 @@ export class FeedRepository {
         updated.channelId ?? null,
         updated.guildId ?? null,
         updated.enabled,
+        updated.threadChannelId,
+        updated.threadEntryCount,
         id,
         userId,
       );
     this.state.putFeed(updated);
     return updated;
+  }
+
+  setFeedThread(userId: number, id: number, threadChannelId: string | null, threadEntryCount: number): void {
+    const current = this.state.getFeed(userId, id);
+    if (!current) return;
+    const updated: Feed = {
+      ...current,
+      threadChannelId,
+      threadEntryCount,
+    };
+    this.db.raw
+      .prepare('UPDATE feeds SET thread_channel_id = ?, thread_entry_count = ? WHERE id = ? AND user_id = ?')
+      .run(threadChannelId, threadEntryCount, id, userId);
+    this.state.putFeed(updated);
   }
 
   setFeedChecked(userId: number, id: number, lastEntryId: string | null): void {

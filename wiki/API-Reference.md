@@ -209,6 +209,39 @@ GET /api/guilds/:guildId/roles
 ]
 ```
 
+### 4. Get Forum Thread Delivery Config for Managed Guilds
+```http
+GET /api/discord/thread-config
+```
+**Auth**: Any logged-in dashboard user (only guilds they can manage are included).
+**Response**:
+```json
+[
+  {
+    "guildId": "987654321098765432",
+    "name": "My Server",
+    "threadsEnabled": true,
+    "forumChannelIds": ["111111111111111111"],
+    "forumChannels": [{ "id": "111111111111111111", "name": "feed-threads", "type": 15 }]
+  }
+]
+```
+
+### 5. Update Forum Thread Delivery Config for a Guild
+```http
+PUT /api/discord/thread-config
+Content-Type: application/json
+
+{
+  "guildId": "987654321098765432",
+  "threadsEnabled": true,
+  "forumChannelIds": ["111111111111111111"]
+}
+```
+**Auth**: User must have `Manage Channels` (or Administrator) on the target guild.
+**Validation**: `threadsEnabled` boolean; `forumChannelIds` must all be IDs of **forum (type 15)** channels present in the guild.
+**Response**: the updated guild config object.
+
 ---
 
 ## 📊 Analytics & Diagnostics

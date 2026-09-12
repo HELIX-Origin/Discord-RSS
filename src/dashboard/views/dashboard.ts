@@ -158,7 +158,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
   const isHost = isOwner || isAdmin;
   const dbStats = deps.db.stats();
   const botInviteUrl = deps.config.clientId
-    ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=534723950656`
+    ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=586263558272`
     : null;
 
   return `<!DOCTYPE html>
@@ -630,6 +630,38 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
           </div>
         </div>
 
+        <!-- Forum Thread Delivery Card -->
+        <div class="card" style="border-left: 4px solid #5865F2;">
+          <div class="card-header">
+            <div>
+              <div class="card-title"><i class="fa-solid fa-comments" style="color: #5865F2;"></i> Forum Thread Delivery</div>
+              <div class="card-desc">Optional: deliver every feed into its own dedicated thread inside a forum channel. One thread per feed — threads are kept open and rotate into a fresh thread when they grow large. Configured per server.</div>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Server</label>
+              <select id="thread-config-guild" onchange="onThreadGuildChange()">
+                <option value="">-- Select Server --</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" style="display: flex; align-items: center; gap: 0.5rem;">
+                <input type="checkbox" id="thread-config-enabled" />
+                <span>Enable forum thread delivery for this server</span>
+              </label>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">Existing feeds in this server automatically adopt a per-feed thread on their next poll.</div>
+            </div>
+          </div>
+          <div class="form-group" id="thread-config-forums-group" style="margin-top: 0.75rem; display: none;">
+            <label class="form-label">Forum Channel(s)</label>
+            <div id="thread-config-forums" style="display: flex; flex-direction: column; gap: 0.4rem;"></div>
+          </div>
+          <div style="display: flex; justify-content: flex-end; margin-top: 0.75rem;">
+            <button onclick="saveThreadConfig()" class="btn btn-primary btn-sm"><i class="fa-solid fa-floppy-disk"></i> Save Thread Settings</button>
+          </div>
+        </div>
+
         <!-- My Feeds List Card -->
         <div class="card">
           <div class="card-header">
@@ -978,6 +1010,15 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       return true;
     }
 
+    function feedDeliveryLabel(f) {
+      const thread = f.threadChannelId
+        ? '<span style="color: #5865F2;"><i class="fa-solid fa-comments"></i> #' + esc(f.threadChannelId) + '</span>'
+        : '';
+      const channel = f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked';
+      if (!thread) return 'Delivery: ' + channel;
+      return 'Delivery: ' + thread + ' &middot; Fallback: ' + channel;
+    }
+
     // User Profile
     async function loadUserProfile() {
       try {
@@ -1087,6 +1128,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
       // Also load user interval and channels
       loadUserInterval();
       loadDiscordChannels();
+      loadThreadConfig();
 
       try {
         const res = await fetch('/api/feeds', { signal: AbortSignal.timeout(5000) });
@@ -1127,7 +1169,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                 statusBadge +
               '</div>' +
               '<div class="feed-url">' + esc(f.url) + '</div>' +
-              '<div class="feed-meta">Delivery: ' + (f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked') + ' &middot; Checked: ' + lastPolled + '</div>' +
+              '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
             '</div>' +
             '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
               '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +
@@ -1178,6 +1220,96 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
         });
         if (!checkAuth(res)) return;
       } catch {}
+    }
+
+    // ----- Forum Thread Delivery (per guild) -----
+    let cachedThreadConfig = { guilds: [] };
+
+    async function loadThreadConfig() {
+      try {
+        const res = await fetch('/api/discord/thread-config', { signal: AbortSignal.timeout(6000) });
+        if (!res.ok) return;
+        const data = await res.json();
+        cachedThreadConfig = data || { guilds: [] };
+        const sel = document.getElementById('thread-config-guild');
+        if (!sel) return;
+        const current = sel.value;
+        sel.innerHTML = '<option value="">-- Select Server --</option>' + cachedThreadConfig.guilds.map(g =>
+          '<option value="' + esc(g.guildId) + '">' + esc(g.name) + '</option>'
+        ).join('');
+        if (current && cachedThreadConfig.guilds.some(g => g.guildId === current)) sel.value = current;
+        renderThreadConfigForGuild();
+      } catch {}
+    }
+
+    function currentThreadGuild() {
+      const sel = document.getElementById('thread-config-guild');
+      const guildId = sel ? sel.value : '';
+      return cachedThreadConfig.guilds.find(g => g.guildId === guildId) || null;
+    }
+
+    function onThreadGuildChange() {
+      renderThreadConfigForGuild();
+    }
+
+    function renderThreadConfigForGuild() {
+      const guild = currentThreadGuild();
+      const box = document.getElementById('thread-config-forums');
+      const group = document.getElementById('thread-config-forums-group');
+      const enable = document.getElementById('thread-config-enabled');
+      if (!guild) {
+        if (group) group.style.display = 'none';
+        if (box) box.innerHTML = '';
+        if (enable) enable.checked = false;
+        return;
+      }
+      if (enable) enable.checked = Boolean(guild.threadsEnabled);
+      if (!box || !group) return;
+      if (!guild.forumChannels.length) {
+        group.style.display = '';
+        box.innerHTML = '<div style="font-size: 0.8125rem; color: var(--text-muted);">No forum channels found in this server. Create a Forum channel first, then refresh this page.</div>';
+        return;
+      }
+      group.style.display = '';
+      const selected = new Set(guild.forumChannelIds || []);
+      box.innerHTML = guild.forumChannels.map(ch => {
+        const checked = selected.has(ch.id) ? 'checked' : '';
+        return '<label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; cursor: pointer;">' +
+          '<input type="checkbox" class="thread-forum-check" value="' + esc(ch.id) + '" ' + checked + ' />' +
+          '<span>#' + esc(ch.name) + '</span>' +
+        '</label>';
+      }).join('');
+    }
+
+    async function saveThreadConfig() {
+      const guild = currentThreadGuild();
+      if (!guild) {
+        alert('Please select a server first.');
+        return;
+      }
+      const enable = document.getElementById('thread-config-enabled');
+      const enabled = Boolean(enable && enable.checked);
+      const forumChannelIds = Array.from(document.querySelectorAll('.thread-forum-check:checked')).map(e => e.value);
+      try {
+        const res = await fetch('/api/discord/thread-config', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ guildId: guild.guildId, threadsEnabled: enabled, forumChannelIds })
+        });
+        if (!checkAuth(res)) return;
+        if (!res.ok) {
+          const err = await res.json().catch(() => null);
+          alert(err && err.error ? err.error : 'Failed to save thread settings.');
+          return;
+        }
+        const data = await res.json();
+        guild.threadsEnabled = data.threadsEnabled;
+        guild.forumChannelIds = data.forumChannelIds;
+        renderThreadConfigForGuild();
+        alert(enabled ? 'Forum thread delivery enabled. Feeds will deliver into per-feed threads on their next poll.' : 'Forum thread delivery disabled. Feeds will deliver into their regular channel going forward.');
+      } catch {
+        alert('Failed to save thread settings.');
+      }
     }
 
     async function submitAddFeed() {
@@ -1422,7 +1554,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                   statusBadge +
                 '</div>' +
                 '<div class="feed-url">' + esc(f.url) + '</div>' +
-                '<div class="feed-meta">Channel: ' + (f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked') + ' &middot; Checked: ' + lastPolled + '</div>' +
+                '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
               '</div>' +
               '<div style="display: flex; gap: 0.375rem; shrink-0; align-items: center;">' +
                 '<button data-feed-id="' + f.id + '" data-target-type="' + toggleAction + '" onclick="toggleRedditFeedType(this.dataset.feedId, this.dataset.targetType)" class="btn btn-ghost btn-sm" title="Toggle display mode">' +
@@ -1620,7 +1752,7 @@ export function renderDashboardHtml(deps: AppDeps, userId: number | null): strin
                   statusBadge +
                 '</div>' +
                 '<div class="feed-url">' + esc(f.url) + '</div>' +
-                '<div class="feed-meta">Channel: ' + (f.channelId ? '<# ' + esc(f.channelId) + '>' : 'Not linked') + ' &middot; Checked: ' + lastPolled + '</div>' +
+                '<div class="feed-meta">' + feedDeliveryLabel(f) + ' &middot; Checked: ' + lastPolled + '</div>' +
               '</div>' +
               '<div style="display: flex; gap: 0.375rem; shrink-0;">' +
                 '<button onclick="toggleFeed(' + f.id + ', ' + (f.enabled ? 'false' : 'true') + ')" class="btn btn-ghost btn-sm">' +

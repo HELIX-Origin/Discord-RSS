@@ -7,7 +7,7 @@ export function renderLandingHtml(deps: AppDeps, _userId: number | null = null):
   const theme = getThemeInfo(deps.config.defaultTheme);
   const colorScheme = getColorSchemeInfo(deps.config.dashboardColorScheme);
   const botInviteUrl = deps.config.clientId
-    ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=534723950656`
+    ? `https://discord.com/oauth2/authorize?client_id=${encodeURIComponent(deps.config.clientId)}&scope=bot%20applications.commands&permissions=586263558272`
     : null;
   const repoUrl = deps.config.repoUrl || 'https://github.com/HELIX-Origin/HELIX-RSS';
   const dbStats = deps.db.stats();

@@ -64,6 +64,8 @@ export interface Feed {
   lastEntryId: string | null;
   lastCheckedAt: string | null;
   createdAt: string;
+  threadChannelId: string | null;
+  threadEntryCount: number;
 }
 
 export interface DiscordGuild {
@@ -71,6 +73,8 @@ export interface DiscordGuild {
   userId: number;
   name: string;
   createdAt: string;
+  threadsEnabled: number;
+  forumChannelIds: string[];
 }
 
 export interface ActivityEntry {
@@ -142,6 +146,9 @@ export const rowToFeed = (r: Row | undefined): Feed | null => {
   const channelId = r.channel_id !== null && r.channel_id !== undefined ? String(r.channel_id) : null;
   const guildId = r.guild_id !== null && r.guild_id !== undefined ? String(r.guild_id) : null;
   const feedType = r.feed_type === 'scrape' ? 'scrape' : r.feed_type === 'reddit' ? 'reddit' : 'rss';
+  const threadChannelId =
+    r.thread_channel_id !== null && r.thread_channel_id !== undefined ? String(r.thread_channel_id) : null;
+  const threadEntryCount = Number(r.thread_entry_count ?? 0);
   return {
     id: Number(r.id),
     userId: Number(r.user_id),
@@ -158,15 +165,34 @@ export const rowToFeed = (r: Row | undefined): Feed | null => {
     lastEntryId: r.last_entry_id === null ? null : String(r.last_entry_id),
     lastCheckedAt: r.last_checked_at === null ? null : String(r.last_checked_at),
     createdAt: String(r.created_at),
+    threadChannelId,
+    threadEntryCount,
   };
 };
 
 export const rowToDiscordGuild = (r: Row | undefined): DiscordGuild | null => {
   if (!r) return null;
+  let forumChannelIds: string[] = [];
+  const rawForum = r.forum_channel_ids;
+  if (typeof rawForum === 'string' && rawForum.trim()) {
+    try {
+      const parsed = JSON.parse(rawForum);
+      if (Array.isArray(parsed)) {
+        forumChannelIds = parsed.filter((id): id is string => typeof id === 'string');
+      }
+    } catch {
+      forumChannelIds = rawForum
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+    }
+  }
   return {
     guildId: String(r.guild_id),
     userId: Number(r.user_id),
     name: String(r.name ?? ''),
     createdAt: String(r.created_at),
+    threadsEnabled: Number(r.threads_enabled ?? 0),
+    forumChannelIds,
   };
 };
