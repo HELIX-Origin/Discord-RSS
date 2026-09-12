@@ -80,24 +80,11 @@ function buildCommandDetailEmbed(command: ApplicationCommand, branding: AppBrand
 }
 
 function buildAllCommandsEmbed(commands: ApplicationCommand[], branding: AppBranding): DiscordEmbed {
-  const fields: Array<{ name: string; value: string; inline?: boolean }> = commands.map((cmd) => {
-    const subcommands = cmd.options?.filter((opt) => opt.type === ApplicationCommandOptionType.SUB_COMMAND) ?? [];
-
-    if (subcommands.length > 0) {
-      const subList = subcommands.map((sub) => `• \`/${cmd.name} ${sub.name}\` — ${sub.description}`).join('\n');
-      return {
-        name: `/${cmd.name}`,
-        value: `${cmd.description}\n\n**Subcommands:**\n${subList}`,
-        inline: true,
-      };
-    }
-
-    return {
-      name: `/${cmd.name}`,
-      value: `${cmd.description}\n\n**Usage:** \`/${cmd.name}\``,
-      inline: true,
-    };
-  });
+  const fields: Array<{ name: string; value: string; inline?: boolean }> = commands.map((cmd) => ({
+    name: `/${cmd.name}`,
+    value: `${cmd.description}\n\n**Usage:** \`/${cmd.name}\``,
+    inline: true,
+  }));
 
   const embed: DiscordEmbed = {
     author: brandAuthor(branding),
