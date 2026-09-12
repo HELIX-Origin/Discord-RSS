@@ -53,6 +53,7 @@ Featuring a built-in web dashboard, Discord OAuth2 authentication, zero frontend
 
 ### 🤖 Discord Bot Integration
 - **Direct Channel Delivery**: Delivers directly to text channels via the Discord REST API—no webhook creation or management required.
+- **Forum Thread Delivery** *(optional, per server)*: Each feed can deliver into its own dedicated thread inside a forum channel—threads are kept open via keepalive polling and rotate into a fresh thread when they grow large. Configured from the dashboard Feeds tab or `FORUM_CHANNEL_IDS` env.
 - **Slash Commands**: Interactive commands (`/feed`, `/stats`, `/about`, `/help`) for checking feed statuses directly in Discord.
 - **Automatic Owner Detection**: Automatically grants full Owner rights to Discord Application owners and team members upon Discord login.
 

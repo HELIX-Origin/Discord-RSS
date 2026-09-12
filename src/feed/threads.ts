@@ -131,6 +131,10 @@ export class FeedThreadManager {
   async deliver(feed: Feed, payload: { content?: string; embeds?: unknown[] }): Promise<ThreadDeliveryOutcome> {
     const forumChannelId = await this.forumChannelForFeed(feed);
     if (!forumChannelId) {
+      if (feed.threadChannelId) {
+        // Guild no longer has thread delivery configured; release the stale binding.
+        this.repo.setFeedThread(feed.userId, feed.id, null, 0);
+      }
       if (!this.bot) {
         this.logger.warn('Discord bot is offline; skipping thread delivery', {
           feedId: feed.id,
